@@ -18,7 +18,7 @@ except:
 # ---------------------------------------------------------
 st.set_page_config(page_title="منصة التحليل الاستراتيجي", page_icon="🦅", layout="wide")
 
-# CSS متطور جداً لإلغاء السايد بار وعمل تصميم زجاجي
+# CSS متطور جداً
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
@@ -30,12 +30,12 @@ st.markdown("""
         direction: rtl;
     }
 
-    /* إخفاء القائمة الجانبية والهيدر الافتراضي تماماً */
+    /* إخفاء القائمة الجانبية والهيدر الافتراضي */
     [data-testid="stSidebar"] { display: none; }
     header { visibility: hidden; }
     #MainMenu { visibility: hidden; }
 
-    /* تصميم الهيدر الخاص بنا */
+    /* تصميم الهيدر الزجاجي */
     .hero-container {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
@@ -63,7 +63,7 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* تنسيق أزرار الراديو لتكون كبطاقات */
+    /* تنسيق أزرار الراديو (البطاقات العلوية) */
     div[role="radiogroup"] {
         display: flex;
         flex-direction: row-reverse;
@@ -72,6 +72,7 @@ st.markdown("""
         background: rgba(0,0,0,0.2);
         padding: 15px;
         border-radius: 15px;
+        margin-bottom: 20px;
     }
 
     div[role="radiogroup"] label {
@@ -83,6 +84,7 @@ st.markdown("""
         transition: all 0.3s ease;
         text-align: center;
         flex: 1;
+        color: white !important;
     }
 
     div[role="radiogroup"] label:hover {
@@ -97,6 +99,7 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 12px !important;
         color: white !important;
+        text-align: right;
     }
     
     /* زر التشغيل */
@@ -117,16 +120,27 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(218, 165, 32, 0.6);
     }
 
-    /* أنيميشن بسيط */
+    /* أنيميشن */
     @keyframes fadeIn {
         0% { opacity: 0; transform: translateY(-20px); }
         100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* تنسيق العناوين المخصصة */
+    .custom-header {
+        text-align: right !important;
+        color: #FFD700;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        border-right: 4px solid #FFD700;
+        padding-right: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب (CSS Strings) - نفس القوالب السابقة
+# 🎨 القوالب (CSS Styles)
 # ---------------------------------------------------------
 STYLE_OFFICIAL = """
 <style>
@@ -219,7 +233,7 @@ def get_working_model():
 # 🏗️ بناء الواجهة (Layout)
 # ---------------------------------------------------------
 
-# 1. الهيدر الجديد (داخل الصفحة وليس كصورة ثابتة)
+# 1. الهيدر
 st.markdown("""
     <div class="hero-container">
         <div class="main-title">تيار الحكمة الوطني</div>
@@ -227,10 +241,9 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 2. لوحة التحكم العلوية (بديل السايد بار)
+# 2. بطاقات الاختيار العلوية
 st.markdown('<div style="text-align: center; margin-bottom: 10px; color: #FFD700; font-weight: bold;">اختر نمط التقرير المطلوب:</div>', unsafe_allow_html=True)
 
-# استخدام radio أفقي (يشبه الأزرار في الـ CSS أعلاه)
 report_type = st.radio(
     "",
     ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق"),
@@ -240,15 +253,17 @@ report_type = st.radio(
 
 st.markdown("---")
 
-# 3. منطقة العمل (المدخلات)
+# 3. منطقة العمل (مع تعديل المحاذاة الدقيقة)
 col_input, col_upload = st.columns([2, 1])
 
 with col_input:
-    st.markdown("### 📝 النص / البيانات الخام")
+    # استخدام HTML لإجبار المحاذاة لليمين بدقة
+    st.markdown('<div class="custom-header">📝 النص / البيانات الخام</div>', unsafe_allow_html=True)
     user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...")
 
 with col_upload:
-    st.markdown("### 📎 ملفات مساعدة")
+    # استخدام HTML لإجبار المحاذاة لليمين بدقة
+    st.markdown('<div class="custom-header">📎 ملفات مساعدة</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'])
     if uploaded_file:
         st.success(f"تم إرفاق: {uploaded_file.name}")
@@ -269,7 +284,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير"):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(get_working_model())
 
-            # تجهيز القوالب بناءً على الاختيار
             target_css = ""
             design_rules = ""
             file_label = "Report"
@@ -292,7 +306,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير"):
                 - Use <article class="card"> for details.
                 - Use <div class="goal"> for conclusion.
                 """
-            else: # التحليل العميق
+            else: 
                 target_css = STYLE_ANALYTICAL
                 file_label = "Deep_Analysis"
                 design_rules = """
@@ -325,11 +339,9 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير"):
                 response = model.generate_content(prompt)
                 html_output = response.text.replace("```html", "").replace("```", "")
 
-            # عرض النتيجة
             st.success("✅ تم إنشاء التقرير بنجاح!")
             st.components.v1.html(html_output, height=800, scrolling=True)
 
-            # التحميل
             st.download_button(
                 label="📥 تحميل التقرير (HTML)",
                 data=html_output,
