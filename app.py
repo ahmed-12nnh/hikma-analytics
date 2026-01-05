@@ -3,8 +3,8 @@ import google.generativeai as genai
 import PyPDF2
 import pandas as pd
 from io import StringIO
-import time
 import random
+import time
 
 # ---------------------------------------------------------
 # 1. إعدادات الصفحة
@@ -17,65 +17,57 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. نظام تدوير المفاتيح (لحل مشكلة 429)
+# 2. جلب المفاتيح (Key Rotation)
 # ---------------------------------------------------------
-def get_api_keys():
+def get_api_key():
     keys = []
-    # جلب جميع المفاتيح المتاحة
-    if "KEY_1" in st.secrets: keys.append(st.secrets["KEY_1"])
-    if "KEY_2" in st.secrets: keys.append(st.secrets["KEY_2"])
-    if "KEY_3" in st.secrets: keys.append(st.secrets["KEY_3"])
-    if "GOOGLE_API_KEY" in st.secrets: keys.append(st.secrets["GOOGLE_API_KEY"])
+    # محاولة جلب كل المفاتيح المحتملة
+    for key_name in ["KEY_1", "KEY_2", "KEY_3", "GOOGLE_API_KEY"]:
+        if key_name in st.secrets:
+            keys.append(st.secrets[key_name])
     
     if not keys:
-        st.error("⚠️ لم يتم العثور على مفاتيح! تأكد من إضافتها في Secrets.")
+        st.error("⚠️ لم يتم العثور على مفاتيح في Secrets.")
         st.stop()
-    return keys
-
-API_KEYS = get_api_keys()
+    
+    # إرجاع مفتاح عشوائي لتوزيع الحمل
+    return random.choice(keys)
 
 # ---------------------------------------------------------
-# 3. مكتشف الموديلات الذكي (لحل مشكلة 404)
+# 3. محرك الاتصال الذكي (يحل مشكلة 404 و 429)
 # ---------------------------------------------------------
-def get_working_model_name():
-    """يبحث عن الموديل المتاح في حسابك بدلاً من التخمين"""
+def get_gemini_response(prompt):
     try:
-        models = genai.list_models()
-        for m in models:
-            name = m.name
-            if 'generateContent' in m.supported_generation_methods:
-                if 'flash' in name: return name # الأفضل
-                if 'pro' in name: return name   # البديل
-        return "models/gemini-1.5-flash" # الافتراضي
-    except:
-        return "gemini-pro" # الملاذ الأخير
+        # 1. إعداد المفتاح
+        current_key = get_api_key()
+        genai.configure(api_key=current_key)
+        
+        # 2. محاولة استخدام الموديل السريع (Flash)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        return response.text
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        # إذا كان الخطأ 404 (الموديل غير موجود)، نستخدم الموديل القديم
+        if "404" in error_msg:
+            try:
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content(prompt)
+                return response.text
+            except Exception as e2:
+                return f"Error: {e2}"
+        
+        # إذا كان الخطأ 429 (سرعة)، نطلب الانتظار
+        elif "429" in error_msg:
+            return "BUSY"
+            
+        else:
+            return f"Error: {error_msg}"
 
 # ---------------------------------------------------------
-# 4. محرك الاتصال (المضاد للأخطاء)
-# ---------------------------------------------------------
-def generate_content_robust(prompt):
-    # خلط المفاتيح لتوزيع الحمل
-    shuffled_keys = random.sample(API_KEYS, len(API_KEYS))
-    
-    for i, key in enumerate(shuffled_keys):
-        try:
-            genai.configure(api_key=key)
-            model_name = get_working_model_name() # اختيار الموديل ديناميكياً
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            error_msg = str(e)
-            # إذا كان خطأ سرعة (429) أو موديل (404)، جرب المفتاح التالي
-            if "429" in error_msg or "404" in error_msg:
-                continue 
-            else:
-                return f"Error: {error_msg}"
-    
-    return "Error: جميع المفاتيح مشغولة حالياً. يرجى الانتظار دقيقة."
-
-# ---------------------------------------------------------
-# 5. دوال مساعدة
+# 4. دوال مساعدة
 # ---------------------------------------------------------
 def extract_text_from_file(uploaded_file):
     text = ""
@@ -88,11 +80,11 @@ def extract_text_from_file(uploaded_file):
             text = df.to_string()
         else:
             text = uploaded_file.getvalue().decode("utf-8")
-    except Exception as e: return ""
+    except: return ""
     return text
 
 # ---------------------------------------------------------
-# 6. تصميم الواجهة (الكحلي والذهبي)
+# 5. واجهة التطبيق (الكحلي والذهبي)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -104,114 +96,92 @@ st.markdown("""
         color: white;
         direction: rtl;
     }
-
-    .block-container { padding-top: 1rem !important; }
+    .block-container { padding-top: 2rem !important; }
     header, footer { visibility: hidden; }
 
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8));
-        border-radius: 20px; padding: 40px 20px; text-align: center; margin-bottom: 40px;
+        border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 40px;
         border: 1px solid rgba(255, 215, 0, 0.3);
         box-shadow: 0 0 30px rgba(0, 31, 63, 0.5);
     }
     .main-title {
-        font-size: 55px; font-weight: 900;
+        font-size: 50px; font-weight: 900;
         background: linear-gradient(to bottom, #FFD700, #B8860B);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         margin-bottom: 10px;
     }
-    .sub-title { font-size: 22px; color: #e0e0e0; }
-
+    
     .stTextArea textarea {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important; color: white !important;
-        text-align: right;
+        border-radius: 12px; color: white !important; text-align: right;
     }
-    .stTextArea textarea:focus { border-color: #FFD700 !important; }
-
+    
     .stButton button {
         background: linear-gradient(45deg, #FFD700, #DAA520) !important;
-        color: #001f3f !important; font-weight: 900 !important; font-size: 20px !important;
-        padding: 0.75rem 2rem !important; border-radius: 50px !important; width: 100%;
-        border: none !important;
+        color: #001f3f !important; font-weight: bold; border-radius: 50px;
+        width: 100%; border: none; padding: 10px;
     }
-    .stButton button:hover { transform: scale(1.02); }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 7. بناء الصفحة
-# ---------------------------------------------------------
 st.markdown("""
     <div class="hero-section">
         <div class="main-title">تيار الحكمة الوطني</div>
-        <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
+        <div style="color: #ddd;">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
     </div>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns([2, 1])
-
 with col1:
-    st.markdown("### 📝 محتوى التقرير الاستراتيجي")
-    report_text = st.text_area("input", height=250, label_visibility="collapsed", placeholder="أدخل البيانات...")
-
+    st.markdown("### 📝 البيانات")
+    report_text = st.text_area("t", height=200, label_visibility="collapsed", placeholder="أدخل النص هنا...")
 with col2:
-    st.markdown("### 📎 المصادر والبيانات")
-    uploaded_file = st.file_uploader("file", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
-    st.info("💡 النظام مدعم بتقنية التبديل التلقائي للمفاتيح.")
+    st.markdown("### 📎 المرفقات")
+    uploaded_file = st.file_uploader("f", label_visibility="collapsed")
 
+# ---------------------------------------------------------
+# 6. التشغيل
+# ---------------------------------------------------------
 st.markdown("---")
-
-# ---------------------------------------------------------
-# 8. التشغيل
-# ---------------------------------------------------------
-if st.button("🚀 توليد الموقع والتقرير التفاعلي"):
-    
+if st.button("🚀 توليد التقرير"):
     final_input = report_text
-    if uploaded_file:
-        final_input += f"\n\n--- DATA ---\n{extract_text_from_file(uploaded_file)}"
+    if uploaded_file: final_input += extract_text_from_file(uploaded_file)
     
     if not final_input.strip():
-        st.warning("⚠️ الرجاء إدخال بيانات.")
+        st.warning("الرجاء إدخال بيانات.")
     else:
-        with st.spinner("جاري التحليل وبناء التقرير..."):
-            
-            # البرومبت الخاص بالتصميم التركوازي والبرتقالي
+        with st.spinner("جاري التحليل..."):
             prompt = f"""
-            You are a Senior Web Developer.
-            Task: Create a Single-File HTML Dashboard Report.
+            Act as a Senior UI Developer. Create a HTML Dashboard Report.
             
-            **DESIGN STYLE (Teal & Amber - As Requested):**
-            Use this exact CSS styling approach:
-            - Primary Color: #00796b (Teal)
-            - Secondary: #ff6f00 (Amber)
-            - Background: #f8f9fa
-            - Cards: White background, border-radius 8px, padding 20px.
-            - Font: 'Cairo', sans-serif.
-            - Layout: Centered container (max-width: 1300px), RTL direction.
+            **DESIGN (Teal & Amber):**
+            - Colors: Teal (#00796b), Amber (#ff6f00), White Cards.
+            - Font: 'Cairo'.
+            - Layout: Centered, RTL.
             
-            **STRUCTURE:**
-            1. Header with Teal bottom border.
-            2. "Stats Grid" at the top (Cards with key numbers).
-            3. Sections with clear titles (background-color: #f1f1f1).
-            4. Detailed Tables with Teal headers (#00796b).
+            **CSS:**
+            body {{ background: #f4f6f8; direction: rtl; font-family: 'Cairo'; padding: 20px; }}
+            .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
+            h1 {{ color: #004d40; text-align: center; border-bottom: 4px solid #00796b; padding-bottom: 15px; }}
+            .card {{ background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th {{ background: #00796b; color: white; padding: 10px; }}
+            td {{ border: 1px solid #ddd; padding: 8px; text-align: right; }}
             
-            **CONTENT:**
-            - **NO SUMMARIZATION:** Include ALL details/numbers from input.
-            - **Language:** Arabic.
-            
-            **Input Data:** {final_input}
-            **Output:** ONLY raw HTML code.
+            **DATA:** {final_input}
+            **OUTPUT:** Only RAW HTML code.
             """
             
-            # استدعاء دالة التدوير القوية
-            result_code = generate_content_robust(prompt)
+            result = get_gemini_response(prompt)
             
-            if "Error" in result_code and "<html" not in result_code:
-                st.error(result_code)
+            if result == "BUSY":
+                st.warning("⏳ السيرفر مشغول (ضغط عالي). يرجى الانتظار 30 ثانية والمحاولة مجدداً.")
+            elif "Error" in result:
+                st.error(result)
             else:
-                html_code = result_code.replace("```html", "").replace("```", "")
+                html_code = result.replace("```html", "").replace("```", "")
                 st.balloons()
-                st.components.v1.html(html_code, height=1200, scrolling=True)
-                st.download_button("📥 تحميل التقرير (HTML)", html_code, "Report.html", "text/html")
+                st.components.v1.html(html_code, height=1000, scrolling=True)
+                st.download_button("📥 تحميل التقرير", html_code, "Report.html", "text/html")
