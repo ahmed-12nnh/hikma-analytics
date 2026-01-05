@@ -128,7 +128,7 @@ st.markdown("""
         text-align: right;
         padding: 15px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        margin-top: 10px !important;  /* تعديل لجعلها أقرب */
+        margin-top: 5px !important;  /* تعديل لجعل العنوان أقرب */
     }
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
@@ -182,7 +182,7 @@ st.markdown("""
 
     /* تعديل على العناوين لجعلها أقرب */
     .stMarkdown h3 {
-        margin-bottom: 10px !important;  /* تقليل المسافة تحت العنوان */
+        margin-bottom: 5px !important;  /* تقليل المسافة أكثر */
     }
 
     /* رسوم متحركة عامة */
@@ -261,11 +261,11 @@ st.markdown("---")
 # استخدام columns للزر ودائرة التحميل بجانبه
 col_button, col_spinner = st.columns([3, 1])  # الزر أكبر، الspinner صغير
 
+generate_button = None
 with col_button:
     generate_button = st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)")
 
-with col_spinner:
-    spinner_placeholder = st.empty()  # مكان ثابت للspinner
+spinner_placeholder = st.empty()  # placeholder للspinner
 
 # عناصر ثابتة للرسائل لتجنب الحركة
 success_placeholder = st.empty()
@@ -273,8 +273,8 @@ error_placeholder = st.empty()
 download_placeholder = st.empty()
 
 if generate_button:
-    # إظهار الspinner بجانب الزر
-    with spinner_placeholder:
+    # إظهار الspinner في العمود الثاني
+    with col_spinner:
         with st.spinner('جاري التحليل...'):
             pass  # الspinner سيظهر هنا
     
