@@ -256,4 +256,4 @@ STYLE_ANALYTICAL = """
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
     .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
     .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; }
-    .pyramid-grid {
+    .pyramid-grid 
