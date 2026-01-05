@@ -5,20 +5,20 @@ import pandas as pd
 from io import StringIO
 
 # ---------------------------------------------------------
-# 🔑 إعدادات المفتاح (من الخزنة السرية)
+# 🔑 إعدادات المفتاح
 # ---------------------------------------------------------
 try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
-    st.error("⚠️ لم يتم العثور على المفتاح في Secrets. يرجى إضافته في إعدادات الموقع.")
+    st.error("⚠️ لم يتم العثور على المفتاح في Secrets.")
     st.stop()
 
 # ---------------------------------------------------------
-# 🎨 القوالب والتصاميم (CSS & Structure)
+# 🎨 القوالب والتصاميم (CSS Styles)
 # ---------------------------------------------------------
 
-# 1. القالب الاستراتيجي (كحلي وذهبي - Dashboard)
-STYLE_STRATEGIC = """
+# 1. القالب الرسمي (Strategic)
+STYLE_OFFICIAL = """
 <style>
     :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
     body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; }
@@ -39,8 +39,8 @@ STYLE_STRATEGIC = """
 </style>
 """
 
-# 2. القالب الإعلامي (أزرق فاتح وجداول - Media)
-STYLE_MEDIA = """
+# 2. القالب الرقمي (Media)
+STYLE_DIGITAL = """
 <style>
     body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #f4f7f9; color: #333; direction: rtl; }
     .container { max-width: 1200px; margin: 20px auto; padding: 25px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); }
@@ -58,7 +58,7 @@ STYLE_MEDIA = """
 </style>
 """
 
-# 3. القالب التحليلي (هرمي ونسب مئوية - Analytical)
+# 3. القالب التحليلي (Analytical)
 STYLE_ANALYTICAL = """
 <style>
     body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
@@ -108,11 +108,10 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🚀 إعدادات الصفحة والتصميم الخارجي (Streamlit)
+# 🚀 إعدادات الصفحة والتصميم
 # ---------------------------------------------------------
 st.set_page_config(page_title="منصة التحليل الاستراتيجي - الحكمة", page_icon="🦅", layout="wide")
 
-# CSS لواجهة Streamlit نفسها (النمط الفخم)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
@@ -120,15 +119,13 @@ st.markdown("""
     .hero-section { background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8)); border-radius: 20px; padding: 30px; text-align: center; margin-bottom: 20px; border: 1px solid rgba(255, 215, 0, 0.3); }
     .main-title { font-size: 45px; font-weight: 900; color: #FFD700; text-shadow: 0px 4px 10px rgba(0,0,0,0.5); }
     .stButton button { background: linear-gradient(45deg, #FFD700, #DAA520); color: #001f3f !important; font-weight: 900; border-radius: 50px; font-size: 18px; }
-    .footer-text { text-align: center; color: #888; font-size: 12px; margin-top: 50px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🏗️ الواجهة الرئيسية
+# 🏗️ الواجهة الرئيسية (التعديل هنا على المسميات)
 # ---------------------------------------------------------
 
-# الهيدر
 st.markdown("""
     <div class="hero-section">
         <div class="main-title">تيار الحكمة الوطني</div>
@@ -136,16 +133,17 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# القائمة الجانبية (اختيار نوع التقرير)
+# القائمة الجانبية (محدثة بأسماء وظيفية)
 with st.sidebar:
-    st.header("⚙️ إعدادات التقرير")
+    st.header("⚙️ إخراج التقرير")
+    st.markdown("اختر النمط الأنسب لطبيعة البيانات:")
     report_type = st.radio(
-        "اختر نوع تصميم التقرير:",
-        ("📊 التقرير الاستراتيجي (كحلي وذهبي)", 
-         "📘 التقرير الإعلامي (أزرق وجداول)", 
-         "📍 التقرير التحليلي (هرمي ونسب)")
+        "نوع القالب:",
+        ("🏛️ نمط الكتاب الرسمي (Official)", 
+         "📱 نمط الداشبورد الرقمي (Digital)", 
+         "📊 نمط التحليل العميق (Analysis)")
     )
-    st.info("سيتم تنسيق التقرير وتلوينه تلقائياً بناءً على اختيارك.")
+    st.success(f"النمط المختار: {report_type.split('(')[0]}")
 
 col1, col2 = st.columns([2, 1])
 
@@ -158,15 +156,14 @@ with col2:
     uploaded_file = st.file_uploader("رفع ملف (PDF, Excel)", type=['pdf', 'xlsx', 'txt'])
 
 # ---------------------------------------------------------
-# 🧠 المنطق البرمجي والتوليد
+# 🧠 المنطق البرمجي
 # ---------------------------------------------------------
 if st.button("🚀 إنشاء التقرير الاحترافي"):
     
-    # 1. تجهيز المدخلات
     full_text = user_text
     if uploaded_file:
-        with st.spinner('جاري استخراج البيانات من الملف...'):
-            full_text += f"\n\n[محتوى الملف المرفق]:\n{extract_text_from_file(uploaded_file)}"
+        with st.spinner('جاري استخراج البيانات...'):
+            full_text += f"\n\n[محتوى الملف]:\n{extract_text_from_file(uploaded_file)}"
 
     if not full_text.strip():
         st.warning("⚠️ يرجى إدخال بيانات أو رفع ملف.")
@@ -175,10 +172,43 @@ if st.button("🚀 إنشاء التقرير الاحترافي"):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(get_working_model())
 
-            # 2. تحديد التصميم والتعليمات بناءً على اختيار المستخدم
+            # تحديد المتغيرات بناءً على الاسم الجديد
             target_css = ""
-            design_instruction = ""
+            design_rules = ""
             
+            # 1. القالب الرسمي (كان اسمه الاستراتيجي)
+            if "Official" in report_type:
+                target_css = STYLE_OFFICIAL
+                design_rules = """
+                Style: Official, High-End Corporate Report.
+                - Use <div class="card"> for sections.
+                - Use <div class="card full-width"> for wide sections.
+                - Use HTML <table> inside cards for structured data.
+                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for key stats.
+                """
+            
+            # 2. القالب الرقمي (كان اسمه الإعلامي)
+            elif "Digital" in report_type:
+                target_css = STYLE_DIGITAL
+                design_rules = """
+                Style: Modern Digital Dashboard (Social Media style).
+                - Use <section id="summary"> for highlights.
+                - Use <article class="card"> for specific platform details.
+                - Use <div class="goal"> for final recommendations.
+                - Focus on readability and visual hierarchy.
+                """
+            
+            # 3. القالب التحليلي
+            else:
+                target_css = STYLE_ANALYTICAL
+                design_rules = """
+                Style: Statistical & Hierarchical Analysis.
+                - Use <div class="stats-grid"> for top KPIs.
+                - Use <div class="pyramid-grid"> for tiered data (hierarchy).
+                - Inside pyramid grid, use <div class="tier-card tier-upper"> (or middle/weak).
+                - MUST calculate percentages and use <div class="bar-container"><div class="bar" style="width: X%;"></div></div>.
+                """
+
             footer_content = """
             <footer>
                 <p><strong>صادر من الجهاز المركزي للجودة الشاملة - وحدة التخطيط الاستراتيجي والتطوير</strong></p>
@@ -186,74 +216,39 @@ if st.button("🚀 إنشاء التقرير الاحترافي"):
             </footer>
             """
 
-            if "الاستراتيجي" in report_type:
-                target_css = STYLE_STRATEGIC
-                design_instruction = """
-                DESIGN RULES (Strategic):
-                - Use <div class="card"> for sections.
-                - Use <div class="card full-width"> for wide sections.
-                - Use standard HTML <table> inside cards for data.
-                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for stats lists.
-                """
-            elif "الإعلامي" in report_type:
-                target_css = STYLE_MEDIA
-                design_instruction = """
-                DESIGN RULES (Media):
-                - Use <section id="summary"> for summary points.
-                - Use <article class="card"> for platform analysis.
-                - Use <div class="goal"> for the final conclusion/goal.
-                - Use icons (Use standard emojis like 📉, 📈, 🟦) inside the text.
-                """
-            else: # التحليلي
-                target_css = STYLE_ANALYTICAL
-                design_instruction = """
-                DESIGN RULES (Analytical):
-                - Use <section class="report-section"> for main blocks.
-                - Use <div class="stats-grid"> with <div class="stat-card"> for top numbers.
-                - Use <div class="pyramid-grid"> for hierarchy.
-                - Inside pyramid grid, use <div class="tier-card tier-upper"> (or tier-middle, tier-weak) based on strength.
-                - Include <div class="bar-container"><div class="bar" style="width: XX%;"></div></div> for percentages.
-                """
-
-            # 3. هندسة الأمر (Prompt Engineering)
             prompt = f"""
             You are an expert Data Analyst & Web Developer for 'Al-Hikma National Movement'.
             
-            **OBJECTIVE:** Convert the provided raw text/data into a professional HTML report using the SPECIFIC CSS and DESIGN RULES provided below.
+            **OBJECTIVE:** Convert the provided raw text/data into a professional HTML report.
 
-            **STRICT GUIDELINES:**
-            1. **NO SUMMARIZATION:** Do NOT summarize. Every single number, name, and detail from the input must be present.
-            2. **LANGUAGE:** Arabic (Official & Professional).
-            3. **FOOTER:** You MUST include the specific footer provided in the instructions.
-            4. **OUTPUT:** Return ONLY the HTML code (starting from <!DOCTYPE html> to </html>).
+            **DESIGN CHOICE:** {report_type}
+            **DESIGN RULES (Strictly Follow):**
+            {design_rules}
 
-            **INPUT DATA:**
+            **DATA:**
             {full_text}
 
-            **DESIGN & CSS (Embed this exactly in <head>):**
+            **CSS TO EMBED:**
             {target_css}
 
-            **HTML STRUCTURE INSTRUCTIONS:**
-            {design_instruction}
-            
-            **MANDATORY FOOTER (Insert before </body>):**
-            {footer_content}
+            **INSTRUCTIONS:**
+            1. Output ONLY valid HTML code.
+            2. Do not summarize; include all details.
+            3. Insert the provided CSS in <head>.
+            4. Insert the provided Footer before </body>.
+            5. Language: Arabic (Professional).
 
-            Generate the full HTML document now.
+            Generate the full HTML now.
             """
 
             with st.spinner('جاري تحليل البيانات وتطبيق القالب المختار...'):
                 response = model.generate_content(prompt)
                 html_output = response.text.replace("```html", "").replace("```", "")
 
-            # 4. العرض والتحميل
             st.success("✅ تم إنشاء التقرير بنجاح!")
-            
-            # عرض معاينة
             st.components.v1.html(html_output, height=800, scrolling=True)
 
-            # زر التحميل
-            file_label = "Strategic_Report" if "الاستراتيجي" in report_type else "Media_Report" if "الإعلامي" in report_type else "Analytical_Report"
+            file_label = "Official_Report" if "Official" in report_type else "Digital_Report" if "Digital" in report_type else "Analysis_Report"
             st.download_button(
                 label="📥 تحميل التقرير (HTML)",
                 data=html_output,
@@ -262,4 +257,4 @@ if st.button("🚀 إنشاء التقرير الاحترافي"):
             )
 
         except Exception as e:
-            st.error(f"حدث خطأ أثناء المعالجة: {e}")
+            st.error(f"حدث خطأ: {e}")
