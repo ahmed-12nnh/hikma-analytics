@@ -17,56 +17,65 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. نظام تدوير المفاتيح (الحل الجذري لمشكلة 429)
+# 2. نظام تدوير المفاتيح (لحل مشكلة 429)
 # ---------------------------------------------------------
-def configure_api_key():
-    # نحاول جلب المفاتيح من الأسرار
+def get_api_keys():
     keys = []
-    try:
-        if "KEY_1" in st.secrets: keys.append(st.secrets["KEY_1"])
-        if "KEY_2" in st.secrets: keys.append(st.secrets["KEY_2"])
-        if "KEY_3" in st.secrets: keys.append(st.secrets["KEY_3"])
-        # للتوافق مع الإعداد القديم
-        if "GOOGLE_API_KEY" in st.secrets: keys.append(st.secrets["GOOGLE_API_KEY"])
-    except:
-        pass
-
-    if not keys:
-        st.error("⚠️ لم يتم العثور على مفاتيح! يرجى إضافة KEY_1, KEY_2, KEY_3 في Secrets.")
-        st.stop()
+    # جلب جميع المفاتيح المتاحة
+    if "KEY_1" in st.secrets: keys.append(st.secrets["KEY_1"])
+    if "KEY_2" in st.secrets: keys.append(st.secrets["KEY_2"])
+    if "KEY_3" in st.secrets: keys.append(st.secrets["KEY_3"])
+    if "GOOGLE_API_KEY" in st.secrets: keys.append(st.secrets["GOOGLE_API_KEY"])
     
-    # اختيار مفتاح عشوائي للبدء
+    if not keys:
+        st.error("⚠️ لم يتم العثور على مفاتيح! تأكد من إضافتها في Secrets.")
+        st.stop()
     return keys
 
-API_KEYS = configure_api_key()
+API_KEYS = get_api_keys()
 
 # ---------------------------------------------------------
-# 3. محرك الاتصال الذكي (مع التبديل عند الخطأ)
+# 3. مكتشف الموديلات الذكي (لحل مشكلة 404)
 # ---------------------------------------------------------
-def generate_content_with_rotation(prompt):
-    # نجرب المفاتيح بالترتيب العشوائي
+def get_working_model_name():
+    """يبحث عن الموديل المتاح في حسابك بدلاً من التخمين"""
+    try:
+        models = genai.list_models()
+        for m in models:
+            name = m.name
+            if 'generateContent' in m.supported_generation_methods:
+                if 'flash' in name: return name # الأفضل
+                if 'pro' in name: return name   # البديل
+        return "models/gemini-1.5-flash" # الافتراضي
+    except:
+        return "gemini-pro" # الملاذ الأخير
+
+# ---------------------------------------------------------
+# 4. محرك الاتصال (المضاد للأخطاء)
+# ---------------------------------------------------------
+def generate_content_robust(prompt):
+    # خلط المفاتيح لتوزيع الحمل
     shuffled_keys = random.sample(API_KEYS, len(API_KEYS))
     
     for i, key in enumerate(shuffled_keys):
         try:
             genai.configure(api_key=key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model_name = get_working_model_name() # اختيار الموديل ديناميكياً
+            model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
-            # إذا كان الخطأ بسبب السرعة (429)، ننتقل للمفتاح التالي
-            if "429" in str(e):
-                print(f"Key {i+1} exhausted, switching...")
-                continue # جرب المفتاح التالي
+            error_msg = str(e)
+            # إذا كان خطأ سرعة (429) أو موديل (404)، جرب المفتاح التالي
+            if "429" in error_msg or "404" in error_msg:
+                continue 
             else:
-                # إذا كان خطأ آخر، نظهره
-                return f"ERROR: {str(e)}"
+                return f"Error: {error_msg}"
     
-    # إذا فشلت كل المفاتيح
-    return "ERROR_QUOTA: جميع المفاتيح مشغولة حالياً. يرجى الانتظار دقيقة."
+    return "Error: جميع المفاتيح مشغولة حالياً. يرجى الانتظار دقيقة."
 
 # ---------------------------------------------------------
-# 4. دوال مساعدة
+# 5. دوال مساعدة
 # ---------------------------------------------------------
 def extract_text_from_file(uploaded_file):
     text = ""
@@ -83,7 +92,7 @@ def extract_text_from_file(uploaded_file):
     return text
 
 # ---------------------------------------------------------
-# 5. تصميم الواجهة (القديم الكحلي والذهبي)
+# 6. تصميم الواجهة (الكحلي والذهبي)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -99,7 +108,6 @@ st.markdown("""
     .block-container { padding-top: 1rem !important; }
     header, footer { visibility: hidden; }
 
-    /* الهيدر القديم */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8));
         border-radius: 20px; padding: 40px 20px; text-align: center; margin-bottom: 40px;
@@ -114,7 +122,6 @@ st.markdown("""
     }
     .sub-title { font-size: 22px; color: #e0e0e0; }
 
-    /* الحقول */
     .stTextArea textarea {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -123,7 +130,6 @@ st.markdown("""
     }
     .stTextArea textarea:focus { border-color: #FFD700 !important; }
 
-    /* الزر */
     .stButton button {
         background: linear-gradient(45deg, #FFD700, #DAA520) !important;
         color: #001f3f !important; font-weight: 900 !important; font-size: 20px !important;
@@ -135,7 +141,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 6. بناء الصفحة
+# 7. بناء الصفحة
 # ---------------------------------------------------------
 st.markdown("""
     <div class="hero-section">
@@ -153,12 +159,12 @@ with col1:
 with col2:
     st.markdown("### 📎 المصادر والبيانات")
     uploaded_file = st.file_uploader("file", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
-    st.info("💡 النظام مدعم بمفاتيح متعددة لضمان الاستمرارية.")
+    st.info("💡 النظام مدعم بتقنية التبديل التلقائي للمفاتيح.")
 
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 7. التشغيل
+# 8. التشغيل
 # ---------------------------------------------------------
 if st.button("🚀 توليد الموقع والتقرير التفاعلي"):
     
@@ -169,8 +175,9 @@ if st.button("🚀 توليد الموقع والتقرير التفاعلي"):
     if not final_input.strip():
         st.warning("⚠️ الرجاء إدخال بيانات.")
     else:
-        with st.spinner("جاري التحليل وتوليد التقرير..."):
-            # هذا هو البرومبت الذي يولد التصميم التركوازي (Teal) الذي طلبته
+        with st.spinner("جاري التحليل وبناء التقرير..."):
+            
+            # البرومبت الخاص بالتصميم التركوازي والبرتقالي
             prompt = f"""
             You are a Senior Web Developer.
             Task: Create a Single-File HTML Dashboard Report.
@@ -198,10 +205,10 @@ if st.button("🚀 توليد الموقع والتقرير التفاعلي"):
             **Output:** ONLY raw HTML code.
             """
             
-            # استدعاء دالة التدوير
-            result_code = generate_content_with_rotation(prompt)
+            # استدعاء دالة التدوير القوية
+            result_code = generate_content_robust(prompt)
             
-            if "ERROR" in result_code:
+            if "Error" in result_code and "<html" not in result_code:
                 st.error(result_code)
             else:
                 html_code = result_code.replace("```html", "").replace("```", "")
