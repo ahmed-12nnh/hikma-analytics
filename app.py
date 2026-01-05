@@ -23,7 +23,7 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
     
-    /* إعدادات الخط والاتجاه */
+    /* إعدادات الخط والاتجاه الرئيسية */
     .stApp {
         background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%);
         font-family: 'Tajawal', sans-serif;
@@ -35,33 +35,49 @@ st.markdown("""
     header { visibility: hidden; }
     #MainMenu { visibility: hidden; }
 
-    /* تصميم الهيدر الزجاجي */
-    .hero-container {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
+    /* ========================================= */
+    /* 🦅 تصميم الهيدر الفخم (المستعاد من التصميم السابق) 🦅 */
+    /* ========================================= */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
-        padding: 30px;
+        padding: 40px 20px; /* زيادة الحشوة ليكون أطول */
         text-align: center;
-        border: 1px solid rgba(255, 215, 0, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         margin-bottom: 30px;
+        border: 1px solid rgba(255, 215, 0, 0.4);
+        box-shadow: 0 0 30px rgba(0, 31, 63, 0.7), inset 0 0 20px rgba(0,0,0,0.5);
+        position: relative;
+        overflow: hidden;
         animation: fadeIn 1s ease-in-out;
     }
 
+    /* الخط الذهبي المشع في الأعلى */
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 6px;
+        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        box-shadow: 0 0 15px #FFD700;
+    }
+
     .main-title {
-        font-size: 40px;
+        font-size: 50px; /* تكبير الخط */
         font-weight: 900;
-        background: linear-gradient(to right, #FFD700, #FDB931);
+        /* تدرج ذهبي غني */
+        background: linear-gradient(to bottom, #FFD700, #B8860B);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 5px;
+        margin-bottom: 15px;
+        text-shadow: 0px 4px 10px rgba(0,0,0,0.6);
     }
 
     .sub-title {
         color: #e0e0e0;
-        font-size: 16px;
+        font-size: 18px;
         letter-spacing: 1px;
+        font-weight: 500;
     }
+    /* ========================================= */
 
     /* تنسيق أزرار الراديو (البطاقات العلوية) */
     div[role="radiogroup"] {
@@ -73,24 +89,27 @@ st.markdown("""
         padding: 15px;
         border-radius: 15px;
         margin-bottom: 20px;
+        border: 1px solid rgba(255, 215, 0, 0.1);
     }
 
     div[role="radiogroup"] label {
         background-color: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 10px 20px;
+        padding: 12px 20px;
         border-radius: 10px;
         cursor: pointer;
         transition: all 0.3s ease;
         text-align: center;
         flex: 1;
         color: white !important;
+        font-weight: bold;
     }
 
     div[role="radiogroup"] label:hover {
-        background-color: rgba(255, 215, 0, 0.1);
+        background-color: rgba(255, 215, 0, 0.15);
         border-color: #FFD700;
         transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
     /* حقول الإدخال */
@@ -113,11 +132,11 @@ st.markdown("""
         padding: 15px;
         border: none;
         box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .stButton button:hover {
         transform: scale(1.02);
-        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.6);
+        box-shadow: 0 8px 25px rgba(218, 165, 32, 0.7);
     }
 
     /* أنيميشن */
@@ -135,12 +154,13 @@ st.markdown("""
         margin-bottom: 10px;
         border-right: 4px solid #FFD700;
         padding-right: 10px;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب (CSS Styles)
+# 🎨 القوالب (CSS Styles) - لم تتغير
 # ---------------------------------------------------------
 STYLE_OFFICIAL = """
 <style>
@@ -233,16 +253,16 @@ def get_working_model():
 # 🏗️ بناء الواجهة (Layout)
 # ---------------------------------------------------------
 
-# 1. الهيدر
+# 1. الهيدر الفخم (تمت استعادته)
 st.markdown("""
-    <div class="hero-container">
+    <div class="hero-section">
         <div class="main-title">تيار الحكمة الوطني</div>
         <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
     </div>
 """, unsafe_allow_html=True)
 
 # 2. بطاقات الاختيار العلوية
-st.markdown('<div style="text-align: center; margin-bottom: 10px; color: #FFD700; font-weight: bold;">اختر نمط التقرير المطلوب:</div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; margin-bottom: 15px; color: #FFD700; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">اختر نمط التقرير المطلوب:</div>', unsafe_allow_html=True)
 
 report_type = st.radio(
     "",
@@ -253,7 +273,7 @@ report_type = st.radio(
 
 st.markdown("---")
 
-# 3. منطقة العمل (مع تعديل المحاذاة الدقيقة)
+# 3. منطقة العمل (مع المحاذاة الدقيقة)
 col_input, col_upload = st.columns([2, 1])
 
 with col_input:
