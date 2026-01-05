@@ -246,14 +246,10 @@ STYLE_DIGITAL = """
     footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-style: italic; color: #777; }
 </style>
 """
+
 STYLE_ANALYTICAL = """
 <style>
     body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
     .container { max-width: 1100px; margin: 20px auto; padding: 20px; }
     header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
-    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.07); margin-bottom: 25px; padding: 25px; }
-    .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
-    .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
-    .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; }
-    .pyramid-grid 
+    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,
