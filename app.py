@@ -128,6 +128,7 @@ st.markdown("""
         text-align: right;
         padding: 15px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        margin-top: 10px !important;  /* تعديل لجعلها أقرب */
     }
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
@@ -177,6 +178,11 @@ st.markdown("""
     .stFileUploader:hover {
         border-color: #FFD700;
         box-shadow: 0 6px 30px rgba(255, 215, 0, 0.2);
+    }
+
+    /* تعديل على العناوين لجعلها أقرب */
+    .stMarkdown h3 {
+        margin-bottom: 10px !important;  /* تقليل المسافة تحت العنوان */
     }
 
     /* رسوم متحركة عامة */
@@ -233,7 +239,7 @@ st.markdown("""
 col_input, col_upload = st.columns([2, 1])
 
 with col_input:
-    st.markdown("### 📝 محتوى التقرير الاستراتيجي")
+    st.markdown("### 📝 محتوى التقرير الاستراتيجي")  # العنوان أقرب الآن
     report_text = st.text_area("أدخل البيانات الخام هنا:", height=250, placeholder="ابدأ الكتابة هنا...")
 
 with col_upload:
@@ -251,7 +257,26 @@ with col_upload:
 # 🚀 زر التشغيل والمنطق البرمجي
 # ---------------------------------------------------------
 st.markdown("---")
-if st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)"):
+
+# استخدام columns للزر ودائرة التحميل بجانبه
+col_button, col_spinner = st.columns([3, 1])  # الزر أكبر، الspinner صغير
+
+with col_button:
+    generate_button = st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)")
+
+with col_spinner:
+    spinner_placeholder = st.empty()  # مكان ثابت للspinner
+
+# عناصر ثابتة للرسائل لتجنب الحركة
+success_placeholder = st.empty()
+error_placeholder = st.empty()
+download_placeholder = st.empty()
+
+if generate_button:
+    # إظهار الspinner بجانب الزر
+    with spinner_placeholder:
+        with st.spinner('جاري التحليل...'):
+            pass  # الspinner سيظهر هنا
     
     # 1. تجميع البيانات
     final_input = report_text
@@ -263,7 +288,8 @@ if st.button("🚀 توليد التقرير التفصيلي (بدون اختص
     
     # 2. التحقق
     if not final_input.strip():
-        st.warning("⚠️ الرجاء إدخال نص أو رفع ملف للبدء.")
+        with error_placeholder:
+            st.warning("⚠️ الرجاء إدخال نص أو رفع ملف للبدء.")
     else:
         try:
             # 3. الاتصال
@@ -298,19 +324,28 @@ if st.button("🚀 توليد التقرير التفصيلي (بدون اختص
                 response = model.generate_content(prompt)
                 html_code = response.text.replace("```html", "").replace("```", "")
                 
-                st.balloons()
-                st.success("✅ تم إنشاء التقرير المفصل بنجاح!")
+                # إخفاء الspinner بعد الانتهاء
+                spinner_placeholder.empty()
+                
+                # عرض الرسائل في الأماكن الثابتة
+                with success_placeholder:
+                    st.balloons()
+                    st.success("✅ تم إنشاء التقرير المفصل بنجاح!")
                 
                 # عرض النتيجة
                 st.components.v1.html(html_code, height=1000, scrolling=True)
                 
-                # زر التحميل
-                st.download_button(
-                    label="📥 تحميل التقرير (HTML)",
-                    data=html_code,
-                    file_name="Strategic_Report_AlHikma.html",
-                    mime="text/html"
-                )
+                # زر التحميل في مكان ثابت
+                with download_placeholder:
+                    st.download_button(
+                        label="📥 تحميل التقرير (HTML)",
+                        data=html_code,
+                        file_name="Strategic_Report_AlHikma.html",
+                        mime="text/html"
+                    )
 
         except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+            # إخفاء الspinner عند الخطأ
+            spinner_placeholder.empty()
+            with error_placeholder:
+                st.error(f"حدث خطأ: {e}")
