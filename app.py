@@ -7,7 +7,7 @@ import random
 import time
 
 # ---------------------------------------------------------
-# 1. إعدادات الصفحة
+# 1. إعداد الصفحة
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
@@ -21,7 +21,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 def get_api_key():
     keys = []
-    # محاولة جلب كل المفاتيح المحتملة
+    # البحث عن أي مفتاح متاح
     for key_name in ["KEY_1", "KEY_2", "KEY_3", "GOOGLE_API_KEY"]:
         if key_name in st.secrets:
             keys.append(st.secrets[key_name])
@@ -30,41 +30,22 @@ def get_api_key():
         st.error("⚠️ لم يتم العثور على مفاتيح في Secrets.")
         st.stop()
     
-    # إرجاع مفتاح عشوائي لتوزيع الحمل
     return random.choice(keys)
 
 # ---------------------------------------------------------
-# 3. محرك الاتصال الذكي (يحل مشكلة 404 و 429)
+# 3. محرك الاتصال (بسيط ومباشر)
 # ---------------------------------------------------------
-def get_gemini_response(prompt):
+def generate_response(prompt):
     try:
-        # 1. إعداد المفتاح
-        current_key = get_api_key()
-        genai.configure(api_key=current_key)
+        api_key = get_api_key()
+        genai.configure(api_key=api_key)
         
-        # 2. محاولة استخدام الموديل السريع (Flash)
+        # نستخدم الموديل المستقر
         model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         return response.text
-        
     except Exception as e:
-        error_msg = str(e)
-        
-        # إذا كان الخطأ 404 (الموديل غير موجود)، نستخدم الموديل القديم
-        if "404" in error_msg:
-            try:
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content(prompt)
-                return response.text
-            except Exception as e2:
-                return f"Error: {e2}"
-        
-        # إذا كان الخطأ 429 (سرعة)، نطلب الانتظار
-        elif "429" in error_msg:
-            return "BUSY"
-            
-        else:
-            return f"Error: {error_msg}"
+        return f"Error: {str(e)}"
 
 # ---------------------------------------------------------
 # 4. دوال مساعدة
@@ -84,7 +65,7 @@ def extract_text_from_file(uploaded_file):
     return text
 
 # ---------------------------------------------------------
-# 5. واجهة التطبيق (الكحلي والذهبي)
+# 5. التصميم (الكحلي والذهبي - للموقع)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -96,6 +77,7 @@ st.markdown("""
         color: white;
         direction: rtl;
     }
+    
     .block-container { padding-top: 2rem !important; }
     header, footer { visibility: hidden; }
 
@@ -106,7 +88,7 @@ st.markdown("""
         box-shadow: 0 0 30px rgba(0, 31, 63, 0.5);
     }
     .main-title {
-        font-size: 50px; font-weight: 900;
+        font-size: 55px; font-weight: 900;
         background: linear-gradient(to bottom, #FFD700, #B8860B);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         margin-bottom: 10px;
@@ -121,11 +103,14 @@ st.markdown("""
     .stButton button {
         background: linear-gradient(45deg, #FFD700, #DAA520) !important;
         color: #001f3f !important; font-weight: bold; border-radius: 50px;
-        width: 100%; border: none; padding: 10px;
+        width: 100%; border: none; padding: 10px; font-size: 18px;
     }
 </style>
 """, unsafe_allow_html=True)
 
+# ---------------------------------------------------------
+# 6. الهيكلية
+# ---------------------------------------------------------
 st.markdown("""
     <div class="hero-section">
         <div class="main-title">تيار الحكمة الوطني</div>
@@ -142,10 +127,11 @@ with col2:
     uploaded_file = st.file_uploader("f", label_visibility="collapsed")
 
 # ---------------------------------------------------------
-# 6. التشغيل
+# 7. التشغيل والتوليد
 # ---------------------------------------------------------
 st.markdown("---")
-if st.button("🚀 توليد التقرير"):
+if st.button("🚀 توليد التقرير الاستراتيجي"):
+    
     final_input = report_text
     if uploaded_file: final_input += extract_text_from_file(uploaded_file)
     
@@ -153,33 +139,36 @@ if st.button("🚀 توليد التقرير"):
         st.warning("الرجاء إدخال بيانات.")
     else:
         with st.spinner("جاري التحليل..."):
+            # هذا البرومبت يضمن تصميم "التركواز والبرتقالي" للتقرير المولد
             prompt = f"""
-            Act as a Senior UI Developer. Create a HTML Dashboard Report.
+            Act as a Senior UI Developer. 
+            Task: Create a Single-File HTML Dashboard Report based on the data.
             
-            **DESIGN (Teal & Amber):**
-            - Colors: Teal (#00796b), Amber (#ff6f00), White Cards.
-            - Font: 'Cairo'.
-            - Layout: Centered, RTL.
+            **DESIGN STYLE (Teal & Amber):**
+            - Primary: #00796b (Teal)
+            - Secondary: #ff6f00 (Amber)
+            - Background: #f8f9fa (Light Gray)
+            - Cards: White
             
-            **CSS:**
-            body {{ background: #f4f6f8; direction: rtl; font-family: 'Cairo'; padding: 20px; }}
-            .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
+            **CSS MUST INCLUDE:**
+            body {{ direction: rtl; font-family: 'Cairo', sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }}
+            .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
             h1 {{ color: #004d40; text-align: center; border-bottom: 4px solid #00796b; padding-bottom: 15px; }}
-            .card {{ background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }}
-            table {{ width: 100%; border-collapse: collapse; }}
+            .stat-card {{ background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }}
+            .stat-val {{ font-size: 2.5em; color: #00796b; font-weight: bold; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
             th {{ background: #00796b; color: white; padding: 10px; }}
             td {{ border: 1px solid #ddd; padding: 8px; text-align: right; }}
             
             **DATA:** {final_input}
-            **OUTPUT:** Only RAW HTML code.
+            **OUTPUT:** RAW HTML CODE ONLY.
             """
             
-            result = get_gemini_response(prompt)
+            result = generate_response(prompt)
             
-            if result == "BUSY":
-                st.warning("⏳ السيرفر مشغول (ضغط عالي). يرجى الانتظار 30 ثانية والمحاولة مجدداً.")
-            elif "Error" in result:
-                st.error(result)
+            if "Error" in result:
+                st.error(f"حدث خطأ: {result}")
+                st.info("تلميح: إذا كان الخطأ 404، فهذا يعني أن ملف requirements.txt لم يتم تحديثه بعد.")
             else:
                 html_code = result.replace("```html", "").replace("```", "")
                 st.balloons()
