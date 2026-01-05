@@ -42,7 +42,7 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🎨 التصميم والمظهر (تحديث الـ CSS للمسافات)
+# 🎨 التصميم والمظهر (نفس تصميمك مع تعديلات المسافات)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
@@ -57,7 +57,7 @@ st.markdown("""
 
     /* الخلفية والخطوط */
     .stApp {
-        background: linear-gradient(135deg, #001f3f 0%, #003366 50%, #000d1a 100%);
+        background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%);
         font-family: 'Tajawal', sans-serif;
         color: white;
         direction: rtl;
@@ -66,75 +66,80 @@ st.markdown("""
     #MainMenu, footer, header {visibility: hidden;}
     .block-container {padding-top: 2rem !important;}
 
-    /* --- الهيدر --- */
+    /* الهيدر */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8));
-        border-radius: 25px;
+        border-radius: 20px;
         padding: 40px 20px;
         text-align: center;
-        margin-bottom: 40px; /* مسافة تحت الهيدر */
-        border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 0 10px 40px rgba(0, 31, 63, 0.6);
-        position: relative; overflow: hidden;
+        margin-bottom: 40px;
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        box-shadow: 0 0 30px rgba(0, 31, 63, 0.5), inset 0 0 20px rgba(0,0,0,0.5);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
     }
     .hero-section::before {
         content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
         background: linear-gradient(90deg, transparent, #FFD700, transparent);
     }
     .main-title {
-        font-size: 50px; font-weight: 900;
-        background: linear-gradient(to right, #FFD700, #FFA500);
+        font-size: 55px; font-weight: 900;
+        background: linear-gradient(to bottom, #FFD700, #B8860B);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         margin-bottom: 10px;
+        text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
     }
-    .sub-title { font-size: 20px; color: #e0e0e0; letter-spacing: 1px; }
+    .sub-title { font-size: 22px; color: #e0e0e0; font-weight: 500; letter-spacing: 1px; }
 
-    /* --- تحسين المسافات (الحل لمشكلة البعد) --- */
-    /* تقريب العناوين من الحقول */
-    div[data-testid="stMarkdownContainer"] > h3 {
-        margin-bottom: -15px !important; /* سحب العنوان للأسفل */
+    /* --- تعديل 1: تقريب العناوين من الحقول --- */
+    h3 {
+        margin-bottom: -1rem !important; /* سحب العنوان للأسفل */
         padding-bottom: 0px !important;
-        font-size: 22px !important;
-        color: #FFD700 !important;
+        z-index: 99;
+        position: relative;
     }
     
     /* تنسيق الحقول */
     .stTextArea textarea {
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 15px !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
         color: #fff !important;
+        font-size: 16px !important;
         text-align: right;
-        margin-top: 5px !important;
+        margin-top: 0px !important; /* إلغاء المسافة العلوية */
     }
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2) !important;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.1) !important;
     }
 
     /* تنسيق صندوق الرفع */
     .stFileUploader {
         margin-top: 5px !important;
-        background-color: rgba(255, 255, 255, 0.05);
-        border-radius: 15px; border: 1px dashed rgba(255, 215, 0, 0.4);
+        background-color: rgba(255, 255, 255, 0.03);
+        padding: 20px; border-radius: 15px;
+        border: 1px dashed rgba(255, 215, 0, 0.3);
     }
 
-    /* --- تنسيق الزر ودائرة التحميل --- */
+    /* الأزرار */
     .stButton button {
-        background: linear-gradient(45deg, #FFD700, #DAA520) !important;
+        background: linear-gradient(45deg, #FFD700, #DAA520);
         color: #001f3f !important;
         font-weight: 900 !important;
         font-size: 20px !important;
+        padding: 0.75rem 2rem !important;
         border-radius: 50px !important;
         border: none !important;
         width: 100%;
-        height: 60px; /* تثبيت ارتفاع الزر */
-        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.3);
+        height: 60px; /* تثبيت الارتفاع */
+        box-shadow: 0 4px 15px rgba(218, 165, 32, 0.3);
         transition: transform 0.2s;
     }
     .stButton button:hover { transform: scale(1.02); }
     
-    /* تنسيق الـ Spinner */
+    /* لون دائرة التحميل */
     .stSpinner > div {
         border-top-color: #FFD700 !important;
     }
@@ -143,7 +148,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🏗️ الهيكلية (Layout)
+# 🏗️ الهيكل الرئيسي
 # ---------------------------------------------------------
 
 # الهيدر
@@ -154,50 +159,53 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# الأعمدة الرئيسية
+# التقسيم
 col_input, col_upload = st.columns([2, 1])
 
 with col_input:
-    st.markdown("### 📝 محتوى التقرير الاستراتيجي") 
-    report_text = st.text_area("input_area", height=250, placeholder="ابدأ الكتابة هنا...", label_visibility="collapsed")
+    # استخدام markdown عادي ليكون العنوان قريباً جداً
+    st.markdown("### 📝 محتوى التقرير الاستراتيجي")
+    # label_visibility="collapsed" لإخفاء العنوان الأصلي البعيد
+    report_text = st.text_area("report", height=250, placeholder="ابدأ الكتابة هنا...", label_visibility="collapsed")
 
 with col_upload:
     st.markdown("### 📎 المصادر والبيانات")
-    uploaded_file = st.file_uploader("upload_area", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("files", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
     
-    st.info("سيتم دمج النص مع الملف المرفق تلقائياً.")
+    st.info("""
+    **💡 تلميح:**
+    النظام مصمم لاستيعاب التقارير الطويلة.
+    """)
 
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 🚀 زر التشغيل + دائرة التحميل الجانبية
+# 🚀 زر التشغيل + دائرة التحميل الجانبية (تعديل 2)
 # ---------------------------------------------------------
 
-# تقسيم المنطقة السفلية: الزر يأخذ مساحة كبيرة (4)، ومساحة صغيرة (1) لدائرة التحميل
-col_btn, col_loading = st.columns([4, 1])
+# نقسم السطر الأخير إلى: [زر كبير] و [مكان صغير للتحميل]
+col_btn, col_loader = st.columns([4, 1])
 
 with col_btn:
-    # الزر الثابت
-    run_process = st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)")
+    run_btn = st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)")
 
 # المنطق البرمجي
-if run_process:
+if run_btn:
     
-    # التحقق من المدخلات
-    final_input = report_text
-    
-    # نظهر دائرة التحميل في العمود الجانبي الصغير
-    with col_loading:
-        with st.spinner(''): # سبينر بدون نص ليكون شكله دائرة فقط
+    # نظهر دائرة التحميل في العمود الصغير المجاور
+    with col_loader:
+        with st.spinner(''): # سبينر صامت (دائرة فقط)
             
-            # --- العمليات الثقيلة تبدأ هنا ---
+            # --- العمليات ---
+            final_input = report_text
+            
             if uploaded_file:
                 file_content = extract_text_from_file(uploaded_file)
                 final_input += f"\n\n--- محتوى الملف المرفق ---\n{file_content}"
             
             if not final_input.strip():
-                st.warning("⚠️ لا توجد بيانات!")
-                processed = False
+                st.warning("⚠️ الرجاء إدخال بيانات.")
+                result_html = None
             else:
                 try:
                     genai.configure(api_key=API_KEY)
@@ -206,26 +214,25 @@ if run_process:
                     prompt = f"""
                     You are a Strategic Data Analyst for 'Al-Hikma National Movement'.
                     **CRITICAL INSTRUCTIONS:**
-                    1. **NO SUMMARIZATION:** Do NOT summarize. Present ALL details.
+                    1. **NO SUMMARIZATION:** Do NOT summarize. Process and present ALL details.
                     2. **FULL REPORT:** Generate a comprehensive HTML report.
-                    3. **Design:** Al-Hikma Theme (Navy Blue #001f3f & Gold #FFD700). RTL Arabic.
+                    3. **Theme:** Al-Hikma Corporate (Navy Blue #001f3f & Gold #FFD700). RTL.
                     
                     **Input Data:** {final_input}
-                    
                     **Output:** Return ONLY raw HTML code.
                     """
                     
                     response = model.generate_content(prompt)
-                    html_code = response.text.replace("```html", "").replace("```", "")
-                    processed = True
+                    result_html = response.text.replace("```html", "").replace("```", "")
+                    
                 except Exception as e:
                     st.error(f"خطأ: {e}")
-                    processed = False
-            # --- انتهت العمليات الثقيلة ---
+                    result_html = None
+            # --- انتهى التحميل ---
 
-    # الآن نظهر النتائج تحت المنطقة (بعد اختفاء التحميل)
-    if processed:
+    # عرض النتائج (خارج منطقة التحميل)
+    if result_html:
         st.balloons()
         st.success("✅ تم الإنشاء بنجاح!")
-        st.components.v1.html(html_code, height=1000, scrolling=True)
-        st.download_button("📥 تحميل التقرير (HTML)", html_code, "Strategic_Report.html", "text/html")
+        st.components.v1.html(result_html, height=1000, scrolling=True)
+        st.download_button("📥 تحميل التقرير (HTML)", result_html, "Report.html", "text/html")
