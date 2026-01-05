@@ -14,10 +14,120 @@ except:
     st.stop()
 
 # ---------------------------------------------------------
-# 🎨 القوالب والتصاميم (CSS Styles)
+# 🎨 إعدادات الصفحة والتصميم الحديث (Modern UI)
 # ---------------------------------------------------------
+st.set_page_config(page_title="منصة التحليل الاستراتيجي", page_icon="🦅", layout="wide")
 
-# 1. القالب الرسمي (Strategic)
+# CSS متطور جداً لإلغاء السايد بار وعمل تصميم زجاجي
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
+    
+    /* إعدادات الخط والاتجاه */
+    .stApp {
+        background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%);
+        font-family: 'Tajawal', sans-serif;
+        direction: rtl;
+    }
+
+    /* إخفاء القائمة الجانبية والهيدر الافتراضي تماماً */
+    [data-testid="stSidebar"] { display: none; }
+    header { visibility: hidden; }
+    #MainMenu { visibility: hidden; }
+
+    /* تصميم الهيدر الخاص بنا */
+    .hero-container {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-bottom: 30px;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    .main-title {
+        font-size: 40px;
+        font-weight: 900;
+        background: linear-gradient(to right, #FFD700, #FDB931);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 5px;
+    }
+
+    .sub-title {
+        color: #e0e0e0;
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    /* تنسيق أزرار الراديو لتكون كبطاقات */
+    div[role="radiogroup"] {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 15px;
+        background: rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    div[role="radiogroup"] label {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        flex: 1;
+    }
+
+    div[role="radiogroup"] label:hover {
+        background-color: rgba(255, 215, 0, 0.1);
+        border-color: #FFD700;
+        transform: translateY(-3px);
+    }
+
+    /* حقول الإدخال */
+    .stTextArea textarea, .stFileUploader {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        color: white !important;
+    }
+    
+    /* زر التشغيل */
+    .stButton button {
+        background: linear-gradient(90deg, #FFD700, #DAA520);
+        color: #001f3f !important;
+        font-weight: 900;
+        font-size: 20px;
+        border-radius: 12px;
+        width: 100%;
+        padding: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+        transition: transform 0.2s;
+    }
+    .stButton button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.6);
+    }
+
+    /* أنيميشن بسيط */
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(-20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# 🎨 القوالب (CSS Strings) - نفس القوالب السابقة
+# ---------------------------------------------------------
 STYLE_OFFICIAL = """
 <style>
     :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
@@ -39,7 +149,6 @@ STYLE_OFFICIAL = """
 </style>
 """
 
-# 2. القالب الرقمي (Media)
 STYLE_DIGITAL = """
 <style>
     body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #f4f7f9; color: #333; direction: rtl; }
@@ -58,7 +167,6 @@ STYLE_DIGITAL = """
 </style>
 """
 
-# 3. القالب التحليلي (Analytical)
 STYLE_ANALYTICAL = """
 <style>
     body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
@@ -108,105 +216,90 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🚀 إعدادات الصفحة والتصميم
+# 🏗️ بناء الواجهة (Layout)
 # ---------------------------------------------------------
-st.set_page_config(page_title="منصة التحليل الاستراتيجي - الحكمة", page_icon="🦅", layout="wide")
 
+# 1. الهيدر الجديد (داخل الصفحة وليس كصورة ثابتة)
 st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
-    .stApp { background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%); font-family: 'Tajawal', sans-serif; color: white; direction: rtl; }
-    .hero-section { background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8)); border-radius: 20px; padding: 30px; text-align: center; margin-bottom: 20px; border: 1px solid rgba(255, 215, 0, 0.3); }
-    .main-title { font-size: 45px; font-weight: 900; color: #FFD700; text-shadow: 0px 4px 10px rgba(0,0,0,0.5); }
-    .stButton button { background: linear-gradient(45deg, #FFD700, #DAA520); color: #001f3f !important; font-weight: 900; border-radius: 50px; font-size: 18px; }
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# 🏗️ الواجهة الرئيسية (التعديل هنا على المسميات)
-# ---------------------------------------------------------
-
-st.markdown("""
-    <div class="hero-section">
+    <div class="hero-container">
         <div class="main-title">تيار الحكمة الوطني</div>
-        <div style="color: #e0e0e0; font-size: 18px;">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
+        <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
     </div>
 """, unsafe_allow_html=True)
 
-# القائمة الجانبية (محدثة بأسماء وظيفية)
-with st.sidebar:
-    st.header("⚙️ إخراج التقرير")
-    st.markdown("اختر النمط الأنسب لطبيعة البيانات:")
-    report_type = st.radio(
-        "نوع القالب:",
-        ("🏛️ نمط الكتاب الرسمي (Official)", 
-         "📱 نمط الداشبورد الرقمي (Digital)", 
-         "📊 نمط التحليل العميق (Analysis)")
-    )
-    st.success(f"النمط المختار: {report_type.split('(')[0]}")
+# 2. لوحة التحكم العلوية (بديل السايد بار)
+st.markdown('<div style="text-align: center; margin-bottom: 10px; color: #FFD700; font-weight: bold;">اختر نمط التقرير المطلوب:</div>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([2, 1])
+# استخدام radio أفقي (يشبه الأزرار في الـ CSS أعلاه)
+report_type = st.radio(
+    "",
+    ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق"),
+    horizontal=True,
+    label_visibility="collapsed"
+)
 
-with col1:
-    st.markdown("### 📝 البيانات والمدخلات")
-    user_text = st.text_area("أدخل نص التقرير أو الملاحظات هنا:", height=200)
+st.markdown("---")
 
-with col2:
-    st.markdown("### 📎 المصادر (اختياري)")
-    uploaded_file = st.file_uploader("رفع ملف (PDF, Excel)", type=['pdf', 'xlsx', 'txt'])
+# 3. منطقة العمل (المدخلات)
+col_input, col_upload = st.columns([2, 1])
 
-# ---------------------------------------------------------
-# 🧠 المنطق البرمجي
-# ---------------------------------------------------------
-if st.button("🚀 إنشاء التقرير الاحترافي"):
+with col_input:
+    st.markdown("### 📝 النص / البيانات الخام")
+    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...")
+
+with col_upload:
+    st.markdown("### 📎 ملفات مساعدة")
+    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'])
+    if uploaded_file:
+        st.success(f"تم إرفاق: {uploaded_file.name}")
+
+# 4. زر التنفيذ
+st.markdown("<br>", unsafe_allow_html=True)
+if st.button("🚀 بدء المعالجة وإنشاء التقرير"):
     
     full_text = user_text
     if uploaded_file:
-        with st.spinner('جاري استخراج البيانات...'):
+        with st.spinner('📂 جاري قراءة الملف...'):
             full_text += f"\n\n[محتوى الملف]:\n{extract_text_from_file(uploaded_file)}"
 
     if not full_text.strip():
-        st.warning("⚠️ يرجى إدخال بيانات أو رفع ملف.")
+        st.warning("⚠️ لا توجد بيانات للتحليل! يرجى كتابة نص أو رفع ملف.")
     else:
         try:
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(get_working_model())
 
-            # تحديد المتغيرات بناءً على الاسم الجديد
+            # تجهيز القوالب بناءً على الاختيار
             target_css = ""
             design_rules = ""
-            
-            # 1. القالب الرسمي (كان اسمه الاستراتيجي)
-            if "Official" in report_type:
+            file_label = "Report"
+
+            if "الرسمي" in report_type:
                 target_css = STYLE_OFFICIAL
+                file_label = "Official_Report"
                 design_rules = """
-                Style: Official, High-End Corporate Report.
+                Style: Official Corporate Report.
                 - Use <div class="card"> for sections.
-                - Use <div class="card full-width"> for wide sections.
-                - Use HTML <table> inside cards for structured data.
-                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for key stats.
+                - Use HTML <table> inside cards.
+                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li>.
                 """
-            
-            # 2. القالب الرقمي (كان اسمه الإعلامي)
-            elif "Digital" in report_type:
+            elif "الرقمي" in report_type:
                 target_css = STYLE_DIGITAL
+                file_label = "Digital_Dashboard"
                 design_rules = """
-                Style: Modern Digital Dashboard (Social Media style).
+                Style: Modern Digital Dashboard.
                 - Use <section id="summary"> for highlights.
-                - Use <article class="card"> for specific platform details.
-                - Use <div class="goal"> for final recommendations.
-                - Focus on readability and visual hierarchy.
+                - Use <article class="card"> for details.
+                - Use <div class="goal"> for conclusion.
                 """
-            
-            # 3. القالب التحليلي
-            else:
+            else: # التحليل العميق
                 target_css = STYLE_ANALYTICAL
+                file_label = "Deep_Analysis"
                 design_rules = """
-                Style: Statistical & Hierarchical Analysis.
-                - Use <div class="stats-grid"> for top KPIs.
-                - Use <div class="pyramid-grid"> for tiered data (hierarchy).
-                - Inside pyramid grid, use <div class="tier-card tier-upper"> (or middle/weak).
-                - MUST calculate percentages and use <div class="bar-container"><div class="bar" style="width: X%;"></div></div>.
+                Style: Statistical Hierarchy.
+                - Use <div class="stats-grid"> for numbers.
+                - Use <div class="pyramid-grid"> for tiers.
+                - Use <div class="bar-container"> for percentages.
                 """
 
             footer_content = """
@@ -217,38 +310,26 @@ if st.button("🚀 إنشاء التقرير الاحترافي"):
             """
 
             prompt = f"""
-            You are an expert Data Analyst & Web Developer for 'Al-Hikma National Movement'.
-            
-            **OBJECTIVE:** Convert the provided raw text/data into a professional HTML report.
-
-            **DESIGN CHOICE:** {report_type}
-            **DESIGN RULES (Strictly Follow):**
-            {design_rules}
-
-            **DATA:**
-            {full_text}
-
-            **CSS TO EMBED:**
-            {target_css}
-
-            **INSTRUCTIONS:**
+            You are an expert Data Analyst for 'Al-Hikma National Movement'.
+            **Role:** Convert raw data into a specific HTML format.
+            **Design Rules:** {design_rules}
+            **Input Data:** {full_text}
+            **Instructions:**
             1. Output ONLY valid HTML code.
-            2. Do not summarize; include all details.
-            3. Insert the provided CSS in <head>.
-            4. Insert the provided Footer before </body>.
-            5. Language: Arabic (Professional).
-
-            Generate the full HTML now.
+            2. Embed the following CSS in <head>: {target_css}
+            3. Insert this footer before </body>: {footer_content}
+            4. Language: Arabic.
             """
 
-            with st.spinner('جاري تحليل البيانات وتطبيق القالب المختار...'):
+            with st.spinner('🤖 جاري التحليل وصياغة التقرير...'):
                 response = model.generate_content(prompt)
                 html_output = response.text.replace("```html", "").replace("```", "")
 
+            # عرض النتيجة
             st.success("✅ تم إنشاء التقرير بنجاح!")
             st.components.v1.html(html_output, height=800, scrolling=True)
 
-            file_label = "Official_Report" if "Official" in report_type else "Digital_Report" if "Digital" in report_type else "Analysis_Report"
+            # التحميل
             st.download_button(
                 label="📥 تحميل التقرير (HTML)",
                 data=html_output,
@@ -257,4 +338,4 @@ if st.button("🚀 إنشاء التقرير الاحترافي"):
             )
 
         except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+            st.error(f"حدث خطأ تقني: {e}")
