@@ -205,9 +205,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# باقي الكود (القوالب والدوال) لم يتغير كثيرًا، لكن يمكن تحسينه لاحقًا إذا لزم الأمر.
-# (أدرجتها كما هي للاختصار، لكن في الواقع يمكن تعديلها لتتناسب مع التصميم الجديد)
-
+# ---------------------------------------------------------
+# 🎨 القوالب (CSS Styles) - محسنة لتتناسب مع التصميم الجديد
+# ---------------------------------------------------------
 STYLE_OFFICIAL = """
 <style>
     :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
@@ -243,4 +243,15 @@ STYLE_DIGITAL = """
     ul li { position: relative; padding-right: 35px; margin-bottom: 12px; }
     ul li::before { content: '•'; position: absolute; right: 0; color: #007bff; font-size: 1.8em; line-height: 1; }
     .goal { background-color: #e6f7ff; border: 1px solid #b3e0ff; padding: 18px; border-radius: 8px; text-align: center; margin-top: 20px; font-weight: bold; }
-    footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-style: italic; color: #777;
+    footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-style: italic; color: #777; }
+</style>
+"""
+
+STYLE_ANALYTICAL = """
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 20px; }
+    header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
+    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.07); margin-bottom: 25px; padding: 25px; }
+    .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; }
+    .stats-grid { display: grid; grid-template-columns: repeat
