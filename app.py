@@ -16,8 +16,6 @@ except:
 # ---------------------------------------------------------
 # 🛠️ الدوال الذكية (المحرك)
 # ---------------------------------------------------------
-
-# 1. دالة قراءة الملفات (PDF, Excel, TXT)
 def extract_text_from_file(uploaded_file):
     text_content = ""
     try:
@@ -35,7 +33,6 @@ def extract_text_from_file(uploaded_file):
         return f"خطأ في قراءة الملف: {e}"
     return text_content
 
-# 2. دالة البحث عن الموديل الشغال (لتفادي خطأ 404)
 def get_working_model():
     try:
         for m in genai.list_models():
@@ -45,7 +42,7 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🎨 التصميم والمظهر (تحديث حديث وتفاعلي)
+# 🎨 التصميم والمظهر (تحديث الـ CSS للمسافات)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
@@ -54,177 +51,99 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# حقن CSS الاحترافي المحدث (مع رسوم متحركة وتفاعلية)
 st.markdown("""
 <style>
-    /* استيراد خط تجوال */
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
 
-    /* الخلفية والخطوط مع gradient حديث */
+    /* الخلفية والخطوط */
     .stApp {
         background: linear-gradient(135deg, #001f3f 0%, #003366 50%, #000d1a 100%);
         font-family: 'Tajawal', sans-serif;
         color: white;
         direction: rtl;
-        animation: fadeIn 1s ease-in-out;
     }
 
-    /* إخفاء العناصر الافتراضية */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu, footer, header {visibility: hidden;}
     .block-container {padding-top: 2rem !important;}
 
-    /* الهيدر (العنوان الرئيسي) مع تأثيرات حديثة */
+    /* --- الهيدر --- */
     .hero-section {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8), rgba(0, 51, 102, 0.7));
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8));
         border-radius: 25px;
-        padding: 50px 30px;
+        padding: 40px 20px;
         text-align: center;
-        margin-bottom: 50px;
+        margin-bottom: 40px; /* مسافة تحت الهيدر */
         border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 0 10px 40px rgba(0, 31, 63, 0.6), inset 0 0 30px rgba(0,0,0,0.6);
-        backdrop-filter: blur(15px);
-        position: relative;
-        overflow: hidden;
-        animation: slideInFromTop 1.2s ease-out;
+        box-shadow: 0 10px 40px rgba(0, 31, 63, 0.6);
+        position: relative; overflow: hidden;
+    }
+    .hero-section::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+    }
+    .main-title {
+        font-size: 50px; font-weight: 900;
+        background: linear-gradient(to right, #FFD700, #FFA500);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+    }
+    .sub-title { font-size: 20px; color: #e0e0e0; letter-spacing: 1px; }
+
+    /* --- تحسين المسافات (الحل لمشكلة البعد) --- */
+    /* تقريب العناوين من الحقول */
+    div[data-testid="stMarkdownContainer"] > h3 {
+        margin-bottom: -15px !important; /* سحب العنوان للأسفل */
+        padding-bottom: 0px !important;
+        font-size: 22px !important;
+        color: #FFD700 !important;
     }
     
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 8px;
-        background: linear-gradient(90deg, transparent, #FFD700, #FFA500, transparent);
-        animation: shimmer 2s infinite;
-    }
-
-    .main-title {
-        font-size: 60px;
-        font-weight: 900;
-        background: linear-gradient(to right, #FFD700, #FFA500, #FFD700);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 15px;
-        text-shadow: 0px 6px 15px rgba(0,0,0,0.7);
-        animation: glow 2s ease-in-out infinite alternate;
-    }
-
-    .sub-title {
-        font-size: 24px;
-        color: #e0e0e0;
-        font-weight: 500;
-        letter-spacing: 1.5px;
-        animation: fadeInUp 1.5s ease-out;
-    }
-
-    /* حقول الإدخال مع تأثيرات تفاعلية */
+    /* تنسيق الحقول */
     .stTextArea textarea {
         background-color: rgba(255, 255, 255, 0.08) !important;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 15px !important;
         color: #fff !important;
-        font-size: 18px !important;
-        transition: all 0.4s ease;
         text-align: right;
-        padding: 15px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        margin-top: 5px !important;  /* تعديل لجعل العنوان أقرب */
+        margin-top: 5px !important;
     }
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.3), 0 4px 30px rgba(0,0,0,0.5) !important;
-        transform: scale(1.02);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2) !important;
     }
 
-    /* الأزرار مع hover وتأثيرات */
+    /* تنسيق صندوق الرفع */
+    .stFileUploader {
+        margin-top: 5px !important;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 15px; border: 1px dashed rgba(255, 215, 0, 0.4);
+    }
+
+    /* --- تنسيق الزر ودائرة التحميل --- */
     .stButton button {
-        background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+        background: linear-gradient(45deg, #FFD700, #DAA520) !important;
         color: #001f3f !important;
         font-weight: 900 !important;
-        font-size: 22px !important;
-        padding: 1rem 2.5rem !important;
+        font-size: 20px !important;
         border-radius: 50px !important;
         border: none !important;
         width: 100%;
-        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+        height: 60px; /* تثبيت ارتفاع الزر */
+        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.3);
+        transition: transform 0.2s;
     }
-    .stButton button::before {
-        content: '';
-        position: absolute;
-        top: 0; left: -100%; width: 100%; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    .stButton button:hover {
-        transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 10px 30px rgba(218, 165, 32, 0.6);
-    }
-    .stButton button:hover::before {
-        left: 100%;
+    .stButton button:hover { transform: scale(1.02); }
+    
+    /* تنسيق الـ Spinner */
+    .stSpinner > div {
+        border-top-color: #FFD700 !important;
     }
 
-    /* صندوق رفع الملفات مع تحسينات */
-    .stFileUploader {
-        background-color: rgba(255, 255, 255, 0.05);
-        padding: 25px;
-        border-radius: 20px;
-        border: 2px dashed rgba(255, 215, 0, 0.4);
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    .stFileUploader:hover {
-        border-color: #FFD700;
-        box-shadow: 0 6px 30px rgba(255, 215, 0, 0.2);
-    }
-
-    /* تعديل على العناوين لجعلها أقرب */
-    .stMarkdown h3 {
-        margin-bottom: 5px !important;  /* تقليل المسافة أكثر */
-    }
-
-    /* رسوم متحركة عامة */
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    @keyframes slideInFromTop {
-        from { transform: translateY(-50px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes fadeInUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes glow {
-        from { text-shadow: 0px 6px 15px rgba(0,0,0,0.7); }
-        to { text-shadow: 0px 6px 25px rgba(255, 215, 0, 0.5); }
-    }
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-
-    /* تحسينات للعناصر الأخرى */
-    .stSuccess, .stWarning, .stError {
-        border-radius: 15px;
-        padding: 15px;
-        animation: fadeIn 0.5s ease;
-    }
-    .stSpinner {
-        animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🏗️ واجهة المستخدم (Layout)
+# 🏗️ الهيكلية (Layout)
 # ---------------------------------------------------------
 
 # الهيدر
@@ -235,117 +154,78 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# التقسيم
+# الأعمدة الرئيسية
 col_input, col_upload = st.columns([2, 1])
 
 with col_input:
-    st.markdown("### 📝 محتوى التقرير الاستراتيجي")  # العنوان أقرب الآن
-    report_text = st.text_area("أدخل البيانات الخام هنا:", height=250, placeholder="ابدأ الكتابة هنا...")
+    st.markdown("### 📝 محتوى التقرير الاستراتيجي") 
+    report_text = st.text_area("input_area", height=250, placeholder="ابدأ الكتابة هنا...", label_visibility="collapsed")
 
 with col_upload:
     st.markdown("### 📎 المصادر والبيانات")
-    st.markdown("يمكنك رفع ملفات مساعدة للتحليل:")
-    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'])
+    uploaded_file = st.file_uploader("upload_area", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
     
-    st.info("""
-    **💡 تلميح:**
-    النظام مصمم لاستيعاب التقارير الطويلة.
-    سيتم دمج النص المكتوب مع محتوى الملف المرفق وتحليلهم سوياً.
-    """)
+    st.info("سيتم دمج النص مع الملف المرفق تلقائياً.")
 
-# ---------------------------------------------------------
-# 🚀 زر التشغيل والمنطق البرمجي
-# ---------------------------------------------------------
 st.markdown("---")
 
-# استخدام columns للزر ودائرة التحميل بجانبه
-col_button, col_spinner = st.columns([3, 1])  # الزر أكبر، الspinner صغير
+# ---------------------------------------------------------
+# 🚀 زر التشغيل + دائرة التحميل الجانبية
+# ---------------------------------------------------------
 
-generate_button = None
-with col_button:
-    generate_button = st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)")
+# تقسيم المنطقة السفلية: الزر يأخذ مساحة كبيرة (4)، ومساحة صغيرة (1) لدائرة التحميل
+col_btn, col_loading = st.columns([4, 1])
 
-spinner_placeholder = st.empty()  # placeholder للspinner
+with col_btn:
+    # الزر الثابت
+    run_process = st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)")
 
-# عناصر ثابتة للرسائل لتجنب الحركة
-success_placeholder = st.empty()
-error_placeholder = st.empty()
-download_placeholder = st.empty()
-
-if generate_button:
-    # إظهار الspinner في العمود الثاني
-    with col_spinner:
-        with st.spinner('جاري التحليل...'):
-            pass  # الspinner سيظهر هنا
+# المنطق البرمجي
+if run_process:
     
-    # 1. تجميع البيانات
+    # التحقق من المدخلات
     final_input = report_text
     
-    if uploaded_file:
-        with st.spinner('📂 جاري قراءة الملف المرفق واستخراج كافة البيانات...'):
-            file_content = extract_text_from_file(uploaded_file)
-            final_input += f"\n\n--- محتوى الملف المرفق ---\n{file_content}"
-    
-    # 2. التحقق
-    if not final_input.strip():
-        with error_placeholder:
-            st.warning("⚠️ الرجاء إدخال نص أو رفع ملف للبدء.")
-    else:
-        try:
-            # 3. الاتصال
-            genai.configure(api_key=API_KEY)
+    # نظهر دائرة التحميل في العمود الجانبي الصغير
+    with col_loading:
+        with st.spinner(''): # سبينر بدون نص ليكون شكله دائرة فقط
             
-            with st.spinner('🤖 جاري تحليل البيانات وبناء الموقع... (قد يستغرق وقتاً للدقة)'):
-                model_name = get_working_model()
-                model = genai.GenerativeModel(model_name)
-                
-                # 4. الأمر المفصل (Prompt)
-                prompt = f"""
-                You are a Strategic Data Analyst for 'Al-Hikma National Movement'.
-                
-                **CRITICAL INSTRUCTIONS:**
-                1. **NO SUMMARIZATION:** Do NOT summarize. Process and present ALL details, numbers, and names from the input.
-                2. **FULL REPORT:** Generate a comprehensive HTML report.
-                3. **ACCURACY:** Exact numbers must be preserved.
-                
-                **Task:** Convert this data into a High-End HTML Dashboard.
-                
-                **Design Specs (Al-Hikma Corporate):**
-                - Colors: Deep Navy Blue (#001f3f) & Gold (#FFD700).
-                - Font: 'Tajawal'.
-                - Language: Arabic (RTL).
-                - Style: Clean cards, shadows, responsive.
-                
-                **Input Data:** {final_input}
-                
-                **Output:** Return ONLY raw HTML code.
-                """
-                
-                response = model.generate_content(prompt)
-                html_code = response.text.replace("```html", "").replace("```", "")
-                
-                # إخفاء الspinner بعد الانتهاء
-                spinner_placeholder.empty()
-                
-                # عرض الرسائل في الأماكن الثابتة
-                with success_placeholder:
-                    st.balloons()
-                    st.success("✅ تم إنشاء التقرير المفصل بنجاح!")
-                
-                # عرض النتيجة
-                st.components.v1.html(html_code, height=1000, scrolling=True)
-                
-                # زر التحميل في مكان ثابت
-                with download_placeholder:
-                    st.download_button(
-                        label="📥 تحميل التقرير (HTML)",
-                        data=html_code,
-                        file_name="Strategic_Report_AlHikma.html",
-                        mime="text/html"
-                    )
+            # --- العمليات الثقيلة تبدأ هنا ---
+            if uploaded_file:
+                file_content = extract_text_from_file(uploaded_file)
+                final_input += f"\n\n--- محتوى الملف المرفق ---\n{file_content}"
+            
+            if not final_input.strip():
+                st.warning("⚠️ لا توجد بيانات!")
+                processed = False
+            else:
+                try:
+                    genai.configure(api_key=API_KEY)
+                    model = genai.GenerativeModel(get_working_model())
+                    
+                    prompt = f"""
+                    You are a Strategic Data Analyst for 'Al-Hikma National Movement'.
+                    **CRITICAL INSTRUCTIONS:**
+                    1. **NO SUMMARIZATION:** Do NOT summarize. Present ALL details.
+                    2. **FULL REPORT:** Generate a comprehensive HTML report.
+                    3. **Design:** Al-Hikma Theme (Navy Blue #001f3f & Gold #FFD700). RTL Arabic.
+                    
+                    **Input Data:** {final_input}
+                    
+                    **Output:** Return ONLY raw HTML code.
+                    """
+                    
+                    response = model.generate_content(prompt)
+                    html_code = response.text.replace("```html", "").replace("```", "")
+                    processed = True
+                except Exception as e:
+                    st.error(f"خطأ: {e}")
+                    processed = False
+            # --- انتهت العمليات الثقيلة ---
 
-        except Exception as e:
-            # إخفاء الspinner عند الخطأ
-            spinner_placeholder.empty()
-            with error_placeholder:
-                st.error(f"حدث خطأ: {e}")
+    # الآن نظهر النتائج تحت المنطقة (بعد اختفاء التحميل)
+    if processed:
+        st.balloons()
+        st.success("✅ تم الإنشاء بنجاح!")
+        st.components.v1.html(html_code, height=1000, scrolling=True)
+        st.download_button("📥 تحميل التقرير (HTML)", html_code, "Strategic_Report.html", "text/html")
