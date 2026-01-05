@@ -45,7 +45,7 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🎨 التصميم والمظهر (التصميم الفخم الذي طلبته)
+# 🎨 التصميم والمظهر (تحديث حديث وتفاعلي)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
@@ -54,18 +54,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# حقن CSS الاحترافي (نفس الكود القديم بالضبط)
+# حقن CSS الاحترافي المحدث (مع رسوم متحركة وتفاعلية)
 st.markdown("""
 <style>
     /* استيراد خط تجوال */
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
 
-    /* الخلفية والخطوط */
+    /* الخلفية والخطوط مع gradient حديث */
     .stApp {
-        background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%);
+        background: linear-gradient(135deg, #001f3f 0%, #003366 50%, #000d1a 100%);
         font-family: 'Tajawal', sans-serif;
         color: white;
         direction: rtl;
+        animation: fadeIn 1s ease-in-out;
     }
 
     /* إخفاء العناصر الافتراضية */
@@ -74,83 +75,144 @@ st.markdown("""
     header {visibility: hidden;}
     .block-container {padding-top: 2rem !important;}
 
-    /* الهيدر (العنوان الرئيسي) */
+    /* الهيدر (العنوان الرئيسي) مع تأثيرات حديثة */
     .hero-section {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8));
-        border-radius: 20px;
-        padding: 40px 20px;
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8), rgba(0, 51, 102, 0.7));
+        border-radius: 25px;
+        padding: 50px 30px;
         text-align: center;
-        margin-bottom: 40px;
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        box-shadow: 0 0 30px rgba(0, 31, 63, 0.5), inset 0 0 20px rgba(0,0,0,0.5);
-        backdrop-filter: blur(10px);
+        margin-bottom: 50px;
+        border: 2px solid rgba(255, 215, 0, 0.4);
+        box-shadow: 0 10px 40px rgba(0, 31, 63, 0.6), inset 0 0 30px rgba(0,0,0,0.6);
+        backdrop-filter: blur(15px);
         position: relative;
         overflow: hidden;
+        animation: slideInFromTop 1.2s ease-out;
     }
     
     .hero-section::before {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0; height: 5px;
-        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        top: 0; left: 0; right: 0; height: 8px;
+        background: linear-gradient(90deg, transparent, #FFD700, #FFA500, transparent);
+        animation: shimmer 2s infinite;
     }
 
     .main-title {
-        font-size: 55px;
+        font-size: 60px;
         font-weight: 900;
-        background: linear-gradient(to bottom, #FFD700, #B8860B);
+        background: linear-gradient(to right, #FFD700, #FFA500, #FFD700);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 10px;
-        text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+        margin-bottom: 15px;
+        text-shadow: 0px 6px 15px rgba(0,0,0,0.7);
+        animation: glow 2s ease-in-out infinite alternate;
     }
 
     .sub-title {
-        font-size: 22px;
+        font-size: 24px;
         color: #e0e0e0;
         font-weight: 500;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        animation: fadeInUp 1.5s ease-out;
     }
 
-    /* حقول الإدخال */
+    /* حقول الإدخال مع تأثيرات تفاعلية */
     .stTextArea textarea {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 15px !important;
         color: #fff !important;
-        font-size: 16px !important;
-        transition: all 0.3s ease;
+        font-size: 18px !important;
+        transition: all 0.4s ease;
         text-align: right;
+        padding: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.1) !important;
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.3), 0 4px 30px rgba(0,0,0,0.5) !important;
+        transform: scale(1.02);
     }
 
-    /* الأزرار */
+    /* الأزرار مع hover وتأثيرات */
     .stButton button {
-        background: linear-gradient(45deg, #FFD700, #DAA520);
+        background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
         color: #001f3f !important;
         font-weight: 900 !important;
-        font-size: 20px !important;
-        padding: 0.75rem 2rem !important;
+        font-size: 22px !important;
+        padding: 1rem 2.5rem !important;
         border-radius: 50px !important;
         border: none !important;
         width: 100%;
-        box-shadow: 0 4px 15px rgba(218, 165, 32, 0.3);
-        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stButton button::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%; width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
     }
     .stButton button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.5);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 30px rgba(218, 165, 32, 0.6);
+    }
+    .stButton button:hover::before {
+        left: 100%;
     }
 
-    /* صندوق رفع الملفات */
+    /* صندوق رفع الملفات مع تحسينات */
     .stFileUploader {
-        background-color: rgba(255, 255, 255, 0.03);
-        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 25px;
+        border-radius: 20px;
+        border: 2px dashed rgba(255, 215, 0, 0.4);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .stFileUploader:hover {
+        border-color: #FFD700;
+        box-shadow: 0 6px 30px rgba(255, 215, 0, 0.2);
+    }
+
+    /* رسوم متحركة عامة */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideInFromTop {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes glow {
+        from { text-shadow: 0px 6px 15px rgba(0,0,0,0.7); }
+        to { text-shadow: 0px 6px 25px rgba(255, 215, 0, 0.5); }
+    }
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    /* تحسينات للعناصر الأخرى */
+    .stSuccess, .stWarning, .stError {
         border-radius: 15px;
-        border: 1px dashed rgba(255, 215, 0, 0.3);
+        padding: 15px;
+        animation: fadeIn 0.5s ease;
+    }
+    .stSpinner {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
 """, unsafe_allow_html=True)
