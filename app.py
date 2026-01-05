@@ -14,10 +14,74 @@ except:
     st.stop()
 
 # ---------------------------------------------------------
-# 🛠️ الدوال الذكية (المحرك)
+# 🎨 القوالب والتصاميم (CSS & Structure)
 # ---------------------------------------------------------
 
-# 1. دالة قراءة الملفات (PDF, Excel, TXT)
+# 1. القالب الاستراتيجي (كحلي وذهبي - Dashboard)
+STYLE_STRATEGIC = """
+<style>
+    :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
+    body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 20px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    header { background-color: var(--navy-blue); color: var(--gold); padding: 20px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); grid-column: 1 / -1; margin-bottom: 20px; border-radius: 8px; }
+    header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
+    header h2 { margin: 10px 0 0; font-size: 1.5em; color: var(--light-gold); }
+    .card { background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 25px; display: flex; flex-direction: column; }
+    .card h3 { color: var(--navy-blue); font-size: 1.8em; margin-top: 0; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+    .card table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
+    .card table th { background-color: var(--navy-blue); color: var(--light-gold); padding: 12px; border: 1px solid #ddd; }
+    .card table td { border: 1px solid #ddd; padding: 12px; }
+    .card ul { list-style: none; padding: 0; }
+    .card ul li { padding: 10px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; }
+    .card ul li span.value { font-weight: 700; color: var(--gold); font-size: 1.1em; }
+    .card.full-width { grid-column: 1 / -1; }
+    footer { grid-column: 1 / -1; text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 0.9em; border-top: 2px solid var(--navy-blue); }
+</style>
+"""
+
+# 2. القالب الإعلامي (أزرق فاتح وجداول - Media)
+STYLE_MEDIA = """
+<style>
+    body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #f4f7f9; color: #333; direction: rtl; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 25px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); }
+    header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 3px solid #0056b3; }
+    h1 { color: #0056b3; font-size: 2.4em; font-weight: 700; }
+    h2 { color: #007bff; font-size: 2em; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    thead th { background-color: #007bff; color: white; padding: 14px; }
+    td { padding: 14px; border: 1px solid #e0e0e0; text-align: center; }
+    .card { background-color: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
+    ul li { position: relative; padding-right: 35px; margin-bottom: 12px; }
+    ul li::before { content: '•'; position: absolute; right: 0; color: #007bff; font-size: 1.8em; line-height: 1; }
+    .goal { background-color: #e6f7ff; border: 1px solid #b3e0ff; padding: 18px; border-radius: 8px; text-align: center; margin-top: 20px; font-weight: bold; }
+    footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-style: italic; color: #777; }
+</style>
+"""
+
+# 3. القالب التحليلي (هرمي ونسب مئوية - Analytical)
+STYLE_ANALYTICAL = """
+<style>
+    body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 20px; }
+    header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
+    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.07); margin-bottom: 25px; padding: 25px; }
+    .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+    .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
+    .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; }
+    .pyramid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .tier-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; background-color: #fcfcfc; border-top: 6px solid; }
+    .tier-upper { border-top-color: #d90429; } .tier-middle { border-top-color: #f7b801; } 
+    .bar-container { background-color: #e0e0e0; border-radius: 5px; height: 12px; margin-top: 12px; }
+    .bar { height: 100%; border-radius: 5px; }
+    .tier-upper .bar { background-color: #d90429; } .tier-middle .bar { background-color: #f7b801; }
+    footer { text-align: center; margin-top: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #ccc; padding-top: 20px;}
+</style>
+"""
+
+# ---------------------------------------------------------
+# 🛠️ الدوال المساعدة
+# ---------------------------------------------------------
 def extract_text_from_file(uploaded_file):
     text_content = ""
     try:
@@ -35,7 +99,6 @@ def extract_text_from_file(uploaded_file):
         return f"خطأ في قراءة الملف: {e}"
     return text_content
 
-# 2. دالة البحث عن الموديل الشغال (لتفادي خطأ 404)
 def get_working_model():
     try:
         for m in genai.list_models():
@@ -45,210 +108,158 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🎨 التصميم والمظهر (التصميم الفخم الذي طلبته)
+# 🚀 إعدادات الصفحة والتصميم الخارجي (Streamlit)
 # ---------------------------------------------------------
-st.set_page_config(
-    page_title="منصة التحليل الاستراتيجي",
-    page_icon="🦅",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="منصة التحليل الاستراتيجي - الحكمة", page_icon="🦅", layout="wide")
 
-# حقن CSS الاحترافي (نفس الكود القديم بالضبط)
+# CSS لواجهة Streamlit نفسها (النمط الفخم)
 st.markdown("""
 <style>
-    /* استيراد خط تجوال */
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
-
-    /* الخلفية والخطوط */
-    .stApp {
-        background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%);
-        font-family: 'Tajawal', sans-serif;
-        color: white;
-        direction: rtl;
-    }
-
-    /* إخفاء العناصر الافتراضية */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .block-container {padding-top: 2rem !important;}
-
-    /* الهيدر (العنوان الرئيسي) */
-    .hero-section {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8));
-        border-radius: 20px;
-        padding: 40px 20px;
-        text-align: center;
-        margin-bottom: 40px;
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        box-shadow: 0 0 30px rgba(0, 31, 63, 0.5), inset 0 0 20px rgba(0,0,0,0.5);
-        backdrop-filter: blur(10px);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 5px;
-        background: linear-gradient(90deg, transparent, #FFD700, transparent);
-    }
-
-    .main-title {
-        font-size: 55px;
-        font-weight: 900;
-        background: linear-gradient(to bottom, #FFD700, #B8860B);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 10px;
-        text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
-    }
-
-    .sub-title {
-        font-size: 22px;
-        color: #e0e0e0;
-        font-weight: 500;
-        letter-spacing: 1px;
-    }
-
-    /* حقول الإدخال */
-    .stTextArea textarea {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
-        color: #fff !important;
-        font-size: 16px !important;
-        transition: all 0.3s ease;
-        text-align: right;
-    }
-    .stTextArea textarea:focus {
-        border-color: #FFD700 !important;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.1) !important;
-    }
-
-    /* الأزرار */
-    .stButton button {
-        background: linear-gradient(45deg, #FFD700, #DAA520);
-        color: #001f3f !important;
-        font-weight: 900 !important;
-        font-size: 20px !important;
-        padding: 0.75rem 2rem !important;
-        border-radius: 50px !important;
-        border: none !important;
-        width: 100%;
-        box-shadow: 0 4px 15px rgba(218, 165, 32, 0.3);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .stButton button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 6px 20px rgba(218, 165, 32, 0.5);
-    }
-
-    /* صندوق رفع الملفات */
-    .stFileUploader {
-        background-color: rgba(255, 255, 255, 0.03);
-        padding: 20px;
-        border-radius: 15px;
-        border: 1px dashed rgba(255, 215, 0, 0.3);
-    }
+    .stApp { background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%); font-family: 'Tajawal', sans-serif; color: white; direction: rtl; }
+    .hero-section { background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.8)); border-radius: 20px; padding: 30px; text-align: center; margin-bottom: 20px; border: 1px solid rgba(255, 215, 0, 0.3); }
+    .main-title { font-size: 45px; font-weight: 900; color: #FFD700; text-shadow: 0px 4px 10px rgba(0,0,0,0.5); }
+    .stButton button { background: linear-gradient(45deg, #FFD700, #DAA520); color: #001f3f !important; font-weight: 900; border-radius: 50px; font-size: 18px; }
+    .footer-text { text-align: center; color: #888; font-size: 12px; margin-top: 50px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🏗️ واجهة المستخدم (Layout)
+# 🏗️ الواجهة الرئيسية
 # ---------------------------------------------------------
 
 # الهيدر
 st.markdown("""
     <div class="hero-section">
         <div class="main-title">تيار الحكمة الوطني</div>
-        <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
+        <div style="color: #e0e0e0; font-size: 18px;">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
     </div>
 """, unsafe_allow_html=True)
 
-# التقسيم
-col_input, col_upload = st.columns([2, 1])
+# القائمة الجانبية (اختيار نوع التقرير)
+with st.sidebar:
+    st.header("⚙️ إعدادات التقرير")
+    report_type = st.radio(
+        "اختر نوع تصميم التقرير:",
+        ("📊 التقرير الاستراتيجي (كحلي وذهبي)", 
+         "📘 التقرير الإعلامي (أزرق وجداول)", 
+         "📍 التقرير التحليلي (هرمي ونسب)")
+    )
+    st.info("سيتم تنسيق التقرير وتلوينه تلقائياً بناءً على اختيارك.")
 
-with col_input:
-    st.markdown("### 📝 محتوى التقرير الاستراتيجي")
-    report_text = st.text_area("أدخل البيانات الخام هنا:", height=250, placeholder="ابدأ الكتابة هنا...")
+col1, col2 = st.columns([2, 1])
 
-with col_upload:
-    st.markdown("### 📎 المصادر والبيانات")
-    st.markdown("يمكنك رفع ملفات مساعدة للتحليل:")
-    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'])
-    
-    st.info("""
-    **💡 تلميح:**
-    النظام مصمم لاستيعاب التقارير الطويلة.
-    سيتم دمج النص المكتوب مع محتوى الملف المرفق وتحليلهم سوياً.
-    """)
+with col1:
+    st.markdown("### 📝 البيانات والمدخلات")
+    user_text = st.text_area("أدخل نص التقرير أو الملاحظات هنا:", height=200)
+
+with col2:
+    st.markdown("### 📎 المصادر (اختياري)")
+    uploaded_file = st.file_uploader("رفع ملف (PDF, Excel)", type=['pdf', 'xlsx', 'txt'])
 
 # ---------------------------------------------------------
-# 🚀 زر التشغيل والمنطق البرمجي
+# 🧠 المنطق البرمجي والتوليد
 # ---------------------------------------------------------
-st.markdown("---")
-if st.button("🚀 توليد التقرير التفصيلي (بدون اختصار)"):
+if st.button("🚀 إنشاء التقرير الاحترافي"):
     
-    # 1. تجميع البيانات
-    final_input = report_text
-    
+    # 1. تجهيز المدخلات
+    full_text = user_text
     if uploaded_file:
-        with st.spinner('📂 جاري قراءة الملف المرفق واستخراج كافة البيانات...'):
-            file_content = extract_text_from_file(uploaded_file)
-            final_input += f"\n\n--- محتوى الملف المرفق ---\n{file_content}"
-    
-    # 2. التحقق
-    if not final_input.strip():
-        st.warning("⚠️ الرجاء إدخال نص أو رفع ملف للبدء.")
+        with st.spinner('جاري استخراج البيانات من الملف...'):
+            full_text += f"\n\n[محتوى الملف المرفق]:\n{extract_text_from_file(uploaded_file)}"
+
+    if not full_text.strip():
+        st.warning("⚠️ يرجى إدخال بيانات أو رفع ملف.")
     else:
         try:
-            # 3. الاتصال
             genai.configure(api_key=API_KEY)
+            model = genai.GenerativeModel(get_working_model())
+
+            # 2. تحديد التصميم والتعليمات بناءً على اختيار المستخدم
+            target_css = ""
+            design_instruction = ""
             
-            with st.spinner('🤖 جاري تحليل البيانات وبناء الموقع... (قد يستغرق وقتاً للدقة)'):
-                model_name = get_working_model()
-                model = genai.GenerativeModel(model_name)
-                
-                # 4. الأمر المفصل (Prompt)
-                prompt = f"""
-                You are a Strategic Data Analyst for 'Al-Hikma National Movement'.
-                
-                **CRITICAL INSTRUCTIONS:**
-                1. **NO SUMMARIZATION:** Do NOT summarize. Process and present ALL details, numbers, and names from the input.
-                2. **FULL REPORT:** Generate a comprehensive HTML report.
-                3. **ACCURACY:** Exact numbers must be preserved.
-                
-                **Task:** Convert this data into a High-End HTML Dashboard.
-                
-                **Design Specs (Al-Hikma Corporate):**
-                - Colors: Deep Navy Blue (#001f3f) & Gold (#FFD700).
-                - Font: 'Tajawal'.
-                - Language: Arabic (RTL).
-                - Style: Clean cards, shadows, responsive.
-                
-                **Input Data:** {final_input}
-                
-                **Output:** Return ONLY raw HTML code.
+            footer_content = """
+            <footer>
+                <p><strong>صادر من الجهاز المركزي للجودة الشاملة - وحدة التخطيط الاستراتيجي والتطوير</strong></p>
+                <p>حقوق النشر محفوظة © 2026</p>
+            </footer>
+            """
+
+            if "الاستراتيجي" in report_type:
+                target_css = STYLE_STRATEGIC
+                design_instruction = """
+                DESIGN RULES (Strategic):
+                - Use <div class="card"> for sections.
+                - Use <div class="card full-width"> for wide sections.
+                - Use standard HTML <table> inside cards for data.
+                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for stats lists.
                 """
-                
+            elif "الإعلامي" in report_type:
+                target_css = STYLE_MEDIA
+                design_instruction = """
+                DESIGN RULES (Media):
+                - Use <section id="summary"> for summary points.
+                - Use <article class="card"> for platform analysis.
+                - Use <div class="goal"> for the final conclusion/goal.
+                - Use icons (Use standard emojis like 📉, 📈, 🟦) inside the text.
+                """
+            else: # التحليلي
+                target_css = STYLE_ANALYTICAL
+                design_instruction = """
+                DESIGN RULES (Analytical):
+                - Use <section class="report-section"> for main blocks.
+                - Use <div class="stats-grid"> with <div class="stat-card"> for top numbers.
+                - Use <div class="pyramid-grid"> for hierarchy.
+                - Inside pyramid grid, use <div class="tier-card tier-upper"> (or tier-middle, tier-weak) based on strength.
+                - Include <div class="bar-container"><div class="bar" style="width: XX%;"></div></div> for percentages.
+                """
+
+            # 3. هندسة الأمر (Prompt Engineering)
+            prompt = f"""
+            You are an expert Data Analyst & Web Developer for 'Al-Hikma National Movement'.
+            
+            **OBJECTIVE:** Convert the provided raw text/data into a professional HTML report using the SPECIFIC CSS and DESIGN RULES provided below.
+
+            **STRICT GUIDELINES:**
+            1. **NO SUMMARIZATION:** Do NOT summarize. Every single number, name, and detail from the input must be present.
+            2. **LANGUAGE:** Arabic (Official & Professional).
+            3. **FOOTER:** You MUST include the specific footer provided in the instructions.
+            4. **OUTPUT:** Return ONLY the HTML code (starting from <!DOCTYPE html> to </html>).
+
+            **INPUT DATA:**
+            {full_text}
+
+            **DESIGN & CSS (Embed this exactly in <head>):**
+            {target_css}
+
+            **HTML STRUCTURE INSTRUCTIONS:**
+            {design_instruction}
+            
+            **MANDATORY FOOTER (Insert before </body>):**
+            {footer_content}
+
+            Generate the full HTML document now.
+            """
+
+            with st.spinner('جاري تحليل البيانات وتطبيق القالب المختار...'):
                 response = model.generate_content(prompt)
-                html_code = response.text.replace("```html", "").replace("```", "")
-                
-                st.balloons()
-                st.success("✅ تم إنشاء التقرير المفصل بنجاح!")
-                
-                # عرض النتيجة
-                st.components.v1.html(html_code, height=1000, scrolling=True)
-                
-                # زر التحميل
-                st.download_button(
-                    label="📥 تحميل التقرير (HTML)",
-                    data=html_code,
-                    file_name="Strategic_Report_AlHikma.html",
-                    mime="text/html"
-                )
+                html_output = response.text.replace("```html", "").replace("```", "")
+
+            # 4. العرض والتحميل
+            st.success("✅ تم إنشاء التقرير بنجاح!")
+            
+            # عرض معاينة
+            st.components.v1.html(html_output, height=800, scrolling=True)
+
+            # زر التحميل
+            file_label = "Strategic_Report" if "الاستراتيجي" in report_type else "Media_Report" if "الإعلامي" in report_type else "Analytical_Report"
+            st.download_button(
+                label="📥 تحميل التقرير (HTML)",
+                data=html_output,
+                file_name=f"{file_label}_2026.html",
+                mime="text/html"
+            )
 
         except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+            st.error(f"حدث خطأ أثناء المعالجة: {e}")
