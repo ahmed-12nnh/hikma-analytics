@@ -14,11 +14,11 @@ except:
     st.stop()
 
 # ---------------------------------------------------------
-# 🎨 إعدادات الصفحة والتصميم الفخم
+# 🎨 إعدادات الصفحة والتصميم الخارجي للمنصة
 # ---------------------------------------------------------
 st.set_page_config(page_title="منصة التحليل الاستراتيجي", page_icon="🦅", layout="wide")
 
-# CSS الواجهة الرئيسية للموقع (Dark Navy & Gold)
+# CSS الواجهة (Dark Navy & Gold Theme)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700;900&display=swap');
@@ -33,7 +33,7 @@ st.markdown("""
     header { visibility: hidden; }
     #MainMenu { visibility: hidden; }
 
-    /* الهيدر الملكي */
+    /* الهيدر الرئيسي للموقع */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
@@ -77,7 +77,7 @@ st.markdown("""
         display: flex;
         flex-direction: row-reverse;
         justify-content: center;
-        gap: 10px;
+        gap: 15px;
         flex-wrap: wrap;
         background: rgba(0,0,0,0.2);
         padding: 15px;
@@ -89,16 +89,15 @@ st.markdown("""
     div[role="radiogroup"] label {
         background-color: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 10px 15px;
+        padding: 12px 20px;
         border-radius: 10px;
         cursor: pointer;
         transition: all 0.3s ease;
         text-align: center;
         flex: 1;
-        min-width: 120px;
+        min-width: 150px;
         color: white !important;
         font-weight: bold;
-        font-size: 0.9rem;
     }
 
     div[role="radiogroup"] label:hover {
@@ -108,7 +107,7 @@ st.markdown("""
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
-    /* الحقول */
+    /* الحقول والأزرار */
     .stTextArea textarea, .stFileUploader {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -117,7 +116,6 @@ st.markdown("""
         text-align: right;
     }
     
-    /* زر الإجراء */
     .stButton button {
         background: linear-gradient(90deg, #FFD700, #DAA520);
         color: #001f3f !important;
@@ -135,7 +133,6 @@ st.markdown("""
         box-shadow: 0 8px 25px rgba(218, 165, 32, 0.7);
     }
 
-    /* العناوين المخصصة */
     .custom-header {
         text-align: right !important;
         color: #FFD700;
@@ -149,16 +146,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب (CSS & HTML Structures)
+# 🎨 القوالب (CSS Styles) للتقارير المولدة
 # ---------------------------------------------------------
 
-# 1. القالب الرسمي (للمخاطبات)
+# 1. القالب الرسمي
 STYLE_OFFICIAL = """
 <style>
     :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
     body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; }
     .container { max-width: 1200px; margin: 20px auto; padding: 20px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-    header { background-color: var(--navy-blue); color: var(--gold); padding: 20px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); grid-column: 1 / -1; margin-bottom: 20px; border-radius: 8px; }
+    header { background-color: var(--navy-blue); color: var(--gold); padding: 30px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); grid-column: 1 / -1; margin-bottom: 20px; border-radius: 8px; }
     header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
     header h2 { margin: 10px 0 0; font-size: 1.5em; color: var(--light-gold); }
     .card { background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 25px; display: flex; flex-direction: column; }
@@ -174,7 +171,7 @@ STYLE_OFFICIAL = """
 </style>
 """
 
-# 2. القالب الرقمي (للشاشات)
+# 2. القالب الرقمي
 STYLE_DIGITAL = """
 <style>
     body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #f4f7f9; color: #333; direction: rtl; }
@@ -193,7 +190,7 @@ STYLE_DIGITAL = """
 </style>
 """
 
-# 3. القالب التحليلي (للإحصائيات)
+# 3. القالب التحليلي
 STYLE_ANALYTICAL = """
 <style>
     body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
@@ -214,87 +211,121 @@ STYLE_ANALYTICAL = """
 </style>
 """
 
-# 4. 🔥 نمط العرض التقديمي التفاعلي (NEW: Presentation Mode)
+# 4. 🔥 القالب الجديد: عرض تقديمي تفاعلي (المطابق للملف المرسل)
 STYLE_PRESENTATION = """
 <style>
-    :root { --primary-navy: #002b49; --primary-blue: #004e89; --gold-main: #c5a059; --white: #ffffff; --text-dark: #333333; }
-    body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow: hidden; height: 100vh; width: 100vw; margin: 0; }
+    :root {
+        --primary-navy: #002b49; /* الأزرق الداكن الرسمي */
+        --primary-blue: #004e89; /* أزرق تيار الحكمة */
+        --gold-main: #c5a059;     /* الذهبي الرسمي */
+        --gold-light: #e6c885;
+        --white: #ffffff;
+        --grey-light: #f8f9fa;
+        --text-dark: #333333;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow: hidden; height: 100vh; width: 100vw; direction: rtl; }
+    
+    /* هيكل العرض */
     .presentation-container { width: 100%; height: 100%; position: relative; background: radial-gradient(circle at center, #003865 0%, #002035 100%); }
-    .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transform: scale(0.95); transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); display: flex; flex-direction: column; padding: 40px 60px; box-sizing: border-box; }
+    
+    /* الشريحة */
+    .slide {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0; visibility: hidden; transform: scale(0.95);
+        transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+        display: flex; flex-direction: column; padding: 40px 60px;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
+    }
     .slide.active { opacity: 1; visibility: visible; transform: scale(1); z-index: 10; }
     
-    /* Header */
+    /* ترويسة الشريحة */
     .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 15px; margin-bottom: 25px; flex-shrink: 0; }
-    .header-title h2 { color: var(--gold-main); font-size: 2rem; margin: 0; font-weight: 800; }
-    .header-logo { font-family: 'Tajawal'; color: var(--white); font-weight: bold; }
+    .header-title h2 { color: var(--gold-main); font-size: 2rem; font-weight: 800; }
+    .header-logo { font-family: 'Tajawal', sans-serif; color: var(--white); font-weight: bold; display: flex; align-items: center; gap: 10px; }
     
-    /* Content Split */
+    /* محتوى الشريحة */
     .slide-content { flex-grow: 1; display: flex; gap: 40px; height: 100%; overflow: hidden; }
-    .text-panel { flex: 3; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: var(--text-dark); overflow-y: auto; border-right: 5px solid var(--gold-main); }
+    .text-panel { flex: 3; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: var(--text-dark); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto; border-right: 5px solid var(--gold-main); }
     .visual-panel { flex: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--white); text-align: center; }
     
-    /* Elements */
-    h3 { color: var(--primary-blue); border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
-    p, li { font-size: 1.2rem; line-height: 1.8; }
-    .icon-box { font-size: 5rem; color: var(--gold-main); margin-bottom: 20px; animation: float 4s infinite; }
+    /* نصوص */
+    h3 { color: var(--primary-blue); font-size: 1.6rem; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+    p { font-size: 1.2rem; line-height: 1.8; margin-bottom: 20px; text-align: justify; }
+    li { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.6; }
+    strong { color: var(--primary-navy); font-weight: 800; }
+    
+    /* جرافيك */
+    .icon-box { font-size: 5rem; color: var(--gold-main); margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; }
     .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid var(--gold-main); backdrop-filter: blur(5px); width: 100%; }
     
-    /* Cover Slide */
+    /* الغلاف */
     .slide.cover { align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--primary-navy) 30%, #001a2c 100%); }
-    .cover-content { border: 2px solid var(--gold-main); padding: 60px; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
-    .main-title-slide { font-size: 3.5rem; color: var(--white); text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .cover-content { border: 2px solid var(--gold-main); padding: 60px; position: relative; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+    .cover-content::before { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 1px solid rgba(197, 160, 89, 0.5); }
+    .main-title { font-size: 3.5rem; color: var(--white); margin-bottom: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .sub-title { font-size: 1.8rem; color: var(--gold-main); margin-bottom: 40px; font-weight: 300; }
     
-    /* Controls */
+    /* تحكم */
     .nav-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 100; }
-    .nav-btn { background: transparent; border: 2px solid var(--gold-main); color: var(--gold-main); width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-    .nav-btn:hover { background: var(--gold-main); color: var(--primary-navy); }
+    .nav-btn { background: transparent; border: 2px solid var(--gold-main); color: var(--gold-main); width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .nav-btn:hover { background: var(--gold-main); color: var(--primary-navy); transform: scale(1.1); }
+    .page-number { position: absolute; bottom: 25px; right: 60px; color: var(--gold-main); font-size: 1.2rem; font-weight: bold; }
     
     @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+    
+    /* التوقيع */
+    .signature-box { margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--gold-main); text-align: center; }
+    .signature-title { font-size: 0.9rem; color: #aaa; margin-bottom: 10px; }
+    .signature-name { font-size: 1.4rem; color: var(--gold-main); font-weight: bold; font-family: 'Tajawal'; }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script>
-    let currentSlide = 1;
-    function showSlide(n) {
-        let slides = document.querySelectorAll('.slide');
-        let total = slides.length;
-        if (n > total) currentSlide = 1;
-        if (n < 1) currentSlide = total;
-        slides.forEach(s => s.classList.remove('active'));
-        document.getElementById('slide-' + currentSlide).classList.add('active');
-    }
-    function nextSlide() { showSlide(++currentSlide); }
-    function prevSlide() { showSlide(--currentSlide); }
-    // Initialize
-    setTimeout(() => showSlide(1), 500);
-</script>
 """
 
-# 5. ✨ نمط الملخص التنفيذي الحديث (NEW: Modern Executive)
-STYLE_MODERN_EXECUTIVE = """
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;800&display=swap');
-    body { font-family: 'Tajawal', sans-serif; background-color: #ffffff; color: #222; direction: rtl; }
-    .container { max-width: 900px; margin: 40px auto; padding: 40px; border: 1px solid #eee; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
-    
-    /* Header */
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; }
-    .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; }
-    .date { color: #888; font-size: 0.9rem; }
-    
-    /* Content */
-    h1 { font-size: 3rem; font-weight: 900; line-height: 1.1; margin-bottom: 10px; color: #000; }
-    .executive-summary { font-size: 1.4rem; line-height: 1.6; color: #444; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 20px; }
-    
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
-    .metric-box { padding: 20px; background: #f9f9f9; border-radius: 8px; }
-    .metric-val { font-size: 2.5rem; font-weight: 800; color: #002b49; }
-    .metric-lbl { font-size: 1rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-    
-    .section-title { font-size: 1.2rem; font-weight: 800; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; color: #c5a059; }
-    p { font-size: 1.1rem; color: #555; line-height: 1.8; }
-    
-    footer { margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; display: flex; justify-content: space-between; color: #999; font-size: 0.8rem; }
-</style>
+# سكربت التنقل للشرائح (JavaSript)
+SCRIPT_PRESENTATION = """
+<script>
+    let currentSlideIndex = 1;
+    // سيتم تحديث هذا الرقم تلقائياً بناءً على عدد الشرائح المولدة
+    const totalSlides = document.querySelectorAll('.slide').length;
+
+    function updateSlide() {
+        document.querySelectorAll('.slide').forEach(slide => {
+            slide.classList.remove('active');
+        });
+        const activeSlide = document.getElementById(`slide-${currentSlideIndex}`);
+        if(activeSlide) {
+            activeSlide.classList.add('active');
+        }
+        const pageNum = document.getElementById('page-num');
+        if(pageNum) pageNum.innerText = `${currentSlideIndex} / ${totalSlides}`;
+    }
+
+    function nextSlide() {
+        if (currentSlideIndex < totalSlides) {
+            currentSlideIndex++;
+            updateSlide();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlideIndex > 1) {
+            currentSlideIndex--;
+            updateSlide();
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "ArrowLeft" || event.key === "Space") {
+            nextSlide();
+        } else if (event.key === "ArrowRight") {
+            prevSlide();
+        }
+    });
+
+    // تشغيل أولي
+    updateSlide();
+</script>
 """
 
 # ---------------------------------------------------------
@@ -326,9 +357,10 @@ def get_working_model():
     except: return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 🏗️ واجهة التطبيق
+# 🏗️ بناء الواجهة (Layout)
 # ---------------------------------------------------------
 
+# الهيدر
 st.markdown("""
     <div class="hero-section">
         <div class="main-title">تيار الحكمة الوطني</div>
@@ -336,12 +368,12 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# خيارات الأنماط (تحديث جديد)
-st.markdown('<div style="text-align: center; margin-bottom: 15px; color: #FFD700; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">اختر نمط الإخراج المطلوب:</div>', unsafe_allow_html=True)
+# أزرار الاختيار
+st.markdown('<div style="text-align: center; margin-bottom: 15px; color: #FFD700; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">اختر نمط التقرير المطلوب:</div>', unsafe_allow_html=True)
 
 report_type = st.radio(
     "",
-    ("🏛️ الكتاب الرسمي", "📱 الداشبورد الرقمي", "📊 التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)", "✨ ملخص تنفيذي حديث"),
+    ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)"),
     horizontal=True,
     label_visibility="collapsed"
 )
@@ -352,24 +384,25 @@ col_input, col_upload = st.columns([2, 1])
 
 with col_input:
     st.markdown('<div class="custom-header">📝 البيانات / الملاحظات</div>', unsafe_allow_html=True)
-    user_text = st.text_area("", height=200, placeholder="اكتب هنا أو اترك فارغاً عند رفع ملف...")
+    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...")
 
 with col_upload:
     st.markdown('<div class="custom-header">📎 رفع الملفات</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'])
     if uploaded_file:
-        st.success(f"تم: {uploaded_file.name}")
+        st.success(f"تم إرفاق: {uploaded_file.name}")
 
+# زر التنفيذ
 st.markdown("<br>", unsafe_allow_html=True)
-if st.button("🚀 توليد التقرير الذكي"):
+if st.button("🚀 بدء المعالجة وإنشاء التقرير"):
     
     full_text = user_text
     if uploaded_file:
-        with st.spinner('📂 جاري تحليل الملف...'):
+        with st.spinner('📂 جاري قراءة الملف...'):
             full_text += f"\n\n[محتوى الملف]:\n{extract_text_from_file(uploaded_file)}"
 
     if not full_text.strip():
-        st.warning("⚠️ الرجاء إدخال بيانات للبدء.")
+        st.warning("⚠️ الرجاء إدخال بيانات أو رفع ملف.")
     else:
         try:
             genai.configure(api_key=API_KEY)
@@ -379,101 +412,127 @@ if st.button("🚀 توليد التقرير الذكي"):
             design_rules = ""
             file_label = "Report"
             
-            # --- منطق الأنماط الجديد ---
-            
+            # التوقيع الموحد لجميع التقارير
+            unified_signature = """
+            <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 2px solid #ccc; font-family: 'Tajawal'; color: #555;">
+                <p style="margin-bottom: 5px;"><strong>صادر من الجهاز المركزي للجودة الشاملة</strong></p>
+                <p style="font-size: 1.1em; color: #001f3f;"><strong>وحدة التخطيط الاستراتيجي والتطوير</strong></p>
+                <p style="font-size: 0.9em; color: #999;">حقوق النشر محفوظة © 2026</p>
+            </div>
+            """
+
+            # 1. تخصيص الأنماط
             if "الرسمي" in report_type:
                 target_css = STYLE_OFFICIAL
-                file_label = "Official_Doc"
-                design_rules = "Style: Official Report. Use <div class='card'>, HTML <table>, <ul> lists."
-
+                file_label = "Official_Report"
+                design_rules = """
+                Style: Official Corporate Report.
+                - Use <div class="card"> for sections.
+                - Use HTML <table> inside cards.
+                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li>.
+                """
             elif "الرقمي" in report_type:
                 target_css = STYLE_DIGITAL
-                file_label = "Dashboard"
-                design_rules = "Style: Digital Dashboard. Use <section id='summary'>, <article class='card'>, <div class='goal'>."
-
+                file_label = "Digital_Dashboard"
+                design_rules = """
+                Style: Modern Digital Dashboard.
+                - Use <section id="summary"> for highlights.
+                - Use <article class="card"> for details.
+                - Use <div class="goal"> for conclusion.
+                """
             elif "التحليل" in report_type:
                 target_css = STYLE_ANALYTICAL
                 file_label = "Deep_Analysis"
-                design_rules = "Style: Analytical Hierarchy. Use <div class='stats-grid'>, <div class='pyramid-grid'>, percentages."
-
+                design_rules = """
+                Style: Statistical Hierarchy.
+                - Use <div class="stats-grid"> for numbers.
+                - Use <div class="pyramid-grid"> for tiers.
+                - Use <div class="bar-container"> for percentages.
+                """
+            
+            # 2. تخصيص نمط العرض التقديمي (الحالة الخاصة)
             elif "عرض تقديمي" in report_type:
                 target_css = STYLE_PRESENTATION
                 file_label = "Presentation_Slides"
                 design_rules = """
-                Style: Interactive Reveal.js style Presentation.
-                Structure:
-                - Create 5 to 8 slides using <div class="slide" id="slide-N">.
-                - Slide 1 must be <div class="slide cover active" id="slide-1">.
-                - Inside slides, use <div class="slide-header">, <div class="slide-content">.
-                - Split content into <div class="text-panel"> (for text) and <div class="visual-panel"> (for icons/stats).
-                - Use FontAwesome icons <i class="fas fa-icon"></i>.
-                - DO NOT write the Javascript or CSS, just the HTML body content for the slides.
+                Style: Interactive Presentation Slides (Reveal.js style).
+                Structure Requirement:
+                1. Output HTML `div` elements with class `slide`.
+                2. The first slide MUST be `<div class="slide cover active" id="slide-1">`.
+                3. Subsequent slides must be `<div class="slide" id="slide-2">`, etc.
+                4. Inside slides, use `<div class="slide-header">` (with title & logo).
+                5. Use `<div class="slide-content">` split into `<div class="text-panel">` and `<div class="visual-panel">`.
+                6. Use FontAwesome icons `<i class="fas fa-icon"></i>`.
+                7. The FINAL slide must include the signature box exactly as:
+                   <div class="signature-box">
+                        <div class="signature-title">صادر عن</div>
+                        <div class="signature-name">الجهاز المركزي للجودة الشاملة</div>
+                        <div class="signature-name">وحدة التخطيط الاستراتيجي والتطوير</div>
+                   </div>
+                8. DO NOT write the CSS or Script, just the HTML Body content.
                 """
-                
-            elif "ملخص تنفيذي" in report_type:
-                target_css = STYLE_MODERN_EXECUTIVE
-                file_label = "Executive_Summary"
-                design_rules = """
-                Style: Modern Clean Executive Summary (White & Black & Gold).
-                - Use <header> with <div class='brand'>AL-HIKMA</div>.
-                - Use <div class='executive-summary'> for the main insight.
-                - Use <div class='grid-2'> with <div class='metric-box'> for key numbers.
-                """
-
-            # الفوتر المشترك (ما عدا العرض التقديمي له فوتر خاص)
-            footer_content = ""
-            if "عرض تقديمي" not in report_type:
-                footer_content = "<footer><p>صادر عن الجهاز المركزي للجودة الشاملة</p></footer>"
-            else:
-                # للعرض التقديمي نضيف أزرار التحكم
-                footer_content = """
+                # للعرض التقديمي، التوقيع يكون داخل الشريحة الأخيرة، لذا نلغي التوقيع العام
+                unified_signature = """
                 <div class="nav-controls">
                     <button class="nav-btn" onclick="prevSlide()"><i class="fas fa-chevron-right"></i></button>
                     <button class="nav-btn" onclick="nextSlide()"><i class="fas fa-chevron-left"></i></button>
                 </div>
+                <div class="page-number" id="page-num">1 / 1</div>
                 """
 
+            # 3. هندسة الأمر (Prompt)
             prompt = f"""
-            You are an expert Data Analyst for 'Al-Hikma National Movement'.
-            **Task:** Convert data into a specific High-End HTML format.
-            **Design Style:** {report_type}
-            **Strict Design Rules:** {design_rules}
-            **Input Data:** {full_text}
+            You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
+            **Objective:** Create a FULL, DETAILED HTML report.
             
-            **Output:** - Return ONLY the HTML Body Content (inside <body>).
-            - Embed the provided CSS in <head>.
-            - Insert the Footer/Controls at the end.
-            - Language: Arabic.
+            **CRITICAL INSTRUCTIONS:**
+            1. **NO SUMMARIZATION:** Include every single detail, number, and name from the input. Do NOT summarize.
+            2. **DATE:** The current year is **2026**. Ensure all dates in the report reflect **2026**.
+            3. **FORMAT:** Output ONLY valid HTML code (inside <body>).
+            4. **DESIGN:** Follow these specific design rules:
+            {design_rules}
+            
+            **INPUT DATA:**
+            {full_text}
+            
+            **LANGUAGE:** Arabic (Professional).
             """
 
-            with st.spinner('🤖 جاري الهندسة والتصميم...'):
+            with st.spinner('🤖 جاري تحليل البيانات وتوليد التقرير الكامل...'):
                 response = model.generate_content(prompt)
-                html_output = response.text.replace("```html", "").replace("```", "")
+                html_body = response.text.replace("```html", "").replace("```", "")
                 
-                # تجميع الكود النهائي (لضمان وجود الستايل والسكريبت)
+                # تجميع الملف النهائي
                 final_html = f"""
                 <!DOCTYPE html>
                 <html lang="ar" dir="rtl">
                 <head>
                     <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>تقرير {file_label} - 2026</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
                     {target_css}
                 </head>
                 <body>
-                    {html_output}
-                    {footer_content}
+                    <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
+                        {html_body}
+                        {unified_signature}
+                    </div>
+                    
+                    {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
                 </body>
                 </html>
                 """
 
-            st.success("✅ تم الإنشاء بنجاح!")
-            st.components.v1.html(final_html, height=800, scrolling=True)
+            st.success("✅ تم الإنشاء بنجاح (2026)!")
+            st.components.v1.html(final_html, height=850, scrolling=True)
 
             st.download_button(
-                label="📥 تحميل الملف (HTML)",
+                label="📥 تحميل التقرير (HTML)",
                 data=final_html,
                 file_name=f"{file_label}_2026.html",
                 mime="text/html"
             )
 
         except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+            st.error(f"حدث خطأ أثناء المعالجة: {e}")
