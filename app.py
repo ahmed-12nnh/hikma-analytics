@@ -920,3 +920,50 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 
         except Exception as e:
             st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
+
+# الفوتر
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown('''
+<div style="
+    background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
+    border-radius: 15px;
+    padding: 30px 20px;
+    margin: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    text-align: center;
+    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
+">
+    <div style="
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        margin: 0 auto 20px auto;
+        border-radius: 2px;
+    "></div>
+    <p style="
+        color: #FFD700;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-family: 'Tajawal', sans-serif;
+    ">الجهاز المركزي للجودة الشاملة</p>
+    <p style="
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+        font-family: 'Tajawal', sans-serif;
+    ">وحدة التخطيط الاستراتيجي والتطوير</p>
+    <div style="
+        width: 100px;
+        height: 1px;
+        background: rgba(255, 215, 0, 0.3);
+        margin: 15px auto;
+    "></div>
+    <p style="
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        font-family: 'Tajawal', sans-serif;
+    ">جميع الحقوق محفوظة © 2025</p>
+</div>
+''', unsafe_allow_html=True)
