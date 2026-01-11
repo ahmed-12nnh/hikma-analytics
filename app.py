@@ -1980,21 +1980,20 @@ def generate_floating_shapes():
 st.markdown(REVOLUTIONARY_CSS, unsafe_allow_html=True)
 
 # الجزيئات المتحركة
-st.markdown(generate_particles_html(), unsafe_allow_html=True)
+particles_html = generate_particles_html()
+st.markdown(particles_html, unsafe_allow_html=True)
 
 # الأشكال العائمة
-st.markdown(generate_floating_shapes(), unsafe_allow_html=True)
+shapes_html = generate_floating_shapes()
+st.markdown(shapes_html, unsafe_allow_html=True)
 
 # الهيدر الملكي
-st.markdown("""
+header_html = '''
 <div class="royal-header">
     <div class="arabic-ornament top-right">۞</div>
     <div class="arabic-ornament bottom-left">۞</div>
-    
     <h1 class="glitch-title" data-text="تيار الحكمة الوطني">تيار الحكمة الوطني</h1>
-    
     <p class="cyber-subtitle">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</p>
-    
     <div class="status-bar">
         <div class="status-item">
             <div class="status-dot"></div>
@@ -2010,14 +2009,16 @@ st.markdown("""
         </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+'''
+st.markdown(header_html, unsafe_allow_html=True)
 
 # قسم اختيار النمط
-st.markdown("""
+style_section = '''
 <div class="style-selector-container">
     <h2 class="section-title">🎨 اختر نمط الإخراج المطلوب</h2>
 </div>
-""", unsafe_allow_html=True)
+'''
+st.markdown(style_section, unsafe_allow_html=True)
 
 report_type = st.radio(
     "",
@@ -2027,12 +2028,10 @@ report_type = st.radio(
 )
 
 # قسم الإدخال
-st.markdown('<div class="input-section">', unsafe_allow_html=True)
-
 col_input, col_upload = st.columns([1.5, 1])
 
 with col_input:
-    st.markdown("""
+    input_card_html = '''
     <div class="input-card">
         <div class="input-header">
             <div class="input-icon">📝</div>
@@ -2042,11 +2041,12 @@ with col_input:
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    '''
+    st.markdown(input_card_html, unsafe_allow_html=True)
     user_text = st.text_area("", height=250, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...", label_visibility="collapsed")
 
 with col_upload:
-    st.markdown("""
+    upload_card_html = '''
     <div class="input-card">
         <div class="input-header">
             <div class="input-icon">📎</div>
@@ -2056,11 +2056,12 @@ with col_upload:
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    '''
+    st.markdown(upload_card_html, unsafe_allow_html=True)
     uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
     
     if uploaded_file:
-        st.markdown(f"""
+        success_html = f'''
         <div style="
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
             border: 1px solid #22c55e;
@@ -2074,12 +2075,11 @@ with col_upload:
             <span style="font-size: 1.5rem;">✅</span>
             <span style="color: #22c55e; font-weight: 600;">تم إرفاق: {uploaded_file.name}</span>
         </div>
-        """, unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
+        '''
+        st.markdown(success_html, unsafe_allow_html=True)
 
 # زر المعالجة
-st.markdown('<div class="main-action-container">', unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
@@ -2196,7 +2196,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             with st.spinner(''):
                 # عرض تقدم مخصص
                 for i in range(0, 101, 10):
-                    progress_placeholder.markdown(f"""
+                    progress_html = f'''
                     <div class="progress-container">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <span style="font-size: 2rem;">🤖</span>
@@ -2206,7 +2206,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                         </div>
                         <p class="progress-text">جاري تحليل البيانات وتوليد التقرير... {i}%</p>
                     </div>
-                    """, unsafe_allow_html=True)
+                    '''
+                    progress_placeholder.markdown(progress_html, unsafe_allow_html=True)
                     time.sleep(0.1)
                 
                 # توليد المحتوى
@@ -2239,38 +2240,36 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             """
             
             # عرض النتيجة
-            st.markdown("""
+            result_html = '''
             <div class="result-section">
                 <div class="success-badge">
                     <span class="success-icon">✅</span>
                     <span class="success-text">تم إنشاء التقرير بنجاح!</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            '''
+            st.markdown(result_html, unsafe_allow_html=True)
             
             # المعاينة
             st.components.v1.html(final_html, height=900, scrolling=True)
             
             # زر التحميل
-            st.markdown('<div class="download-btn-container">', unsafe_allow_html=True)
             st.download_button(
                 label="📥 تحميل التقرير (HTML)",
                 data=final_html,
                 file_name=f"{file_label}.html",
                 mime="text/html"
             )
-            st.markdown('</div>', unsafe_allow_html=True)
             
         except Exception as e:
             st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
 
-st.markdown('</div>', unsafe_allow_html=True)
-
 # الفوتر
-st.markdown("""
+footer_html = '''
 <div class="cyber-footer">
     <div class="footer-logo">⚡ تيار الحكمة الوطني</div>
     <p class="footer-text">منصة التحليل الاستراتيجي المدعومة بالذكاء الاصطناعي</p>
     <p class="footer-text" style="margin-top: 10px; opacity: 0.5;">جميع الحقوق محفوظة © 2025</p>
 </div>
-""", unsafe_allow_html=True)
+'''
+st.markdown(footer_html, unsafe_allow_html=True)
