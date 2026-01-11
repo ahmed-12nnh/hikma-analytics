@@ -693,7 +693,7 @@ def get_working_model():
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
+    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -964,6 +964,7 @@ st.markdown('''
         color: rgba(255, 255, 255, 0.5);
         font-size: 0.85rem;
         font-family: 'Tajawal', sans-serif;
-    ">جميع الحقوق محفوظة © 2025</p>
+    ">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
+
