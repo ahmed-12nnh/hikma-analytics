@@ -818,8 +818,36 @@ def clean_html_response(text):
     return text.strip()
 
 def get_working_model():
-    """الحصول على نموذج Gemini"""
-    return "gemini-1.5-flash"  # استخدام النموذج الأسرع مباشرة
+    """الحصول على نموذج Gemini المتاح"""
+    try:
+        # البحث عن النماذج المتاحة
+        available_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                available_models.append(m.name)
+        
+        # ترتيب الأولوية للنماذج
+        preferred_models = [
+            'models/gemini-1.5-flash-latest',
+            'models/gemini-1.5-flash',
+            'models/gemini-1.5-pro-latest',
+            'models/gemini-1.5-pro',
+            'models/gemini-pro',
+            'models/gemini-1.0-pro-latest',
+            'models/gemini-1.0-pro',
+        ]
+        
+        for model in preferred_models:
+            if model in available_models:
+                return model
+        
+        # إذا لم يوجد أي من المفضلة، استخدم أول نموذج متاح
+        if available_models:
+            return available_models[0]
+        
+        return 'gemini-pro'
+    except Exception as e:
+        return 'gemini-pro'
 
 def analyze_text(text):
     """تحليل النص واستخراج الإحصائيات"""
@@ -1110,7 +1138,10 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
     else:
         try:
             genai.configure(api_key=API_KEY)
-            model = genai.GenerativeModel(get_working_model())
+            
+            # الحصول على النموذج المتاح
+            model_name = get_working_model()
+            model = genai.GenerativeModel(model_name)
 
             target_css = ""
             design_rules = ""
