@@ -819,14 +819,7 @@ def clean_html_response(text):
 
 def get_working_model():
     """الحصول على نموذج Gemini"""
-    try:
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                if "flash" in m.name:
-                    return m.name
-        return "gemini-1.5-flash"
-    except:
-        return "gemini-1.5-flash"
+    return "gemini-1.5-flash"  # استخدام النموذج الأسرع مباشرة
 
 def analyze_text(text):
     """تحليل النص واستخراج الإحصائيات"""
@@ -1214,25 +1207,34 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             **LANGUAGE:** Arabic (Professional).
             """
 
-            # شريط التقدم
-            progress_placeholder = st.empty()
-            
-            for i in range(0, 101, 5):
-                progress_placeholder.markdown(f'''
-                <div class="progress-box">
-                    <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: {i}%;"></div>
-                    </div>
-                    <div style="color: rgba(255,255,255,0.8);">جاري تحليل البيانات وتوليد التقرير... {i}%</div>
+            # رسالة التحميل
+            status_placeholder = st.empty()
+            status_placeholder.markdown('''
+            <div class="progress-box">
+                <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: 100%; animation: progressShine 1s infinite linear;"></div>
                 </div>
-                ''', unsafe_allow_html=True)
-                time.sleep(0.05)
+                <div style="color: rgba(255,255,255,0.8);">جاري تحليل البيانات وتوليد التقرير... يرجى الانتظار</div>
+            </div>
+            ''', unsafe_allow_html=True)
             
-            response = model.generate_content(prompt)
-            html_body = clean_html_response(response.text)
+            # توليد التقرير مع timeout
+            try:
+                response = model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=8192,
+                        temperature=0.7
+                    )
+                )
+                html_body = clean_html_response(response.text)
+            except Exception as api_error:
+                status_placeholder.empty()
+                st.error(f"❌ خطأ في الاتصال بالذكاء الاصطناعي: {api_error}")
+                st.stop()
             
-            progress_placeholder.empty()
+            status_placeholder.empty()
             
             # تجميع HTML النهائي
             container_class = 'presentation-container' if 'عرض تقديمي' in report_type else 'container'
