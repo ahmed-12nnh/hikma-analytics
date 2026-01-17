@@ -2,34 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 import PyPDF2
 import pandas as pd
-from io import StringIO, BytesIO
+from io import StringIO
 import time
-import base64
-import re
-from collections import Counter
-
-# ---------------------------------------------------------
-# 📦 استيراد المكتبات الإضافية (مع معالجة الأخطاء)
-# ---------------------------------------------------------
-try:
-    from weasyprint import HTML as WeasyHTML
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    WEASYPRINT_AVAILABLE = False
-
-try:
-    from docx import Document
-    from docx.shared import Inches, Pt, RGBColor
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    DOCX_AVAILABLE = True
-except ImportError:
-    DOCX_AVAILABLE = False
-
-try:
-    from PIL import Image
-    PIL_AVAILABLE = True
-except ImportError:
-    PIL_AVAILABLE = False
 
 # ---------------------------------------------------------
 # 🔑 إعدادات المفتاح
@@ -50,12 +24,13 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 🎨 CSS المحسن
+# 🎨 CSS المحسن - نفس التصميم الأصلي مع تحسينات
 # ---------------------------------------------------------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     
+    /* إعدادات عامة */
     * { box-sizing: border-box; }
     
     .stApp {
@@ -64,13 +39,14 @@ st.markdown("""
         direction: rtl;
     }
 
+    /* إخفاء عناصر Streamlit */
     [data-testid="stSidebar"] { display: none; }
     header { visibility: hidden; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     [data-testid="stToolbar"] { display: none; }
 
-    /* الهيدر */
+    /* ===== الهيدر الرئيسي ===== */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
@@ -78,11 +54,21 @@ st.markdown("""
         text-align: center;
         margin: 20px;
         border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 0 0 40px rgba(0, 31, 63, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 
+            0 0 40px rgba(0, 31, 63, 0.8),
+            inset 0 0 30px rgba(0, 0, 0, 0.5),
+            0 0 15px rgba(255, 215, 0, 0.1);
         position: relative;
         overflow: hidden;
+        animation: fadeIn 1s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
+    /* الخط الذهبي العلوي المتوهج */
     .hero-section::before {
         content: '';
         position: absolute;
@@ -91,125 +77,53 @@ st.markdown("""
         right: 0;
         height: 4px;
         background: linear-gradient(90deg, transparent, #FFD700, transparent);
-        box-shadow: 0 0 20px #FFD700;
+        box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700;
+        animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
     }
 
+    /* العنوان الرئيسي */
     .main-title {
         font-size: 52px;
         font-weight: 900;
         background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        background-clip: text;
         margin-bottom: 15px;
+        text-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes titleGlow {
+        from { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); }
+        to { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.6)); }
     }
 
+    /* العنوان الفرعي */
     .sub-title {
         color: #e0e0e0;
         font-size: 18px;
         letter-spacing: 2px;
         font-weight: 500;
+        opacity: 0.9;
     }
 
-    /* عنوان القسم */
+    /* ===== عنوان القسم ===== */
     .section-header {
         text-align: center;
         margin: 30px 20px;
         color: #FFD700;
         font-size: 1.4rem;
         font-weight: bold;
+        text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* بطاقات القوالب */
-    .template-card {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95));
-        border: 2px solid rgba(255, 215, 0, 0.2);
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-    
-    .template-card:hover {
-        border-color: #FFD700;
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
-    }
-    
-    .template-icon {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-    }
-    
-    .template-title {
-        color: #FFD700;
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-    
-    .template-desc {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.85rem;
-    }
-
-    /* بطاقة تحليل النص */
-    .analysis-card {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(0, 15, 30, 0.98));
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        border-radius: 15px;
-        padding: 25px;
-        margin: 15px 0;
-    }
-    
-    .analysis-title {
-        color: #FFD700;
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .stat-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 15px;
-    }
-    
-    .stat-item {
-        background: rgba(255, 215, 0, 0.1);
-        border-radius: 12px;
-        padding: 15px;
-        text-align: center;
-    }
-    
-    .stat-value {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #FFD700;
-    }
-    
-    .stat-label {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.7);
-        margin-top: 5px;
-    }
-
-    .keyword-tag {
-        display: inline-block;
-        background: rgba(255, 215, 0, 0.15);
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        color: #FFD700;
-        padding: 5px 12px;
-        border-radius: 20px;
-        margin: 3px;
-        font-size: 0.85rem;
-    }
-
-    /* أزرار الاختيار */
+    /* ===== أزرار الاختيار ===== */
     div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row-reverse !important;
@@ -229,22 +143,52 @@ st.markdown("""
         padding: 15px 25px !important;
         border-radius: 12px !important;
         cursor: pointer !important;
-        transition: all 0.4s ease !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         text-align: center !important;
         flex: 1 !important;
         min-width: 160px !important;
         max-width: 220px !important;
         color: white !important;
         font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    div[role="radiogroup"] label::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent) !important;
+        transition: left 0.5s ease !important;
+    }
+    
+    div[role="radiogroup"] label:hover::before {
+        left: 100% !important;
     }
 
     div[role="radiogroup"] label:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 31, 63, 0.95)) !important;
         border-color: #FFD700 !important;
-        transform: translateY(-5px) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        transform: translateY(-5px) scale(1.02) !important;
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(255, 215, 0, 0.2) !important;
+    }
+    
+    div[role="radiogroup"] label[data-checked="true"],
+    div[role="radiogroup"] label:has(input:checked) {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.15)) !important;
+        border-color: #FFD700 !important;
+        box-shadow: 
+            0 0 25px rgba(255, 215, 0, 0.3),
+            inset 0 0 20px rgba(255, 215, 0, 0.1) !important;
     }
 
-    /* بطاقات الإدخال */
+    /* ===== بطاقات الإدخال ===== */
     .input-card {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 15, 30, 0.95));
         border-radius: 20px;
@@ -252,6 +196,15 @@ st.markdown("""
         margin: 10px;
         border: 1px solid rgba(255, 215, 0, 0.2);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s ease;
+    }
+    
+    .input-card:hover {
+        border-color: rgba(255, 215, 0, 0.4);
+        transform: translateY(-5px);
+        box-shadow: 
+            0 15px 50px rgba(0, 0, 0, 0.4),
+            0 0 20px rgba(255, 215, 0, 0.1);
     }
 
     .input-header {
@@ -272,6 +225,7 @@ st.markdown("""
         background: linear-gradient(135deg, #FFD700, #B8860B);
         border-radius: 12px;
         font-size: 1.5rem;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
     }
 
     .input-title {
@@ -286,33 +240,46 @@ st.markdown("""
         margin-top: 5px;
     }
 
-    /* حقل النص */
+    /* ===== حقل النص ===== */
     .stTextArea textarea {
         background-color: rgba(0, 0, 0, 0.4) !important;
         border: 2px solid rgba(255, 215, 0, 0.2) !important;
         border-radius: 15px !important;
         color: white !important;
         font-family: 'Tajawal', sans-serif !important;
+        font-size: 1rem !important;
         padding: 20px !important;
         text-align: right !important;
         direction: rtl !important;
+        transition: all 0.3s ease !important;
     }
     
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
         box-shadow: 0 0 20px rgba(255, 215, 0, 0.2) !important;
+        outline: none !important;
+    }
+    
+    .stTextArea textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
     }
 
-    /* رفع الملفات */
+    /* ===== رفع الملفات ===== */
     [data-testid="stFileUploader"] {
         background: rgba(0, 0, 0, 0.3) !important;
         border: 2px dashed rgba(255, 215, 0, 0.3) !important;
         border-radius: 15px !important;
         padding: 25px !important;
+        transition: all 0.3s ease !important;
     }
     
     [data-testid="stFileUploader"]:hover {
         border-color: #FFD700 !important;
+        background: rgba(255, 215, 0, 0.05) !important;
+    }
+    
+    [data-testid="stFileUploader"] section {
+        color: rgba(255, 255, 255, 0.7) !important;
     }
     
     [data-testid="stFileUploader"] button {
@@ -321,9 +288,16 @@ st.markdown("""
         border: none !important;
         border-radius: 10px !important;
         font-weight: 700 !important;
+        padding: 10px 20px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    [data-testid="stFileUploader"] button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4) !important;
     }
 
-    /* زر المعالجة */
+    /* ===== زر المعالجة الرئيسي ===== */
     .stButton > button {
         background: linear-gradient(135deg, #FFD700 0%, #DAA520 50%, #FFD700 100%) !important;
         background-size: 200% auto !important;
@@ -335,45 +309,127 @@ st.markdown("""
         width: 100% !important;
         padding: 18px 40px !important;
         border: none !important;
-        box-shadow: 0 8px 30px rgba(218, 165, 32, 0.4) !important;
-        transition: all 0.4s ease !important;
+        box-shadow: 
+            0 8px 30px rgba(218, 165, 32, 0.4),
+            0 0 0 0 rgba(255, 215, 0, 0.5) !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        cursor: pointer !important;
+        position: relative !important;
+        overflow: hidden !important;
+        animation: buttonPulse 2s infinite !important;
+    }
+    
+    @keyframes buttonPulse {
+        0%, 100% { box-shadow: 0 8px 30px rgba(218, 165, 32, 0.4), 0 0 0 0 rgba(255, 215, 0, 0.4); }
+        50% { box-shadow: 0 8px 30px rgba(218, 165, 32, 0.6), 0 0 0 10px rgba(255, 215, 0, 0); }
+    }
+    
+    .stButton > button::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+        transition: left 0.6s ease !important;
+    }
+    
+    .stButton > button:hover::before {
+        left: 100% !important;
     }
     
     .stButton > button:hover {
         transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 0 15px 40px rgba(218, 165, 32, 0.5) !important;
+        box-shadow: 
+            0 15px 40px rgba(218, 165, 32, 0.5),
+            0 0 30px rgba(255, 215, 0, 0.3) !important;
+        background-position: right center !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px) scale(0.98) !important;
     }
 
-    /* أزرار التحميل */
+    /* ===== التنبيهات ===== */
+    .stAlert {
+        background: rgba(0, 31, 63, 0.9) !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        border-radius: 12px !important;
+        color: white !important;
+    }
+    
+    .stSuccess {
+        background: rgba(34, 197, 94, 0.15) !important;
+        border: 1px solid rgba(34, 197, 94, 0.5) !important;
+    }
+    
+    .stWarning {
+        background: rgba(255, 193, 7, 0.15) !important;
+        border: 1px solid rgba(255, 193, 7, 0.5) !important;
+    }
+    
+    .stError {
+        background: rgba(220, 53, 69, 0.15) !important;
+        border: 1px solid rgba(220, 53, 69, 0.5) !important;
+    }
+
+    /* ===== زر التحميل ===== */
     .stDownloadButton > button {
         background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
         color: white !important;
-        font-size: 1rem !important;
+        font-size: 1.1rem !important;
         font-weight: 700 !important;
-        padding: 12px 25px !important;
-        border-radius: 10px !important;
+        padding: 15px 40px !important;
+        border-radius: 12px !important;
         border: none !important;
-        margin: 5px !important;
-    }
-
-    /* خيارات التصدير */
-    .export-section {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(0, 15, 30, 0.98));
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        border-radius: 15px;
-        padding: 25px;
-        margin: 20px 0;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
     }
     
-    .export-title {
-        color: #FFD700;
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin-bottom: 20px;
-        text-align: center;
+    .stDownloadButton > button:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.5) !important;
     }
 
-    /* شريط التقدم */
+    /* ===== شريط النجاح ===== */
+    .success-banner {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+        border: 2px solid #22c55e;
+        border-radius: 15px;
+        padding: 20px 30px;
+        text-align: center;
+        margin: 20px;
+        animation: successPop 0.5s ease;
+    }
+    
+    @keyframes successPop {
+        0% { transform: scale(0.9); opacity: 0; }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .success-banner span {
+        color: #22c55e;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    /* ===== إخفاء التسميات ===== */
+    .stTextArea > label,
+    .stFileUploader > label,
+    .stRadio > label {
+        display: none !important;
+    }
+
+    /* ===== المعاينة ===== */
+    iframe {
+        border-radius: 15px !important;
+        border: 2px solid rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* ===== شريط التقدم ===== */
     .progress-box {
         background: rgba(0, 31, 63, 0.9);
         border: 1px solid rgba(255, 215, 0, 0.3);
@@ -397,1288 +453,169 @@ st.markdown("""
         background-size: 200% 100%;
         border-radius: 10px;
         animation: progressShine 1.5s infinite linear;
+        transition: width 0.3s ease;
     }
     
     @keyframes progressShine {
         0% { background-position: 200% center; }
         100% { background-position: -200% center; }
     }
-
-    /* التنبيهات */
-    .success-banner {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
-        border: 2px solid #22c55e;
-        border-radius: 15px;
-        padding: 20px 30px;
-        text-align: center;
-        margin: 20px;
-    }
     
-    .success-banner span {
-        color: #22c55e;
-        font-size: 1.2rem;
-        font-weight: 700;
+    .progress-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        margin-top: 10px;
     }
 
-    /* معاينة الشعار */
-    .logo-preview {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-        margin-top: 15px;
-    }
-    
-    .logo-preview img {
-        max-height: 80px;
-        border-radius: 8px;
-    }
-
-    /* إخفاء التسميات */
-    .stTextArea > label,
-    .stFileUploader > label,
-    .stRadio > label,
-    .stSelectbox > label {
-        display: none !important;
-    }
-
-    /* المعاينة */
-    iframe {
-        border-radius: 15px !important;
-        border: 2px solid rgba(255, 215, 0, 0.3) !important;
-    }
-
+    /* ===== الاستجابة ===== */
     @media (max-width: 768px) {
         .main-title { font-size: 36px; }
         .sub-title { font-size: 14px; }
         .hero-section { padding: 30px 20px; margin: 10px; }
+        div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب للتقارير - تصميم احترافي بخلفية بيضاء
+# 🎨 القوالب (نفس القوالب الأصلية)
 # ---------------------------------------------------------
 
 STYLE_OFFICIAL = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
+    :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
+    body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; margin: 0; padding: 0; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 20px; display: block; }
+    .card-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     
-    :root {
-        --primary: #1a365d;
-        --secondary: #2c5282;
-        --accent: #c9a227;
-        --accent-light: #f6e05e;
-        --text-dark: #1a202c;
-        --text-medium: #4a5568;
-        --text-light: #718096;
-        --bg-white: #ffffff;
-        --bg-light: #f7fafc;
-        --border: #e2e8f0;
-        --success: #38a169;
-        --shadow: 0 4px 20px rgba(0,0,0,0.08);
-    }
+    header { background-color: var(--navy-blue); color: var(--gold); padding: 30px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; border-radius: 8px; }
+    header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
+    header h2 { margin: 10px 0 0; font-size: 1.5em; color: var(--light-gold); }
     
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    .card { background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 25px; margin-bottom: 20px; break-inside: avoid; }
+    .card h3 { color: var(--navy-blue); font-size: 1.8em; margin-top: 0; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
     
-    body {
-        font-family: 'Tajawal', 'Cairo', sans-serif;
-        background-color: var(--bg-white);
-        color: var(--text-dark);
-        line-height: 1.8;
-        direction: rtl;
-        text-align: right;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
+    table th { background-color: var(--navy-blue); color: var(--light-gold); padding: 12px; border: 1px solid #ddd; }
+    table td { border: 1px solid #ddd; padding: 12px; text-align: right; }
     
-    .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 50px 60px;
-        background: var(--bg-white);
-    }
+    ul { list-style: none; padding: 0; }
+    ul li { padding: 10px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    ul li span.value { font-weight: 700; color: var(--gold); font-size: 1.1em; background: #001f3f; padding: 2px 8px; border-radius: 4px; margin-right: 10px; }
     
-    /* الهيدر */
-    header {
-        text-align: center;
-        padding: 40px;
-        margin-bottom: 50px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        border-radius: 16px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--accent));
-    }
-    
-    .logo-container { margin-bottom: 20px; }
-    .logo-container img { max-height: 80px; filter: brightness(0) invert(1); }
-    
-    header h1 {
-        color: white;
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin-bottom: 10px;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    
-    header h2 {
-        color: var(--accent-light);
-        font-size: 1.2rem;
-        font-weight: 500;
-        letter-spacing: 1px;
-    }
-    
-    header .date {
-        color: rgba(255,255,255,0.8);
-        font-size: 0.95rem;
-        margin-top: 15px;
-    }
-    
-    /* الأقسام */
-    .section {
-        background: var(--bg-white);
-        border-radius: 12px;
-        padding: 35px;
-        margin-bottom: 30px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        transition: all 0.3s ease;
-    }
-    
-    .section:hover {
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    }
-    
-    .section-title {
-        color: var(--primary);
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 3px solid var(--accent);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .section-title::before {
-        content: '';
-        width: 8px;
-        height: 30px;
-        background: linear-gradient(180deg, var(--accent), var(--accent-light));
-        border-radius: 4px;
-    }
-    
-    h3 {
-        color: var(--secondary);
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin: 25px 0 15px 0;
-    }
-    
-    p {
-        color: var(--text-medium);
-        font-size: 1.05rem;
-        line-height: 2;
-        margin-bottom: 15px;
-    }
-    
-    /* الجداول */
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin: 25px 0;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-    }
-    
-    thead th {
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        color: white;
-        padding: 18px 20px;
-        font-weight: 700;
-        font-size: 1rem;
-        text-align: right;
-    }
-    
-    tbody tr {
-        transition: all 0.2s ease;
-    }
-    
-    tbody tr:nth-child(even) { background: var(--bg-light); }
-    tbody tr:hover { background: #edf2f7; }
-    
-    tbody td {
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--border);
-        color: var(--text-dark);
-        font-size: 0.95rem;
-    }
-    
-    /* القوائم */
-    ul, ol {
-        list-style: none;
-        padding: 0;
-        margin: 20px 0;
-    }
-    
-    li {
-        padding: 15px 20px;
-        margin-bottom: 10px;
-        background: var(--bg-light);
-        border-radius: 10px;
-        border-right: 4px solid var(--accent);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.2s ease;
-    }
-    
-    li:hover {
-        background: #edf2f7;
-        transform: translateX(-5px);
-    }
-    
-    li .value {
-        font-weight: 800;
-        color: var(--primary);
-        background: linear-gradient(135deg, var(--accent), var(--accent-light));
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-    }
-    
-    /* بطاقات الإحصائيات */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin: 30px 0;
-    }
-    
-    .stat-card {
-        background: linear-gradient(135deg, var(--bg-light), var(--bg-white));
-        border-radius: 16px;
-        padding: 30px;
-        text-align: center;
-        border: 1px solid var(--border);
-        transition: all 0.3s ease;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .stat-card .value {
-        font-size: 2.8rem;
-        font-weight: 900;
-        color: var(--primary);
-        display: block;
-        margin-bottom: 8px;
-    }
-    
-    .stat-card .label {
-        font-size: 0.95rem;
-        color: var(--text-light);
-        font-weight: 500;
-    }
-    
-    /* الفوتر */
-    footer {
-        text-align: center;
-        margin-top: 50px;
-        padding: 30px;
-        background: var(--bg-light);
-        border-radius: 12px;
-        border-top: 4px solid var(--accent);
-    }
-    
-    footer p {
-        color: var(--text-medium);
-        font-size: 1rem;
-        margin: 5px 0;
-    }
-    
-    footer .org-name {
-        color: var(--primary);
-        font-weight: 800;
-        font-size: 1.1rem;
-    }
-    
-    /* طباعة */
-    @media print {
-        body { background: white; }
-        .section { box-shadow: none; border: 1px solid #ddd; }
-        header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
+    footer { grid-column: 1 / -1; text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 0.9em; border-top: 2px solid var(--navy-blue); }
 </style>
 """
 
 STYLE_DIGITAL = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
+    body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #f4f7f9; color: #333; direction: rtl; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 25px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); }
+    header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 3px solid #0056b3; }
+    h1 { color: #0056b3; font-size: 2.4em; font-weight: 700; }
+    h2 { color: #007bff; font-size: 2em; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px; }
     
-    :root {
-        --primary: #0066cc;
-        --primary-dark: #004999;
-        --primary-light: #e6f2ff;
-        --accent: #00c853;
-        --accent-orange: #ff9100;
-        --text-dark: #1a1a2e;
-        --text-medium: #4a4a68;
-        --text-light: #8888a0;
-        --bg-white: #ffffff;
-        --bg-light: #f8fafc;
-        --border: #e8ecf0;
-    }
+    .card { background-color: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
     
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ul li { position: relative; padding-right: 35px; margin-bottom: 12px; }
+    ul li::before { content: '•'; position: absolute; right: 0; color: #007bff; font-size: 1.8em; line-height: 1; }
     
-    body {
-        font-family: 'Tajawal', 'Cairo', sans-serif;
-        background-color: var(--bg-white);
-        color: var(--text-dark);
-        line-height: 1.8;
-        direction: rtl;
-    }
+    .goal { background-color: #e6f7ff; border: 1px solid #b3e0ff; padding: 18px; border-radius: 8px; text-align: center; margin-top: 20px; font-weight: bold; color: #0056b3; }
     
-    .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 50px 60px;
-        background: var(--bg-white);
-    }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; display: block; overflow-x: auto; white-space: nowrap; }
+    thead th { background-color: #007bff; color: white; padding: 14px; }
+    td { padding: 14px; border: 1px solid #e0e0e0; text-align: center; }
     
-    /* الهيدر */
-    header {
-        text-align: center;
-        padding: 50px 40px;
-        margin-bottom: 50px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        border-radius: 20px;
-        position: relative;
-    }
-    
-    header::after {
-        content: '';
-        position: absolute;
-        bottom: -20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60px;
-        height: 4px;
-        background: var(--accent);
-        border-radius: 2px;
-    }
-    
-    .logo-container { margin-bottom: 20px; }
-    .logo-container img { max-height: 80px; }
-    
-    header h1 {
-        color: white;
-        font-size: 2.4rem;
-        font-weight: 800;
-        margin-bottom: 12px;
-    }
-    
-    header h2 {
-        color: rgba(255,255,255,0.9);
-        font-size: 1.15rem;
-        font-weight: 400;
-    }
-    
-    /* البطاقات */
-    .card {
-        background: var(--bg-white);
-        border-radius: 16px;
-        padding: 35px;
-        margin-bottom: 25px;
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    
-    .card-title {
-        color: var(--primary);
-        font-size: 1.4rem;
-        font-weight: 800;
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .card-title .icon {
-        width: 40px;
-        height: 40px;
-        background: var(--primary-light);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-    }
-    
-    h2 {
-        color: var(--primary);
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin: 30px 0 20px 0;
-        padding-bottom: 12px;
-        border-bottom: 2px solid var(--border);
-    }
-    
-    h3 {
-        color: var(--text-dark);
-        font-size: 1.15rem;
-        font-weight: 700;
-        margin: 20px 0 12px 0;
-    }
-    
-    p {
-        color: var(--text-medium);
-        font-size: 1.05rem;
-        line-height: 1.9;
-    }
-    
-    /* شبكة الإحصائيات */
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 20px;
-        margin: 30px 0;
-    }
-    
-    .metric-card {
-        background: var(--bg-light);
-        border-radius: 14px;
-        padding: 25px;
-        text-align: center;
-        border: 1px solid var(--border);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary);
-    }
-    
-    .metric-card.success::before { background: var(--accent); }
-    .metric-card.warning::before { background: var(--accent-orange); }
-    
-    .metric-card .number {
-        font-size: 2.5rem;
-        font-weight: 900;
-        color: var(--primary);
-        display: block;
-    }
-    
-    .metric-card .label {
-        font-size: 0.9rem;
-        color: var(--text-light);
-        margin-top: 5px;
-    }
-    
-    /* الجداول */
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin: 25px 0;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 2px 15px rgba(0,0,0,0.04);
-    }
-    
-    thead th {
-        background: var(--primary);
-        color: white;
-        padding: 16px 20px;
-        font-weight: 700;
-        text-align: right;
-    }
-    
-    tbody tr:nth-child(even) { background: var(--bg-light); }
-    tbody tr:hover { background: var(--primary-light); }
-    
-    tbody td {
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    /* القوائم */
-    ul { list-style: none; padding: 0; margin: 20px 0; }
-    
-    ul li {
-        padding: 14px 20px;
-        margin-bottom: 8px;
-        background: var(--bg-light);
-        border-radius: 10px;
-        position: relative;
-        padding-right: 40px;
-        transition: all 0.2s ease;
-    }
-    
-    ul li::before {
-        content: '✓';
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--accent);
-        font-weight: bold;
-    }
-    
-    ul li:hover { background: var(--primary-light); }
-    
-    /* الملاحظات */
-    .highlight-box {
-        background: linear-gradient(135deg, var(--primary-light), #f0f7ff);
-        border-radius: 12px;
-        padding: 25px;
-        margin: 25px 0;
-        border-right: 5px solid var(--primary);
-    }
-    
-    .highlight-box.success {
-        background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-        border-right-color: var(--accent);
-    }
-    
-    /* الفوتر */
-    footer {
-        text-align: center;
-        margin-top: 50px;
-        padding: 35px;
-        background: var(--bg-light);
-        border-radius: 16px;
-    }
-    
-    footer .org-name {
-        color: var(--primary);
-        font-weight: 800;
-        font-size: 1.15rem;
-        margin-bottom: 5px;
-    }
-    
-    footer .dept-name {
-        color: var(--text-medium);
-        font-size: 1rem;
-    }
+    footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-style: italic; color: #777; }
 </style>
 """
 
 STYLE_ANALYTICAL = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
+    body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 20px; }
+    header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
+    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.07); margin-bottom: 25px; padding: 25px; }
+    .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; }
     
-    :root {
-        --primary: #1e3a5f;
-        --secondary: #3d5a80;
-        --accent: #ee6c4d;
-        --accent-light: #ffeae5;
-        --success: #06d6a0;
-        --warning: #ffd166;
-        --text-dark: #1a1a2e;
-        --text-medium: #4a5568;
-        --text-light: #718096;
-        --bg-white: #ffffff;
-        --bg-light: #f8f9fa;
-        --border: #e9ecef;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+    .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
+    .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; word-break: break-all; }
     
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    .pyramid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .tier-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; background-color: #fcfcfc; border-top: 6px solid; }
+    .tier-upper { border-top-color: #d90429; } 
+    .tier-middle { border-top-color: #f7b801; } 
     
-    body {
-        font-family: 'Tajawal', 'Cairo', sans-serif;
-        background-color: var(--bg-white);
-        color: var(--text-dark);
-        line-height: 1.8;
-        direction: rtl;
-    }
+    .bar-container { background-color: #e0e0e0; border-radius: 5px; height: 12px; margin-top: 12px; width: 100%; overflow: hidden; }
+    .bar { height: 100%; border-radius: 5px; }
+    .tier-upper .bar { background-color: #d90429; } 
+    .tier-middle .bar { background-color: #f7b801; }
     
-    .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 50px 60px;
-        background: var(--bg-white);
-    }
-    
-    /* الهيدر */
-    header {
-        text-align: center;
-        padding: 50px 40px;
-        margin-bottom: 50px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        border-radius: 20px;
-        position: relative;
-    }
-    
-    .logo-container { margin-bottom: 20px; }
-    .logo-container img { max-height: 80px; }
-    
-    header h1 {
-        color: white;
-        font-size: 2.4rem;
-        font-weight: 800;
-        margin-bottom: 12px;
-    }
-    
-    header h2 {
-        color: var(--accent);
-        font-size: 1.15rem;
-        font-weight: 500;
-    }
-    
-    /* أقسام التقرير */
-    .report-section {
-        background: var(--bg-white);
-        border-radius: 16px;
-        padding: 35px;
-        margin-bottom: 30px;
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
-    
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid var(--border);
-    }
-    
-    .section-number {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, var(--accent), #ff8a65);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 800;
-    }
-    
-    .section-header h2 {
-        color: var(--primary);
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin: 0;
-    }
-    
-    /* شبكة الإحصائيات */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin: 30px 0;
-    }
-    
-    .stat-card {
-        background: var(--bg-light);
-        border-radius: 16px;
-        padding: 30px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid var(--border);
-    }
-    
-    .stat-card::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary);
-    }
-    
-    .stat-card.highlight::after { background: var(--accent); }
-    .stat-card.success::after { background: var(--success); }
-    .stat-card.warning::after { background: var(--warning); }
-    
-    .stat-card .value {
-        font-size: 2.8rem;
-        font-weight: 900;
-        color: var(--primary);
-        display: block;
-        margin-bottom: 8px;
-    }
-    
-    .stat-card .label {
-        font-size: 0.95rem;
-        color: var(--text-light);
-    }
-    
-    /* شريط التقدم */
-    .progress-item {
-        margin-bottom: 20px;
-    }
-    
-    .progress-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }
-    
-    .progress-label { color: var(--text-dark); font-weight: 600; }
-    .progress-value { color: var(--primary); font-weight: 800; }
-    
-    .progress-bar {
-        height: 12px;
-        background: var(--bg-light);
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary), var(--secondary));
-        border-radius: 6px;
-        transition: width 0.5s ease;
-    }
-    
-    .progress-fill.success { background: linear-gradient(90deg, var(--success), #00e5b0); }
-    .progress-fill.warning { background: linear-gradient(90deg, var(--warning), #ffe066); }
-    .progress-fill.danger { background: linear-gradient(90deg, var(--accent), #ff8a80); }
-    
-    /* الجداول */
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin: 25px 0;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-    
-    thead th {
-        background: var(--primary);
-        color: white;
-        padding: 16px 20px;
-        font-weight: 700;
-        text-align: right;
-    }
-    
-    tbody tr:nth-child(even) { background: var(--bg-light); }
-    tbody tr:hover { background: #eef2f7; }
-    
-    tbody td {
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    /* البطاقات المميزة */
-    .highlight-card {
-        background: var(--accent-light);
-        border-radius: 14px;
-        padding: 25px;
-        margin: 25px 0;
-        border-right: 5px solid var(--accent);
-    }
-    
-    .highlight-card.info {
-        background: #e3f2fd;
-        border-right-color: var(--secondary);
-    }
-    
-    .highlight-card.success {
-        background: #e8f5e9;
-        border-right-color: var(--success);
-    }
-    
-    /* الفوتر */
-    footer {
-        text-align: center;
-        margin-top: 50px;
-        padding: 35px;
-        background: var(--bg-light);
-        border-radius: 16px;
-        border-top: 4px solid var(--accent);
-    }
-    
-    footer .org-name {
-        color: var(--primary);
-        font-weight: 800;
-        font-size: 1.15rem;
-    }
-    
-    footer .dept-name {
-        color: var(--text-medium);
-        font-size: 1rem;
-        margin-top: 5px;
-    }
+    footer { text-align: center; margin-top: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #ccc; padding-top: 20px;}
 </style>
 """
 
 STYLE_PRESENTATION = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
-    
     :root {
-        --primary: #1a365d;
-        --secondary: #2d4a6f;
-        --accent: #d69e2e;
-        --accent-light: #f6e05e;
-        --text-dark: #1a202c;
-        --text-light: #718096;
-        --bg-white: #ffffff;
+        --primary-navy: #002b49; --primary-blue: #004e89;
+        --gold-main: #c5a059; --gold-light: #e6c885;
+        --white: #ffffff; --grey-light: #f8f9fa; --text-dark: #333333;
     }
-    
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-        font-family: 'Tajawal', 'Cairo', sans-serif;
-        background-color: var(--bg-white);
-        overflow: hidden;
-        height: 100vh;
-        width: 100vw;
-        direction: rtl;
-    }
-    
-    .presentation-container {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        background: var(--bg-white);
-    }
-    
+    body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow: hidden; height: 100vh; width: 100vw; direction: rtl; margin:0;}
+    .presentation-container { width: 100%; height: 100%; position: relative; background: radial-gradient(circle at center, #003865 0%, #002035 100%); }
     .slide {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        visibility: hidden;
-        transform: scale(0.95);
-        transition: all 0.5s ease;
-        display: flex;
-        flex-direction: column;
-        padding: 50px 70px;
-        background: var(--bg-white);
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0; visibility: hidden; transform: scale(0.95);
+        transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+        display: flex; flex-direction: column; padding: 40px 60px;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
     }
-    
-    .slide.active {
-        opacity: 1;
-        visibility: visible;
-        transform: scale(1);
-        z-index: 10;
-    }
-    
-    /* شريحة الغلاف */
-    .slide.cover {
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    }
-    
-    .cover-content {
-        padding: 80px;
-        border: 3px solid var(--accent);
-        border-radius: 20px;
-        background: rgba(255,255,255,0.05);
-    }
-    
-    .cover-logo { margin-bottom: 30px; }
-    .cover-logo img { max-height: 100px; }
-    
-    .slide.cover .main-title {
-        font-size: 3.5rem;
-        color: white;
-        font-weight: 900;
-        margin-bottom: 20px;
-    }
-    
-    .slide.cover .sub-title {
-        font-size: 1.5rem;
-        color: var(--accent-light);
-        font-weight: 400;
-    }
-    
-    /* الشرائح العادية */
-    .slide-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 25px;
-        margin-bottom: 35px;
-        border-bottom: 3px solid var(--accent);
-    }
-    
-    .header-title h2 {
-        color: var(--primary);
-        font-size: 2rem;
-        font-weight: 800;
-    }
-    
-    .header-logo img { max-height: 50px; }
-    
-    .slide-content {
-        flex-grow: 1;
-        display: flex;
-        gap: 50px;
-        overflow: hidden;
-    }
-    
-    .text-panel {
-        flex: 3;
-        padding: 30px;
-        overflow-y: auto;
-    }
-    
-    .visual-panel {
-        flex: 2;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        border-radius: 20px;
-        color: white;
-        padding: 40px;
-    }
-    
-    h3 {
-        color: var(--primary);
-        font-size: 1.5rem;
-        margin-bottom: 20px;
-        font-weight: 700;
-    }
-    
-    p {
-        font-size: 1.2rem;
-        line-height: 2;
-        color: var(--text-dark);
-        margin-bottom: 20px;
-    }
-    
-    li {
-        font-size: 1.15rem;
-        margin-bottom: 15px;
-        color: var(--text-dark);
-    }
-    
-    .icon-box {
-        font-size: 5rem;
-        color: var(--accent);
-        margin-bottom: 20px;
-    }
-    
-    /* التنقل */
-    .nav-controls {
-        position: absolute;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 15px;
-        z-index: 100;
-    }
-    
-    .nav-btn {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: 2px solid var(--primary);
-        background: white;
-        color: var(--primary);
-        cursor: pointer;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-    }
-    
-    .nav-btn:hover {
-        background: var(--primary);
-        color: white;
-    }
-    
-    .page-number {
-        position: absolute;
-        bottom: 35px;
-        right: 70px;
-        color: var(--text-light);
-        font-size: 1rem;
-        font-weight: 600;
-    }
-    
-    /* التوقيع */
-    .signature-box {
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 2px solid var(--accent);
-        text-align: center;
-    }
-    
-    .signature-title {
-        color: var(--text-light);
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-    }
-    
-    .signature-name {
-        color: var(--primary);
-        font-size: 1.2rem;
-        font-weight: 700;
-    }
+    .slide.active { opacity: 1; visibility: visible; transform: scale(1); z-index: 10; }
+    .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 15px; margin-bottom: 25px; flex-shrink: 0; }
+    .header-title h2 { color: var(--gold-main); font-size: 2rem; font-weight: 800; }
+    .header-logo { font-family: 'Tajawal'; color: var(--white); font-weight: bold; display: flex; align-items: center; gap: 10px; }
+    .slide-content { flex-grow: 1; display: flex; gap: 40px; height: 100%; overflow: hidden; }
+    .text-panel { flex: 3; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: var(--text-dark); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto; border-right: 5px solid var(--gold-main); }
+    .visual-panel { flex: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--white); text-align: center; }
+    h3 { color: var(--primary-blue); font-size: 1.6rem; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+    p { font-size: 1.2rem; line-height: 1.8; margin-bottom: 20px; text-align: justify; }
+    li { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.6; }
+    strong { color: var(--primary-navy); font-weight: 800; }
+    .icon-box { font-size: 5rem; color: var(--gold-main); margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; }
+    .slide.cover { align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--primary-navy) 30%, #001a2c 100%); }
+    .cover-content { border: 2px solid var(--gold-main); padding: 60px; position: relative; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+    .main-title { font-size: 3.5rem; color: var(--white); margin-bottom: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .sub-title { font-size: 1.8rem; color: var(--gold-main); margin-bottom: 40px; font-weight: 300; }
+    .nav-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 100; }
+    .nav-btn { background: transparent; border: 2px solid var(--gold-main); color: var(--gold-main); width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .nav-btn:hover { background: var(--gold-main); color: var(--primary-navy); transform: scale(1.1); }
+    .page-number { position: absolute; bottom: 25px; right: 60px; color: var(--gold-main); font-size: 1.2rem; font-weight: bold; }
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+    .signature-box { margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--gold-main); text-align: center; }
+    .signature-title { font-size: 0.9rem; color: #aaa; margin-bottom: 10px; }
+    .signature-name { font-size: 1.4rem; color: var(--gold-main); font-weight: bold; font-family: 'Tajawal'; }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 """
 
 STYLE_EXECUTIVE = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
-    
-    :root {
-        --primary: #111827;
-        --secondary: #374151;
-        --accent: #d97706;
-        --accent-light: #fef3c7;
-        --success: #059669;
-        --text-dark: #111827;
-        --text-medium: #4b5563;
-        --text-light: #9ca3af;
-        --bg-white: #ffffff;
-        --bg-light: #f9fafb;
-        --border: #e5e7eb;
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-        font-family: 'Tajawal', 'Cairo', sans-serif;
-        background-color: var(--bg-white);
-        color: var(--text-dark);
-        line-height: 1.8;
-        direction: rtl;
-    }
-    
-    .container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 60px 70px;
-        background: var(--bg-white);
-    }
-    
-    /* الهيدر */
-    header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 30px;
-        margin-bottom: 50px;
-        border-bottom: 4px solid var(--primary);
-    }
-    
-    .brand {
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: var(--primary);
-        letter-spacing: -0.5px;
-    }
-    
-    .logo-container img { max-height: 60px; }
-    
-    /* العنوان الرئيسي */
-    h1 {
-        font-size: 3rem;
-        font-weight: 900;
-        color: var(--primary);
-        line-height: 1.2;
-        margin-bottom: 15px;
-        letter-spacing: -1px;
-    }
-    
-    .subtitle {
-        font-size: 1.2rem;
-        color: var(--text-light);
-        margin-bottom: 40px;
-    }
-    
-    /* الملخص التنفيذي */
-    .executive-summary {
-        font-size: 1.25rem;
-        line-height: 1.9;
-        color: var(--text-medium);
-        margin-bottom: 50px;
-        padding: 30px;
-        background: var(--bg-light);
-        border-radius: 12px;
-        border-right: 5px solid var(--accent);
-    }
-    
-    /* شبكة المقاييس */
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 25px;
-        margin: 40px 0;
-    }
-    
-    .metric-box {
-        padding: 30px;
-        background: var(--bg-light);
-        border-radius: 12px;
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    
-    .metric-box:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-    
-    .metric-value {
-        font-size: 2.8rem;
-        font-weight: 900;
-        color: var(--primary);
-        display: block;
-        margin-bottom: 5px;
-    }
-    
-    .metric-label {
-        font-size: 0.9rem;
-        color: var(--text-light);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    /* عناوين الأقسام */
-    .section-title {
-        font-size: 1.1rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: var(--accent);
-        margin: 50px 0 25px 0;
-        padding-bottom: 12px;
-        border-bottom: 2px solid var(--border);
-    }
-    
-    h2 {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: var(--primary);
-        margin: 30px 0 20px 0;
-    }
-    
-    h3 {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--secondary);
-        margin: 25px 0 15px 0;
-    }
-    
-    p {
-        font-size: 1.1rem;
-        color: var(--text-medium);
-        line-height: 1.9;
-        margin-bottom: 20px;
-    }
-    
-    /* القوائم */
-    ul, ol {
-        list-style: none;
-        padding: 0;
-        margin: 20px 0;
-    }
-    
-    li {
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    li::before {
-        content: '—';
-        color: var(--accent);
-        font-weight: 800;
-    }
-    
-    /* الجداول */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 30px 0;
-    }
-    
-    thead th {
-        background: var(--primary);
-        color: white;
-        padding: 15px 20px;
-        text-align: right;
-        font-weight: 700;
-    }
-    
-    tbody tr:nth-child(even) { background: var(--bg-light); }
-    
-    tbody td {
-        padding: 15px 20px;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    /* صندوق التمييز */
-    .callout {
-        background: var(--accent-light);
-        padding: 25px 30px;
-        border-radius: 12px;
-        margin: 30px 0;
-        border-right: 5px solid var(--accent);
-    }
-    
-    .callout.success {
-        background: #d1fae5;
-        border-right-color: var(--success);
-    }
-    
-    /* الفوتر */
-    footer {
-        margin-top: 80px;
-        padding-top: 30px;
-        border-top: 2px solid var(--border);
-        text-align: center;
-    }
-    
-    footer .org-name {
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--primary);
-        margin-bottom: 5px;
-    }
-    
-    footer .dept-name {
-        font-size: 0.95rem;
-        color: var(--text-light);
-    }
-    
-    footer .date {
-        font-size: 0.85rem;
-        color: var(--text-light);
-        margin-top: 15px;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;800&display=swap');
+    body { font-family: 'Tajawal', sans-serif; background-color: #ffffff; color: #222; direction: rtl; }
+    .container { max-width: 900px; margin: 40px auto; padding: 40px; border: 1px solid #eee; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; }
+    .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; color: #002b49; }
+    h1 { font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin-bottom: 10px; color: #000; }
+    .executive-summary { font-size: 1.3rem; line-height: 1.6; color: #444; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 20px; background: #fafafa; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 30px; }
+    .metric-box { padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
+    .metric-val { font-size: 2.5rem; font-weight: 800; color: #002b49; }
+    .metric-lbl { font-size: 1rem; color: #666; text-transform: uppercase; }
+    .section-title { font-size: 1.2rem; font-weight: 800; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; color: #c5a059; border-bottom: 2px solid #eee; display: inline-block;}
+    footer { margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #999; font-size: 0.8rem; }
 </style>
 """
 
@@ -1689,21 +626,24 @@ SCRIPT_PRESENTATION = """
         const slides = document.querySelectorAll('.slide');
         const totalSlides = slides.length;
         if(totalSlides === 0) return;
+        
         slides.forEach(slide => { slide.classList.remove('active'); });
+        
         const activeSlide = document.getElementById(`slide-${currentSlideIndex}`);
         if(activeSlide) activeSlide.classList.add('active');
+        
         const pageNum = document.getElementById('page-num');
         if(pageNum) pageNum.innerText = `${currentSlideIndex} / ${totalSlides}`;
     }
-    function nextSlide() {
+    function nextSlide() { 
         const totalSlides = document.querySelectorAll('.slide').length;
-        if (currentSlideIndex < totalSlides) { currentSlideIndex++; updateSlide(); }
+        if (currentSlideIndex < totalSlides) { currentSlideIndex++; updateSlide(); } 
     }
-    function prevSlide() {
-        if (currentSlideIndex > 1) { currentSlideIndex--; updateSlide(); }
+    function prevSlide() { 
+        if (currentSlideIndex > 1) { currentSlideIndex--; updateSlide(); } 
     }
     document.addEventListener('keydown', function(event) {
-        if (event.key === "ArrowLeft" || event.key === " ") nextSlide();
+        if (event.key === "ArrowLeft" || event.key === "Space") nextSlide();
         else if (event.key === "ArrowRight") prevSlide();
     });
     setTimeout(updateSlide, 100);
@@ -1715,7 +655,6 @@ SCRIPT_PRESENTATION = """
 # ---------------------------------------------------------
 
 def extract_text_from_file(uploaded_file):
-    """استخراج النص من الملفات"""
     text_content = ""
     try:
         if uploaded_file.type == "application/pdf":
@@ -1733,143 +672,24 @@ def extract_text_from_file(uploaded_file):
     return text_content
 
 def clean_html_response(text):
-    """تنظيف رد الذكاء الاصطناعي"""
     text = text.replace("```html", "").replace("```", "")
     return text.strip()
 
 def get_working_model():
-    """الحصول على نموذج Gemini المتاح"""
     try:
-        # البحث عن النماذج المتاحة
-        available_models = []
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
-                available_models.append(m.name)
-        
-        # ترتيب الأولوية للنماذج
-        preferred_models = [
-            'models/gemini-1.5-flash-latest',
-            'models/gemini-1.5-flash',
-            'models/gemini-1.5-pro-latest',
-            'models/gemini-1.5-pro',
-            'models/gemini-pro',
-            'models/gemini-1.0-pro-latest',
-            'models/gemini-1.0-pro',
-        ]
-        
-        for model in preferred_models:
-            if model in available_models:
-                return model
-        
-        # إذا لم يوجد أي من المفضلة، استخدم أول نموذج متاح
-        if available_models:
-            return available_models[0]
-        
-        return 'gemini-pro'
-    except Exception as e:
-        return 'gemini-pro'
-
-def analyze_text(text):
-    """تحليل النص واستخراج الإحصائيات"""
-    if not text.strip():
-        return None
-    
-    # تنظيف النص
-    clean_text = re.sub(r'[^\w\s]', '', text)
-    
-    # عدد الكلمات
-    words = clean_text.split()
-    word_count = len(words)
-    
-    # عدد الجمل
-    sentences = re.split(r'[.!?؟،]', text)
-    sentence_count = len([s for s in sentences if s.strip()])
-    
-    # عدد الفقرات
-    paragraphs = text.split('\n\n')
-    paragraph_count = len([p for p in paragraphs if p.strip()])
-    
-    # عدد الأحرف
-    char_count = len(text)
-    
-    # استخراج الأرقام والنسب
-    numbers = re.findall(r'\d+(?:\.\d+)?%?', text)
-    
-    # الكلمات المفتاحية (أكثر الكلمات تكراراً)
-    # استبعاد الكلمات الشائعة
-    stop_words = {'في', 'من', 'إلى', 'على', 'عن', 'مع', 'هذا', 'هذه', 'التي', 'الذي', 'أن', 'كان', 'كانت', 'يكون', 'تكون', 'هو', 'هي', 'ذلك', 'تلك', 'و', 'أو', 'ثم', 'لكن', 'بل', 'حتى', 'إذا', 'لو', 'ما', 'لا', 'نعم', 'قد', 'لقد', 'سوف', 'عند', 'بعد', 'قبل', 'فوق', 'تحت', 'بين', 'خلال', 'حول', 'ضد', 'منذ', 'أما', 'إما', 'سواء', 'كل', 'بعض', 'غير', 'أي', 'كيف', 'متى', 'أين', 'لماذا', 'كم', 'هل'}
-    
-    filtered_words = [w for w in words if len(w) > 2 and w not in stop_words]
-    word_freq = Counter(filtered_words)
-    keywords = word_freq.most_common(8)
-    
-    return {
-        'word_count': word_count,
-        'sentence_count': sentence_count,
-        'paragraph_count': paragraph_count,
-        'char_count': char_count,
-        'numbers': numbers[:10],
-        'keywords': keywords,
-        'reading_time': max(1, word_count // 200)  # دقائق القراءة
-    }
-
-def image_to_base64(uploaded_image):
-    """تحويل الصورة إلى Base64"""
-    if uploaded_image is not None:
-        bytes_data = uploaded_image.getvalue()
-        base64_str = base64.b64encode(bytes_data).decode()
-        return f"data:image/{uploaded_image.type.split('/')[-1]};base64,{base64_str}"
-    return None
-
-def create_pdf(html_content):
-    """إنشاء ملف PDF من HTML"""
-    if not WEASYPRINT_AVAILABLE:
-        return None
-    try:
-        pdf_bytes = WeasyHTML(string=html_content).write_pdf()
-        return pdf_bytes
-    except Exception as e:
-        st.error(f"خطأ في إنشاء PDF: {e}")
-        return None
-
-def create_docx(html_content, title="تقرير"):
-    """إنشاء ملف Word من HTML"""
-    if not DOCX_AVAILABLE:
-        return None
-    try:
-        doc = Document()
-        
-        # إعداد الاتجاه RTL
-        section = doc.sections[0]
-        
-        # العنوان
-        heading = doc.add_heading(title, 0)
-        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        # استخراج النص من HTML (تبسيط)
-        text_content = re.sub(r'<[^>]+>', '\n', html_content)
-        text_content = re.sub(r'\n\s*\n', '\n\n', text_content)
-        
-        # إضافة المحتوى
-        for para in text_content.split('\n\n'):
-            if para.strip():
-                p = doc.add_paragraph(para.strip())
-                p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        
-        # حفظ في الذاكرة
-        buffer = BytesIO()
-        doc.save(buffer)
-        buffer.seek(0)
-        return buffer.getvalue()
-    except Exception as e:
-        st.error(f"خطأ في إنشاء Word: {e}")
-        return None
+                if "flash" in m.name:
+                    return m.name
+        return "gemini-1.5-flash"
+    except:
+        return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
 # 🏗️ بناء الواجهة
 # ---------------------------------------------------------
 
-# الهيدر
+# الهيدر الرئيسي
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
@@ -1877,35 +697,10 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# ===== قسم الشعار =====
-st.markdown('<div class="section-header">🏷️ شعار المؤسسة (اختياري)</div>', unsafe_allow_html=True)
-
-logo_col1, logo_col2 = st.columns([1, 3])
-
-with logo_col1:
-    uploaded_logo = st.file_uploader("ارفع شعار المؤسسة", type=['png', 'jpg', 'jpeg'], label_visibility="collapsed", key="logo_uploader")
-    
-with logo_col2:
-    if uploaded_logo:
-        logo_base64 = image_to_base64(uploaded_logo)
-        st.markdown(f'''
-        <div class="logo-preview">
-            <img src="{logo_base64}" alt="شعار المؤسسة">
-            <p style="color: #22c55e; margin-top: 10px; font-size: 0.9rem;">✅ تم رفع الشعار بنجاح</p>
-        </div>
-        ''', unsafe_allow_html=True)
-    else:
-        st.markdown('''
-        <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px; text-align: center;">
-            <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">لم يتم رفع شعار - سيتم استخدام التصميم الافتراضي</p>
-        </div>
-        ''', unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ===== قسم اختيار النمط =====
+# عنوان اختيار النمط
 st.markdown('<div class="section-header">🎨 اختر نمط الإخراج المطلوب</div>', unsafe_allow_html=True)
 
+# أزرار الاختيار
 report_type = st.radio(
     "",
     ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)", "✨ ملخص تنفيذي حديث"),
@@ -1915,7 +710,7 @@ report_type = st.radio(
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ===== قسم الإدخال =====
+# منطقة الإدخال
 col_input, col_upload = st.columns([2, 1])
 
 with col_input:
@@ -1930,8 +725,7 @@ with col_input:
         </div>
     </div>
     ''', unsafe_allow_html=True)
-    
-    user_text = st.text_area("", height=250, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...", label_visibility="collapsed")
+    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...", label_visibility="collapsed")
 
 with col_upload:
     st.markdown('''
@@ -1945,79 +739,14 @@ with col_upload:
         </div>
     </div>
     ''', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed", key="file_uploader")
+    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
     
     if uploaded_file:
         st.success(f"✅ تم إرفاق: {uploaded_file.name}")
 
-# ===== تحليل النص الذكي =====
-if user_text.strip():
-    analysis = analyze_text(user_text)
-    if analysis:
-        st.markdown('''
-        <div class="analysis-card">
-            <div class="analysis-title">📊 تحليل النص الذكي</div>
-        </div>
-        ''', unsafe_allow_html=True)
-        
-        # إحصائيات النص
-        stat_cols = st.columns(5)
-        
-        with stat_cols[0]:
-            st.markdown(f'''
-            <div class="stat-item">
-                <div class="stat-value">{analysis['word_count']}</div>
-                <div class="stat-label">كلمة</div>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        with stat_cols[1]:
-            st.markdown(f'''
-            <div class="stat-item">
-                <div class="stat-value">{analysis['sentence_count']}</div>
-                <div class="stat-label">جملة</div>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        with stat_cols[2]:
-            st.markdown(f'''
-            <div class="stat-item">
-                <div class="stat-value">{analysis['paragraph_count']}</div>
-                <div class="stat-label">فقرة</div>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        with stat_cols[3]:
-            st.markdown(f'''
-            <div class="stat-item">
-                <div class="stat-value">{analysis['char_count']}</div>
-                <div class="stat-label">حرف</div>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        with stat_cols[4]:
-            st.markdown(f'''
-            <div class="stat-item">
-                <div class="stat-value">{analysis['reading_time']}</div>
-                <div class="stat-label">دقائق للقراءة</div>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        # الكلمات المفتاحية
-        if analysis['keywords']:
-            st.markdown("<p style='color: #FFD700; margin: 15px 0 10px 0; font-weight: 600;'>🔑 الكلمات المفتاحية:</p>", unsafe_allow_html=True)
-            keywords_html = " ".join([f'<span class="keyword-tag">{word} ({count})</span>' for word, count in analysis['keywords']])
-            st.markdown(f'<div>{keywords_html}</div>', unsafe_allow_html=True)
-        
-        # الأرقام المكتشفة
-        if analysis['numbers']:
-            st.markdown("<p style='color: #FFD700; margin: 15px 0 10px 0; font-weight: 600;'>🔢 الأرقام المكتشفة:</p>", unsafe_allow_html=True)
-            numbers_html = " ".join([f'<span class="keyword-tag">{num}</span>' for num in analysis['numbers']])
-            st.markdown(f'<div>{numbers_html}</div>', unsafe_allow_html=True)
-
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ===== زر المعالجة =====
+# زر المعالجة
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
     if not API_KEY:
@@ -2034,20 +763,11 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
     else:
         try:
             genai.configure(api_key=API_KEY)
-            
-            # الحصول على النموذج المتاح
-            model_name = get_working_model()
-            model = genai.GenerativeModel(model_name)
+            model = genai.GenerativeModel(get_working_model())
 
             target_css = ""
             design_rules = ""
             file_label = "Report"
-            
-            # معالجة الشعار
-            logo_html = ""
-            if uploaded_logo:
-                logo_base64 = image_to_base64(uploaded_logo)
-                logo_html = f'<div class="logo-container"><img src="{logo_base64}" alt="شعار المؤسسة"></div>'
             
             unified_signature = """
             <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 2px solid #ccc; font-family: 'Tajawal'; color: #555;">
@@ -2059,56 +779,63 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             if "الرسمي" in report_type:
                 target_css = STYLE_OFFICIAL
                 file_label = "Official_Report"
-                design_rules = f"""
+                design_rules = """
                 Style: Official Corporate Report.
-                - Start with this logo HTML if provided: {logo_html}
                 - Wrap card sections in <div class="card">.
                 - Use HTML <table> inside cards for tabular data.
-                - Use <ul> with <li> for lists.
+                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for lists.
                 """
             
             elif "الرقمي" in report_type:
                 target_css = STYLE_DIGITAL
                 file_label = "Digital_Dashboard"
-                design_rules = f"""
+                design_rules = """
                 Style: Modern Digital Dashboard.
-                - Start with this logo HTML if provided: {logo_html}
-                - Use <section class="card"> for sections.
+                - Use <section id="summary"> for highlights.
+                - Use <article class="card"> for detailed sections.
                 - Use <div class="goal"> for key takeaways.
                 """
             
             elif "التحليل" in report_type:
                 target_css = STYLE_ANALYTICAL
                 file_label = "Deep_Analysis"
-                design_rules = f"""
+                design_rules = """
                 Style: Statistical Hierarchy.
-                - Start with this logo HTML if provided: {logo_html}
-                - Use <div class="stats-grid"> for statistics.
-                - Use <div class="pyramid-grid"> for hierarchy.
+                - Use <div class="stats-grid"> for top key numbers.
+                - Use <div class="pyramid-grid"> for detailed hierarchy.
+                - Inside pyramid, use <div class="tier-card tier-upper"> (or middle/weak) based on importance.
+                - Use <div class="bar-container"><div class="bar" style="width: XX%;"></div></div> for percentages.
                 """
             
             elif "ملخص" in report_type:
                 target_css = STYLE_EXECUTIVE
                 file_label = "Executive_Summary"
-                design_rules = f"""
+                design_rules = """
                 Style: Modern Executive Summary.
-                - Include logo in header if provided: {logo_html}
-                - Use <div class="executive-summary"> for main text.
-                - Use <div class="grid-2"> with <div class="metric-box"> for metrics.
+                - Header is already provided in CSS, just use <h1>.
+                - Use <div class="executive-summary"> for the main text.
+                - Use <div class="grid-2"> with <div class="metric-box"> for key metrics.
                 """
 
             elif "عرض تقديمي" in report_type:
                 target_css = STYLE_PRESENTATION
                 file_label = "Presentation_Slides"
-                cover_logo = f'<div class="cover-logo"><img src="{image_to_base64(uploaded_logo)}" alt="شعار"></div>' if uploaded_logo else ''
-                header_logo = f'<div class="header-logo"><img src="{image_to_base64(uploaded_logo)}" alt="شعار"></div>' if uploaded_logo else '<div class="header-logo">تيار الحكمة</div>'
-                design_rules = f"""
-                Style: Interactive Presentation Slides.
-                Structure:
-                1. First slide cover must include: {cover_logo}
-                2. Each slide header must include: {header_logo}
-                3. Use FontAwesome icons in visual-panel.
-                4. Output ONLY HTML body content.
+                design_rules = """
+                Style: Interactive Presentation Slides (Reveal.js style).
+                Structure Requirement:
+                1. Output HTML `div` elements with class `slide`.
+                2. The first slide MUST be `<div class="slide cover active" id="slide-1">`.
+                3. Subsequent slides must be `<div class="slide" id="slide-2">`, `<div class="slide" id="slide-3">` etc.
+                4. Inside slides, use `<div class="slide-header">` (with title & logo).
+                5. Use `<div class="slide-content">` split into `<div class="text-panel">` and `<div class="visual-panel">`.
+                6. Use FontAwesome icons `<i class="fas fa-icon"></i>` inside the visual panel.
+                7. The FINAL slide must include the signature box exactly as:
+                   <div class="signature-box">
+                        <div class="signature-title">صادر عن</div>
+                        <div class="signature-name">الجهاز المركزي للجودة الشاملة</div>
+                        <div class="signature-name">وحدة التخطيط الاستراتيجي والتطوير</div>
+                   </div>
+                8. DO NOT output the Javascript or CSS, only the HTML body content.
                 """
                 unified_signature = """
                 <div class="nav-controls">
@@ -2123,10 +850,11 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             **Objective:** Create a FULL, DETAILED HTML report.
             
             **CRITICAL INSTRUCTIONS:**
-            1. **FULL CONTENT:** Do NOT summarize. Include EVERY detail.
-            2. **DATE:** Detect date from input or use current context.
-            3. **FORMAT:** Output ONLY valid HTML (body content). No markdown.
-            4. **DESIGN:** Follow these rules: {design_rules}
+            1. **FULL CONTENT:** Do NOT summarize. Process every single detail, number, and name from the input. The report must be exhaustive.
+            2. **DATE:** Do NOT force a specific year. Detect the date from the input text. If not found, use the current context or leave generic.
+            3. **FORMAT:** Output ONLY valid HTML code (inside <body> tags). Do not include ```html markers.
+            4. **DESIGN:** Follow these specific design rules:
+            {design_rules}
             
             **INPUT DATA:**
             {full_text}
@@ -2134,37 +862,25 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             **LANGUAGE:** Arabic (Professional).
             """
 
-            # رسالة التحميل
-            status_placeholder = st.empty()
-            status_placeholder.markdown('''
-            <div class="progress-box">
-                <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: 100%; animation: progressShine 1s infinite linear;"></div>
+            # شريط التقدم
+            progress_placeholder = st.empty()
+            
+            for i in range(0, 101, 5):
+                progress_placeholder.markdown(f'''
+                <div class="progress-box">
+                    <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: {i}%;"></div>
+                    </div>
+                    <div class="progress-text">جاري تحليل البيانات وتوليد التقرير... {i}%</div>
                 </div>
-                <div style="color: rgba(255,255,255,0.8);">جاري تحليل البيانات وتوليد التقرير... يرجى الانتظار</div>
-            </div>
-            ''', unsafe_allow_html=True)
+                ''', unsafe_allow_html=True)
+                time.sleep(0.05)
             
-            # توليد التقرير مع timeout
-            try:
-                response = model.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=8192,
-                        temperature=0.7
-                    )
-                )
-                html_body = clean_html_response(response.text)
-            except Exception as api_error:
-                status_placeholder.empty()
-                st.error(f"❌ خطأ في الاتصال بالذكاء الاصطناعي: {api_error}")
-                st.stop()
+            response = model.generate_content(prompt)
+            html_body = clean_html_response(response.text)
             
-            status_placeholder.empty()
-            
-            # تجميع HTML النهائي
-            container_class = 'presentation-container' if 'عرض تقديمي' in report_type else 'container'
+            progress_placeholder.empty()
             
             final_html = f"""
             <!DOCTYPE html>
@@ -2177,18 +893,15 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 {target_css}
             </head>
             <body>
-                <div class="{container_class}">
+                <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
                     {html_body}
                     {unified_signature}
                 </div>
+                
                 {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
             </body>
             </html>
             """
-            
-            # حفظ في session state
-            st.session_state['final_html'] = final_html
-            st.session_state['file_label'] = file_label
 
             st.markdown('''
             <div class="success-banner">
@@ -2196,59 +909,14 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             </div>
             ''', unsafe_allow_html=True)
             
-            # عرض المعاينة
             st.components.v1.html(final_html, height=850, scrolling=True)
-            
-            # ===== قسم التصدير المتعدد =====
-            st.markdown('''
-            <div class="export-section">
-                <div class="export-title">📥 تحميل التقرير بصيغ مختلفة</div>
-            </div>
-            ''', unsafe_allow_html=True)
-            
-            export_cols = st.columns(3)
-            
-            # تحميل HTML
-            with export_cols[0]:
-                st.download_button(
-                    label="📄 تحميل HTML",
-                    data=final_html,
-                    file_name=f"{file_label}.html",
-                    mime="text/html",
-                    use_container_width=True
-                )
-            
-            # تحميل PDF
-            with export_cols[1]:
-                if WEASYPRINT_AVAILABLE:
-                    pdf_data = create_pdf(final_html)
-                    if pdf_data:
-                        st.download_button(
-                            label="📕 تحميل PDF",
-                            data=pdf_data,
-                            file_name=f"{file_label}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                else:
-                    st.button("📕 PDF (غير متاح)", disabled=True, use_container_width=True)
-                    st.caption("يحتاج مكتبة weasyprint")
-            
-            # تحميل Word
-            with export_cols[2]:
-                if DOCX_AVAILABLE:
-                    docx_data = create_docx(final_html, file_label)
-                    if docx_data:
-                        st.download_button(
-                            label="📘 تحميل Word",
-                            data=docx_data,
-                            file_name=f"{file_label}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
-                        )
-                else:
-                    st.button("📘 Word (غير متاح)", disabled=True, use_container_width=True)
-                    st.caption("يحتاج مكتبة python-docx")
+
+            st.download_button(
+                label="📥 تحميل التقرير (HTML)",
+                data=final_html,
+                file_name=f"{file_label}.html",
+                mime="text/html"
+            )
 
         except Exception as e:
             st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
@@ -2263,11 +931,39 @@ st.markdown('''
     margin: 20px;
     border: 1px solid rgba(255, 215, 0, 0.3);
     text-align: center;
+    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
 ">
-    <div style="width: 60px; height: 3px; background: linear-gradient(90deg, transparent, #FFD700, transparent); margin: 0 auto 20px auto;"></div>
-    <p style="color: #FFD700; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">الجهاز المركزي للجودة الشاملة</p>
-    <p style="color: rgba(255, 255, 255, 0.8); font-size: 1rem; font-weight: 500; margin-bottom: 15px;">وحدة التخطيط الاستراتيجي والتطوير</p>
-    <div style="width: 100px; height: 1px; background: rgba(255, 215, 0, 0.3); margin: 15px auto;"></div>
-    <p style="color: rgba(255, 255, 255, 0.5); font-size: 0.85rem;">جميع الحقوق محفوظة © 2026</p>
+    <div style="
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        margin: 0 auto 20px auto;
+        border-radius: 2px;
+    "></div>
+    <p style="
+        color: #FFD700;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-family: 'Tajawal', sans-serif;
+    ">الجهاز المركزي للجودة الشاملة</p>
+    <p style="
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+        font-family: 'Tajawal', sans-serif;
+    ">وحدة التخطيط الاستراتيجي والتطوير</p>
+    <div style="
+        width: 100px;
+        height: 1px;
+        background: rgba(255, 215, 0, 0.3);
+        margin: 15px auto;
+    "></div>
+    <p style="
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        font-family: 'Tajawal', sans-serif;
+    ">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
