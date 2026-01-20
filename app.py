@@ -4,19 +4,20 @@ import PyPDF2
 import pandas as pd
 from io import StringIO
 import time
-import json
 import random
+import json
 
 # =========================================================
 # 1. إعدادات النظام والأمان (System Configuration)
 # =========================================================
 try:
+    # محاولة جلب المفتاح من أسرار النظام
     API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
-    # محاولة بديلة في حال عدم وجود Secrets (للتطوير المحلي)
+    # يمكنك وضع مفتاحك هنا مباشرة إذا كنت تعمل محلياً
     API_KEY = None 
 
-# إعدادات الصفحة - يجب أن تكون أول أمر Streamlit
+# إعدادات الصفحة - يجب أن تكون أول أمر
 st.set_page_config(
     page_title="منصة التحليل الاستراتيجي - الجيل الثالث",
     page_icon="🦅",
@@ -42,6 +43,7 @@ st.markdown("""
 
     /* Hiding Default Elements */
     [data-testid="stSidebar"], header, footer, #MainMenu { display: none !important; }
+    [data-testid="stToolbar"] { display: none !important; }
 
     /* --- Hero Section (الهوية البصرية) --- */
     .hero-section {
@@ -74,6 +76,33 @@ st.markdown("""
         margin-bottom: 10px;
     }
     .sub-title { color: #e0e0e0; font-size: 1.2rem; letter-spacing: 1px; opacity: 0.9; font-weight: 300; }
+
+    /* --- عنوان القسم --- */
+    .section-header { text-align: center; margin: 30px 20px; color: #FFD700; font-size: 1.4rem; font-weight: bold; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+
+    /* --- أزرار الاختيار (Radio Buttons) --- */
+    div[role="radiogroup"] {
+        display: flex !important; flex-direction: row-reverse !important; justify-content: center !important;
+        gap: 15px !important; flex-wrap: wrap !important; background: rgba(0, 0, 0, 0.3) !important;
+        padding: 20px !important; border-radius: 15px !important; margin: 0 20px 30px 20px !important;
+        border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    }
+    div[role="radiogroup"] label {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95)) !important;
+        border: 2px solid rgba(255, 215, 0, 0.2) !important; padding: 15px 25px !important;
+        border-radius: 12px !important; cursor: pointer !important; text-align: center !important;
+        flex: 1 !important; min-width: 160px !important; max-width: 220px !important;
+        color: white !important; font-weight: 600 !important; transition: all 0.4s !important;
+    }
+    div[role="radiogroup"] label:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 31, 63, 0.95)) !important;
+        border-color: #FFD700 !important; transform: translateY(-5px) scale(1.02) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.2) !important;
+    }
+    div[role="radiogroup"] label[data-checked="true"] {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.15)) !important;
+        border-color: #FFD700 !important; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3) !important;
+    }
 
     /* --- Input Cards (البطاقات) --- */
     .input-card {
@@ -110,31 +139,27 @@ st.markdown("""
     .stButton > button {
         width: 100%; background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
         background-size: 200% auto; color: #001f3f; font-weight: 900; font-size: 1.3rem;
-        padding: 15px; border-radius: 15px; border: none;
+        padding: 18px 40px; border-radius: 15px; border: none;
         box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
-        transition: 0.5s; font-family: 'Tajawal';
+        transition: 0.5s; font-family: 'Tajawal'; animation: buttonPulse 2s infinite;
     }
+    @keyframes buttonPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); } }
     .stButton > button:hover { background-position: right center; transform: scale(1.02); }
 
-    /* --- Radio Buttons (The Selection) --- */
-    .stRadio > div { flex-direction: row-reverse; justify-content: center; gap: 20px; }
-    .stRadio label {
-        background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,215,0,0.2) !important;
-        padding: 15px 30px !important; border-radius: 30px !important; cursor: pointer; transition: 0.3s;
-    }
-    .stRadio label:hover { background: rgba(255,215,0,0.1) !important; border-color: #FFD700 !important; }
-    
     /* --- Progress & Success --- */
-    .progress-container { background: rgba(0,0,0,0.5); border-radius: 15px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1); animation: popIn 0.5s; }
-    .success-msg { background: rgba(39, 174, 96, 0.2); border: 1px solid #27ae60; color: #2ecc71; padding: 15px; border-radius: 10px; text-align: center; margin-top: 20px; }
-    @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+    .progress-box { background: rgba(0, 31, 63, 0.9); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 15px; padding: 30px; margin: 20px; text-align: center; }
+    .progress-bar-bg { background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 12px; overflow: hidden; margin: 20px 0; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700); background-size: 200% 100%; border-radius: 10px; animation: progressShine 1.5s infinite linear; transition: width 0.3s ease; }
+    @keyframes progressShine { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+    .success-banner { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); border: 2px solid #22c55e; border-radius: 15px; padding: 20px 30px; text-align: center; margin: 20px; animation: successPop 0.5s ease; }
+    @keyframes successPop { 0% { transform: scale(0.9); opacity: 0; } 50% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
 
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
 # 3. مكتبة القوالب العملاقة (Master Templates)
-# تحتوي على CSS و JS مدمجين لضمان التفاعلية وعدم الحاجة لإنترنت
+# تحتوي على CSS و JS مدمجين لضمان التفاعلية
 # =========================================================
 
 # --- 1. القالب الرسمي (Government Official) ---
@@ -143,7 +168,7 @@ TEMPLATE_OFFICIAL = """
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -308,7 +333,39 @@ TEMPLATE_DIGITAL = """
 </html>
 """
 
-# --- 3. قالب الشرائح (Presentation) ---
+# --- 3. القالب التحليلي (Analytical) ---
+TEMPLATE_ANALYTICAL = """
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #ecf0f1; color: #333; padding: 30px; }
+        .research-paper { max-width: 1000px; margin: 0 auto; background: #fff; padding: 60px; box-shadow: 0 5px 25px rgba(0,0,0,0.05); border-top: 10px solid #2c3e50; }
+        
+        .paper-header { text-align: center; border-bottom: 1px solid #eee; padding-bottom: 30px; margin-bottom: 40px; }
+        .paper-header h1 { font-size: 2.5rem; color: #2c3e50; }
+        
+        .abstract-box { background: #f8f9fa; padding: 30px; border-right: 5px solid #3498db; margin-bottom: 40px; }
+        .content-cols { column-count: 2; column-gap: 40px; text-align: justify; margin-bottom: 40px; }
+        .figure-box { break-inside: avoid; background: #fff; border: 1px solid #eee; padding: 15px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .chart-wrapper { width: 100%; height: 300px; }
+    </style>
+</head>
+<body>
+    <div class="research-paper">
+        <div class="paper-header">
+            <h1>تقرير التحليل الاستراتيجي العميق</h1>
+            <p style="color:#777">وحدة الأبحاث والدراسات</p>
+        </div>
+        </div>
+</body>
+</html>
+"""
+
+# --- 4. قالب الشرائح (Presentation) ---
 TEMPLATE_SLIDES = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -354,190 +411,286 @@ TEMPLATE_SLIDES = """
 </html>
 """
 
+# --- 5. القالب التنفيذي (Executive) ---
+TEMPLATE_EXECUTIVE = """
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap');
+        body { font-family: 'Tajawal'; background: #fff; color: #222; margin: 0; padding: 40px; }
+        .exec-wrapper { max-width: 900px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 50px; box-shadow: 0 15px 50px rgba(0,0,0,0.05); }
+        
+        .exec-header { display: flex; justify-content: space-between; border-bottom: 5px solid #111; padding-bottom: 30px; margin-bottom: 40px; }
+        .main-head h1 { font-size: 3.5rem; font-weight: 800; margin: 0; line-height: 1; }
+        
+        .takeaway-box { background: #fff9c4; border-right: 6px solid #FFD700; padding: 25px; font-size: 1.4rem; font-weight: 500; margin-bottom: 40px; }
+        .metrics-row { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 40px; background: #f4f4f4; padding: 30px; border-radius: 12px; }
+        .m-val { font-size: 3rem; font-weight: 800; display: block; }
+        
+        .chart-area { height: 350px; background: #fff; border: 1px solid #eee; padding: 10px; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <div class="exec-wrapper">
+        </div>
+</body>
+</html>
+"""
+
 # =========================================================
 # 4. المنطق البرمجي الذكي (Business Logic)
 # =========================================================
 
 def get_smart_model():
-    """دالة ذكية لاختيار الموديل وتجنب خطأ 404"""
-    # الأولوية للموديل السريع، ثم الأقوى، ثم القديم
-    models_priority = [
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-pro"
-    ]
+    """دالة ذكية لاختيار الموديل المتاح وتجنب خطأ 404"""
+    # نحاول استخدام أحدث موديل، إذا فشل نعود للأقدم
+    available_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
     
-    # هنا يمكن إضافة منطق لفحص الموديل، لكن للاختصار سنرجع الأول
-    # *تنبيه:* يجب تحديث مكتبة google-generativeai في requirements.txt
+    # يمكنك إضافة كود هنا للتحقق من الموديلات المتاحة عبر genai.list_models()
+    # لكن للاختصار سنفترض أن flash هو الهدف، وسنستخدم try/except في التنفيذ
     return "gemini-1.5-flash"
 
-def extract_content(file):
-    """استخراج النصوص بذكاء من أنواع الملفات المختلفة"""
-    text = ""
+def extract_text_from_file(uploaded_file):
+    text_content = ""
     try:
-        if file.type == "application/pdf":
-            reader = PyPDF2.PdfReader(file)
+        if uploaded_file.type == "application/pdf":
+            reader = PyPDF2.PdfReader(uploaded_file)
             for page in reader.pages:
-                text += page.extract_text() + "\n"
-        elif "spreadsheet" in file.type:
-            df = pd.read_excel(file)
-            text = df.to_string()
+                text_content += page.extract_text() + "\n"
+        elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            df = pd.read_excel(uploaded_file)
+            text_content = df.to_string()
         else:
-            text = file.getvalue().decode("utf-8")
+            stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+            text_content = stringio.read()
     except Exception as e:
-        return f"خطأ في القراءة: {e}"
-    return text
+        return f"خطأ في قراءة الملف: {e}"
+    return text_content
 
-def generate_report_logic(full_text, report_type):
-    """المحرك الرئيسي لتوليد التقرير"""
-    
-    model_name = get_smart_model()
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel(model_name)
-    
-    # 1. تحديد القالب والتعليمات بناء على اختيار المستخدم
-    if "الرسمي" in report_type:
-        base_html = TEMPLATE_OFFICIAL
-        role = "Government Consultant"
-        instruction = """
-        Output HTML Structure for 'CONTENT_PLACEHOLDER':
-        1. `<div class="section-title">المقدمة</div>` followed by `<p>...</p>`
-        2. `<div class="stats-grid">` containing exactly 3 divs of class `stat-box`, each with `stat-val` and `stat-lbl`.
-        3. `<div class="section-title">التحليل التفصيلي</div>` with paragraphs.
-        4. Create a `<div class="chart-container"><canvas id="mainChart"></canvas></div>`.
-        5. A standard HTML `<table>`.
-        6. **IMPORTANT:** At the end, add a `<script>` block that creates a Chart.js instance on 'mainChart' using data from the text.
-        """
-    
-    elif "الرقمي" in report_type:
-        base_html = TEMPLATE_DIGITAL
-        role = "Data Scientist"
-        instruction = """
-        Output HTML Structure for 'CONTENT_PLACEHOLDER':
-        1. `<div class="kpi-container">` containing 4 `kpi-card` divs.
-        2. `<div class="chart-panel"><canvas id="dashChart"></canvas></div>`.
-        3. `<div class="list-panel">` containing 5 `list-item` divs.
-        4. `<div class="table-panel">` with a detailed table.
-        5. **IMPORTANT:** Add `<script>` for 'dashChart' (Line or Doughnut chart) with neon colors.
-        """
-    
-    else: # عرض تقديمي
-        base_html = TEMPLATE_SLIDES
-        role = "Presentation Expert"
-        instruction = """
-        Output HTML Structure for 'CONTENT_PLACEHOLDER':
-        1. Slide 1: `<div class="slide cover"><div class="cover-box"><h1>Title</h1><h2>Subtitle</h2></div></div>`.
-        2. Slide 2: `<div class="slide"><div class="slide-title">Overview</div><div class="content-split"><div class="text-part"><ul><li>...</li></ul></div><div class="viz-part"><canvas id="slideChart1"></canvas></div></div></div>`.
-        3. Slide 3: `<div class="slide">...Conclusion...</div>`.
-        4. **IMPORTANT:** Add `<script>` for 'slideChart1'.
-        """
-
-    # 2. هندسة الأمر (Prompt Engineering)
-    prompt = f"""
-    Role: {role}. Language: Arabic.
-    Task: Analyze the input text and generate HTML content to replace 'CONTENT_PLACEHOLDER'.
-    
-    Input: {full_text[:25000]}
-    
-    Instructions:
-    {instruction}
-    
-    **Critical Rules:**
-    - Return ONLY the HTML parts to be injected. Do not return the full <html> structure again.
-    - Ensure the JavaScript for Chart.js is valid and strictly follows the data.
-    - Do not use markdown (```).
-    """
-
-    # 3. استدعاء API
-    with st.spinner('⚡ جاري المعالجة بواسطة الذكاء الاصطناعي...'):
-        response = model.generate_content(prompt)
-        generated_content = response.text.replace("```html", "").replace("```", "")
-    
-    # 4. دمج الناتج مع القالب
-    final_html = base_html.replace("", generated_content)
-    
-    return final_html
+def clean_html_response(text):
+    text = text.replace("```html", "").replace("```", "")
+    return text.strip()
 
 # =========================================================
-# 5. واجهة المستخدم والتفاعل (Main Execution)
+# 5. واجهة التطبيق الرئيسية (Main Application)
 # =========================================================
 
 # الهيدر
-st.markdown("""
+st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title">الجهاز المركزي للجودة الشاملة | منظومة التحليل الاستراتيجي</div>
+    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
 </div>
-""", unsafe_allow_html=True)
+''', unsafe_allow_html=True)
+
+# عنوان اختيار النمط
+st.markdown('<div class="section-header">🎨 اختر نمط الإخراج المطلوب</div>', unsafe_allow_html=True)
 
 # أزرار الاختيار
 report_type = st.radio(
     "",
-    ("🏛️ التقرير الرسمي (للطباعة)", "💻 لوحة القيادة الرقمية (Dashboard)", "📽️ عرض تقديمي (شرائح)"),
-    horizontal=True
+    ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي (شرائح)", "✨ ملخص تنفيذي"),
+    horizontal=True,
+    label_visibility="collapsed"
 )
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# المدخلات
-c1, c2 = st.columns([2, 1])
-with c1:
-    st.markdown('<div class="input-card"><div class="card-header"><div class="card-icon">📝</div><div class="card-title">النص / الملاحظات</div></div>', unsafe_allow_html=True)
-    txt_input = st.text_area("", height=200, placeholder="اكتب البيانات هنا...")
-    st.markdown('</div>', unsafe_allow_html=True)
+# منطقة الإدخال
+col_input, col_upload = st.columns([2, 1])
 
-with c2:
-    st.markdown('<div class="input-card"><div class="card-header"><div class="card-icon">📎</div><div class="card-title">إرفاق ملف</div></div>', unsafe_allow_html=True)
-    uploaded = st.file_uploader("", type=["pdf", "xlsx", "txt"])
-    st.markdown('</div>', unsafe_allow_html=True)
+with col_input:
+    st.markdown('''
+    <div class="input-card">
+        <div class="card-header">
+            <div class="card-icon">📝</div>
+            <div class="card-title">البيانات / الملاحظات</div>
+        </div>
+        <div style="color: #ccc; margin-bottom: 10px;">أدخل النص أو الصق محتوى التقرير هنا</div>
+    </div>
+    ''', unsafe_allow_html=True)
+    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات...", label_visibility="collapsed")
+
+with col_upload:
+    st.markdown('''
+    <div class="input-card">
+        <div class="card-header">
+            <div class="card-icon">📎</div>
+            <div class="card-title">رفع الملفات</div>
+        </div>
+        <div style="color: #ccc; margin-bottom: 10px;">PDF, XLSX, TXT</div>
+    </div>
+    ''', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
+    
+    if uploaded_file:
+        st.success(f"✅ تم إرفاق: {uploaded_file.name}")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# زر التنفيذ
-if st.button("🚀 تحليل البيانات وإنشاء التقرير الكامل"):
+# ---------------------------------------------------------
+# 🚀 المعالجة الذكية (The Core Engine)
+# ---------------------------------------------------------
+if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
+    
     if not API_KEY:
-        st.error("⚠️ لم يتم العثور على مفتاح API.")
+        st.error("⚠️ لم يتم العثور على مفتاح API. يرجى التأكد من إضافته.")
         st.stop()
-        
-    content = txt_input
-    if uploaded:
-        content += "\n" + extract_content(uploaded)
-        
-    if not content.strip():
-        st.warning("الرجاء إدخال محتوى للتحليل.")
+    
+    full_text = user_text
+    if uploaded_file:
+        with st.spinner('📂 جاري قراءة الملف...'):
+            full_text += f"\n\n[FILE_CONTENT]:\n{extract_text_from_file(uploaded_file)}"
+
+    if not full_text.strip():
+        st.warning("⚠️ الرجاء إدخال بيانات أو رفع ملف.")
     else:
         try:
-            # شريط تقدم وهمي للجمالية
-            prog_bar = st.progress(0)
-            status_text = st.empty()
+            # تهيئة الذكاء الاصطناعي
+            genai.configure(api_key=API_KEY)
             
-            steps = ["تحليل السياق العام...", "استخراج المؤشرات الرقمية...", "بناء الهيكلية البصرية...", "توليد الرسوم البيانية..."]
+            # محاولة اختيار الموديل مع معالجة الأخطاء
+            try:
+                model = genai.GenerativeModel("gemini-1.5-flash")
+            except:
+                st.warning("⚠️ جاري التبديل إلى موديل بديل...")
+                model = genai.GenerativeModel("gemini-pro")
+
+            # تحديد القالب والتعليمات بناءً على اختيار المستخدم
+            base_html = ""
+            instruction = ""
+            
+            if "الرسمي" in report_type:
+                base_html = TEMPLATE_OFFICIAL
+                instruction = """
+                **Mode:** Official Government Report.
+                **Required HTML Fragments (to replace PLACEHOLDER):**
+                1. `<div class="section-title">المقدمة</div>` text.
+                2. `<div class="stats-grid">` with 3 `stat-box` divs.
+                3. `<div class="chart-container"><canvas id="mainChart"></canvas></div>`.
+                4. Detailed sections using `<div class="section-title">` and `<p>`.
+                5. Standard `<table>`.
+                6. **IMPORTANT:** End with `<script>` creating 'mainChart' (Bar chart).
+                """
+            
+            elif "الرقمي" in report_type:
+                base_html = TEMPLATE_DIGITAL
+                instruction = """
+                **Mode:** Digital Dashboard.
+                **Required HTML Fragments:**
+                1. `<div class="kpi-container">` with 4 `kpi-card` divs.
+                2. `<div class="chart-panel"><canvas id="dashChart"></canvas></div>`.
+                3. `<div class="list-panel">` with 5 `list-item` divs.
+                4. `<div class="table-panel">` with table.
+                5. **IMPORTANT:** End with `<script>` creating 'dashChart' (Line chart, neon colors).
+                """
+
+            elif "التحليل" in report_type:
+                base_html = TEMPLATE_ANALYTICAL
+                instruction = """
+                **Mode:** Analytical Paper.
+                **Required HTML Fragments:**
+                1. Abstract box.
+                2. Hierarchy grid.
+                3. Text columns with embedded `<div class="figure-box"><div class="chart-wrapper"><canvas id="analysisChart"></canvas></div></div>`.
+                4. **IMPORTANT:** End with `<script>` creating 'analysisChart' (Mixed chart).
+                """
+
+            elif "عرض تقديمي" in report_type:
+                base_html = TEMPLATE_SLIDES
+                instruction = """
+                **Mode:** Presentation Slides.
+                **Required HTML Fragments:**
+                1. Slide 1 (Cover): `<div class="slide cover"><div class="cover-box"><h1>Title</h1></div></div>`.
+                2. Slide 2: `<div class="slide"><div class="slide-title">Overview</div><div class="content-split"><div class="text-part"><ul>...</ul></div><div class="viz-part"><canvas id="slideChart1"></canvas></div></div></div>`.
+                3. Slide 3: Recommendations.
+                4. **IMPORTANT:** End with `<script>` creating 'slideChart1' (Doughnut).
+                """
+
+            elif "ملخص" in report_type:
+                base_html = TEMPLATE_EXECUTIVE
+                instruction = """
+                **Mode:** Executive Summary.
+                **Required HTML Fragments:**
+                1. Header info.
+                2. `<div class="takeaway-box">Main Insight</div>`.
+                3. `<div class="metrics-row">` (3 items).
+                4. `<div class="chart-area"><canvas id="execChart"></canvas></div>`.
+                5. **IMPORTANT:** End with `<script>` creating 'execChart' (Horizontal Bar).
+                """
+
+            # الـ Prompt
+            prompt = f"""
+            Role: Expert Data Analyst & Developer.
+            Task: Analyze the input text and generate ONLY the HTML fragments needed to populate the BODY of the report.
+            
+            Input Data:
+            {full_text[:25000]}
+            
+            Style Instructions:
+            {instruction}
+            
+            **CRITICAL RULES:**
+            1. Return **ONLY** the HTML/JS code fragments. Do not return `<html>` or `<head>` tags.
+            2. The javascript for Chart.js MUST be included at the end in a `<script>` tag.
+            3. Use Arabic language.
+            4. Make up data numbers if exact numbers are missing, based on context.
+            """
+
+            # شريط التقدم التفاعلي
+            progress_placeholder = st.empty()
+            steps = ["تحليل البيانات...", "اختيار القالب المناسب...", "توليد الرسوم البيانية...", "بناء التقرير النهائي..."]
+            
             for i, step in enumerate(steps):
-                status_text.text(f"🤖 {step}")
-                prog_bar.progress((i + 1) * 25)
-                time.sleep(0.3)
+                p = (i + 1) * 25
+                progress_placeholder.markdown(f'''
+                <div class="progress-box">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">⚡</div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: {p}%;"></div></div>
+                    <div style="color:white; font-size:1.1rem;">{step}</div>
+                </div>''', unsafe_allow_html=True)
+                time.sleep(0.5)
             
-            # التوليد الفعلي
-            final_report = generate_report_logic(content, report_type)
+            # توليد المحتوى
+            response = model.generate_content(prompt)
+            generated_content = clean_html_response(response.text)
             
-            status_text.empty()
-            prog_bar.empty()
+            # دمج المحتوى مع القالب
+            final_html = base_html.replace("", generated_content)
             
+            progress_placeholder.empty()
+
             # عرض النتيجة
-            st.markdown(f'<div class="progress-container"><div class="success-msg">✅ تم إنشاء {report_type} بنجاح!</div></div>', unsafe_allow_html=True)
+            st.markdown(f'''
+            <div class="success-banner">
+                <span style="font-size: 1.4rem;">✅ تم إنشاء التقرير بنجاح!</span><br>
+                <span style="opacity:0.8">النمط: {report_type} | الحالة: تفاعلي</span>
+            </div>
+            ''', unsafe_allow_html=True)
             
-            st.components.v1.html(final_report, height=800, scrolling=True)
-            
+            st.components.v1.html(final_html, height=900, scrolling=True)
+
+            # زر التحميل
             st.download_button(
-                label="📥 تحميل التقرير النهائي (HTML)",
-                data=final_report,
-                file_name=f"Report_{int(time.time())}.html",
+                label="📥 تحميل التقرير (HTML تفاعلي)",
+                data=final_html,
+                file_name=f"Report_{report_type.replace(' ', '_')}.html",
                 mime="text/html"
             )
-            
-        except Exception as e:
-            st.error(f"❌ حدث خطأ: {e}")
-            st.warning("تلميح: تأكد من تحديث مكتبة google-generativeai في ملف requirements.txt")
 
-# الفوتر
-st.markdown("<div style='text-align:center; color:#666; margin-top:50px;'>Jassim AI Systems © 2026</div>", unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
+            st.error("نصيحة: تأكد من إعداد مفتاح API بشكل صحيح ومن أن المكتبة محدثة.")
+
+# ---------------------------------------------------------
+# الفوتر (Footer)
+# ---------------------------------------------------------
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown('''
+<div style="text-align:center; color:rgba(255,255,255,0.5); font-size:0.9rem;">
+    الجهاز المركزي للجودة الشاملة - وحدة التحليل الاستراتيجي © 2026
+</div>
+''', unsafe_allow_html=True)
