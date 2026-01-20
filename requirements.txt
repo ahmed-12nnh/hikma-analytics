@@ -6,4 +6,5 @@ openpyxl
 python-docx
 weasyprint
 Pillow
-pip install pdfplumber
+pdfplumber
+
