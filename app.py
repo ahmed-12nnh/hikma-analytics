@@ -39,6 +39,9 @@ if 'preview_report' not in st.session_state:
 if 'preview_title' not in st.session_state:
     st.session_state.preview_title = ""
 
+if 'sidebar_state' not in st.session_state:
+    st.session_state.sidebar_state = "collapsed"
+
 # ---------------------------------------------------------
 # 🎨 إعدادات الصفحة
 # ---------------------------------------------------------
@@ -46,7 +49,7 @@ st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
     page_icon="🦅",
     layout="wide",
-    initial_sidebar_state="collapsed"  # مغلق افتراضياً
+    initial_sidebar_state=st.session_state.sidebar_state
 )
 
 # تطبيق التصميم الرئيسي
@@ -235,15 +238,13 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# زر فتح سجل التقارير (صغير وأنيق)
+# زر فتح سجل التقارير
 reports_count = len(st.session_state.reports_history)
-col_spacer1, col_btn, col_spacer2 = st.columns([2, 1, 2])
+col_spacer1, col_btn, col_spacer2 = st.columns([1.5, 2, 1.5])
 with col_btn:
-    st.markdown(f'''
-    <div class="open-sidebar-hint">
-        <span>📚 سجل التقارير ({reports_count}) ← افتح الشريط الجانبي</span>
-    </div>
-    ''', unsafe_allow_html=True)
+    if st.button(f"📚 فتح سجل التقارير ({reports_count})", key="open_sidebar_btn", use_container_width=True):
+        st.session_state.sidebar_state = "expanded"
+        st.rerun()
 
 # عرض معاينة التقرير إذا كانت مفعّلة
 if st.session_state.preview_report:
@@ -517,7 +518,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 st.markdown('''
                 <div class="success-hint">
-                    💡 يمكنك الوصول للتقارير المحفوظة من الشريط الجانبي (اسحب من اليمين)
+                    💡 يمكنك الوصول للتقارير المحفوظة من زر "فتح سجل التقارير" أعلاه
                 </div>
                 ''', unsafe_allow_html=True)
                 
