@@ -444,12 +444,188 @@ MAIN_CSS = """
         margin-top: 10px;
     }
 
+    /* ===== سجل التقارير المؤقت ===== */
+    .history-toggle-bar {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.85));
+        border-radius: 15px;
+        padding: 18px 25px;
+        margin: 20px;
+        border: 1px solid rgba(255, 215, 0, 0.25);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .history-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .history-icon {
+        font-size: 1.6rem;
+        animation: bookFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes bookFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+    }
+    
+    .history-text {
+        color: #FFD700;
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+    
+    .history-badge {
+        background: linear-gradient(135deg, #FFD700, #B8860B);
+        color: #001f3f;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        box-shadow: 0 3px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .history-hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+    
+    .history-container {
+        background: linear-gradient(180deg, rgba(0, 15, 30, 0.95), rgba(0, 10, 20, 0.98));
+        border-radius: 15px;
+        padding: 20px;
+        margin: 0 20px 20px 20px;
+        border: 1px solid rgba(255, 215, 0, 0.15);
+        max-height: 450px;
+        overflow-y: auto;
+        box-shadow: inset 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .history-card {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.85), rgba(0, 20, 40, 0.9));
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 215, 0, 0.12);
+        transition: all 0.3s ease;
+    }
+    
+    .history-card:hover {
+        border-color: rgba(255, 215, 0, 0.35);
+        transform: translateX(-8px);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 215, 0, 0.1);
+    }
+    
+    .history-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .history-card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #FFD700;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    
+    .report-icon {
+        font-size: 1.4rem;
+    }
+    
+    .history-card-badge {
+        background: rgba(255, 215, 0, 0.12);
+        color: #FFD700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+    
+    .history-card-meta {
+        display: flex;
+        gap: 20px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+    
+    .empty-history {
+        text-align: center;
+        padding: 50px 20px;
+        margin: 0 20px 20px 20px;
+        background: linear-gradient(180deg, rgba(0, 15, 30, 0.85), rgba(0, 10, 20, 0.9));
+        border-radius: 15px;
+        border: 2px dashed rgba(255, 215, 0, 0.15);
+    }
+    
+    .empty-icon {
+        font-size: 3.5rem;
+        margin-bottom: 18px;
+        opacity: 0.7;
+    }
+    
+    .empty-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .empty-hint {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.9rem;
+    }
+    
+    .preview-header {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        padding: 14px 22px;
+        border-radius: 12px 12px 0 0;
+        margin: 20px 20px 0 20px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 5px 20px rgba(99, 102, 241, 0.3);
+    }
+    
+    /* تخصيص شريط التمرير للسجل */
+    .history-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .history-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+    }
+    
+    .history-container::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, rgba(255, 215, 0, 0.4), rgba(184, 134, 11, 0.4));
+        border-radius: 4px;
+    }
+    
+    .history-container::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, rgba(255, 215, 0, 0.6), rgba(184, 134, 11, 0.6));
+    }
+
     /* ===== الاستجابة ===== */
     @media (max-width: 768px) {
         .main-title { font-size: 36px; }
         .sub-title { font-size: 14px; }
         .hero-section { padding: 30px 20px; margin: 10px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
+        .history-toggle-bar { flex-direction: column; gap: 10px; text-align: center; }
+        .history-card-meta { justify-content: center; }
     }
 </style>
 """
