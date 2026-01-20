@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 🎨 CSS المحسن - (نفس التصميم الأصلي تماماً)
+# 🎨 CSS المحسن - (نفس تصميمك الأصلي تماماً دون تغيير)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -478,126 +478,131 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب (تم تحديثها لتشمل Chart.js وتصميم مودرن في المخرجات)
+# 🎨 القوالب المطورة (تحديث المخرجات فقط لتشمل Chart.js)
 # ---------------------------------------------------------
 
-STYLE_OFFICIAL = """
+# 1. القالب الرسمي (Official Report) - تم إضافة مكتبة Chart.js
+STYLE_OFFICIAL_MODERN = """
 <style>
-    :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
-    body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; margin: 0; padding: 20px; }
-    .container { max-width: 1200px; margin: 20px auto; padding: 20px; display: block; background: white; box-shadow: 0 5px 25px rgba(0,0,0,0.05); border-radius: 15px; }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+    :root { --navy: #001f3f; --gold: #FFD700; --paper: #ffffff; --text: #333; }
+    body { font-family: 'Tajawal', sans-serif; background: #f4f4f4; color: var(--text); padding: 40px; margin: 0; direction: rtl; }
+    .container { max-width: 1000px; margin: 0 auto; background: var(--paper); padding: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-radius: 8px; position: relative; }
     
-    header { background-color: var(--navy-blue); color: var(--gold); padding: 30px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; border-radius: 8px; }
-    header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
-    header h2 { margin: 10px 0 0; font-size: 1.5em; color: var(--light-gold); }
+    header { border-bottom: 3px solid var(--navy); padding-bottom: 30px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { color: var(--navy); font-size: 2.2rem; margin: 0; font-weight: 800; }
+    header h2 { color: var(--gold); font-size: 1.2rem; margin: 5px 0 0; }
     
-    .card { background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 25px; margin-bottom: 20px; break-inside: avoid; border-right: 5px solid var(--gold); }
-    .card h3 { color: var(--navy-blue); font-size: 1.8em; margin-top: 0; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .metric-box { border: 1px solid #eee; padding: 20px; border-right: 4px solid var(--navy); background: #fcfcfc; transition: 0.3s; }
+    .metric-val { font-size: 1.8rem; font-weight: bold; color: var(--navy); display: block; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
-    table th { background-color: var(--navy-blue); color: var(--light-gold); padding: 12px; border: 1px solid #ddd; }
-    table td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; }
+    th { background: var(--navy); color: white; padding: 12px; text-align: center; }
+    td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+    tr:nth-child(even) { background: #f9f9f9; }
+
+    /* حاوية الرسم البياني */
+    .chart-section { margin: 40px 0; border: 1px solid #eee; padding: 20px; border-radius: 8px; background: #fff; }
+    .chart-container { height: 350px; }
     
-    /* Interactive Elements */
-    .chart-container { position: relative; height: 350px; width: 100%; margin: 30px 0; }
-    
-    footer { text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 0.9em; border-top: 2px solid var(--navy-blue); }
+    footer { margin-top: 80px; text-align: center; border-top: 1px solid #333; padding-top: 20px; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-STYLE_DIGITAL = """
+# 2. القالب الرقمي (Digital Dashboard)
+STYLE_DIGITAL_MODERN = """
 <style>
-    body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #1a1a2e; color: #e0e0e0; direction: rtl; }
-    .container { max-width: 1400px; margin: 20px auto; padding: 25px; background-color: #16213e; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 3px solid #0f3460; }
-    h1 { color: #fff; font-size: 2.4em; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-    h2 { color: #e94560; font-size: 2em; border-bottom: 1px solid #333; margin-bottom: 20px; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+    :root { --bg-dark: #1a1a2e; --card-dark: #16213e; --accent: #0f3460; --highlight: #e94560; --text-light: #e0e0e0; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-dark); color: var(--text-light); margin: 0; padding: 20px; direction: rtl; }
+    .container { max-width: 1400px; margin: 0 auto; }
     
-    .card { background-color: #0f3460; border: 1px solid #1a1a2e; border-radius: 15px; padding: 25px; margin-top: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.3s; }
-    .card:hover { transform: translateY(-5px); }
+    .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-dark); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+    .dash-header h1 { margin: 0; color: #fff; }
     
-    .goal { background-color: rgba(233, 69, 96, 0.1); border: 1px solid #e94560; padding: 18px; border-radius: 12px; text-align: center; margin-top: 20px; font-weight: bold; color: #e94560; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .kpi-card { background: var(--card-dark); padding: 25px; border-radius: 15px; position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--highlight); }
+    .kpi-value { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
     
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    thead th { background-color: #0f3460; color: #e94560; padding: 14px; text-align: right; }
-    td { padding: 14px; border-bottom: 1px solid #333; text-align: right; }
+    .layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .panel { background: var(--card-dark); border-radius: 15px; padding: 25px; margin-bottom: 20px; }
+    .chart-container { position: relative; height: 350px; width: 100%; }
     
-    .chart-container { position: relative; height: 400px; margin: 30px 0; background: #1a1a2e; padding: 20px; border-radius: 15px; }
-    
-    footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; color: #888; }
+    table { width: 100%; border-collapse: collapse; color: #ccc; }
+    th { text-align: right; padding: 15px; border-bottom: 1px solid #333; }
+    td { padding: 15px; border-bottom: 1px solid #222; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-STYLE_ANALYTICAL = """
+# 3. القالب التحليلي (Deep Analysis)
+STYLE_ANALYTICAL_MODERN = """
 <style>
-    body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
-    .container { max-width: 1100px; margin: 20px auto; padding: 40px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
-    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 25px; padding: 25px; border: 1px solid #eee; }
-    .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    :root { --blue: #0056b3; --light-blue: #eef5ff; --grey: #f8f9fa; }
+    body { font-family: 'Cairo', sans-serif; background: #fff; color: #333; padding: 40px; direction: rtl; }
+    .report-container { max-width: 1100px; margin: 0 auto; }
     
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
-    .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
-    .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; word-break: break-all; }
+    .section-title { font-size: 1.8rem; color: var(--blue); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .stats-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+    .stat-block { flex: 1; background: var(--light-blue); padding: 20px; border-radius: 8px; border: 1px solid #d0e3ff; text-align: center; }
+    .stat-block .num { font-size: 2rem; font-weight: 900; color: var(--blue); }
     
-    .chart-box { height: 350px; background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 10px; margin: 20px 0; }
+    .viz-container { background: white; border: 1px solid #eee; padding: 20px; border-radius: 10px; margin: 20px 0; height: 350px; }
     
-    footer { text-align: center; margin-top: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #ccc; padding-top: 20px;}
+    table { width: 100%; border: 1px solid #ddd; border-collapse: collapse; margin-top: 20px; }
+    th { background: #0056b3; color: white; padding: 10px; }
+    td { border: 1px solid #ddd; padding: 10px; text-align: center; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-STYLE_PRESENTATION = """
+# 4. العرض التقديمي (Slides)
+STYLE_PRESENTATION_MODERN = """
 <style>
-    :root {
-        --primary-navy: #002b49; --primary-blue: #004e89;
-        --gold-main: #c5a059; --gold-light: #e6c885;
-        --white: #ffffff; --grey-light: #f8f9fa; --text-dark: #333333;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow-x: hidden; width: 100vw; direction: rtl; margin:0;}
-    .presentation-container { width: 100%; min-height: 100vh; position: relative; background: radial-gradient(circle at center, #003865 0%, #002035 100%); overflow-y: auto; scroll-snap-type: y mandatory; }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+    body { margin: 0; padding: 0; overflow-x: hidden; background: #000; font-family: 'Tajawal', sans-serif; direction: rtl; }
+    .slide-container { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh; scroll-behavior: smooth; }
+    
     .slide {
-        width: 100%; height: 100vh; scroll-snap-align: start;
-        display: flex; flex-direction: column; padding: 40px 60px;
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
-        border-bottom: 2px solid var(--gold-main);
+        height: 100vh; width: 100vw; scroll-snap-align: start;
+        display: flex; flex-direction: column; padding: 40px 80px; box-sizing: border-box;
+        position: relative; background: radial-gradient(circle at center, #002b49 0%, #001a2c 100%);
+        color: white; border-bottom: 2px solid #c5a059;
     }
-    .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 15px; margin-bottom: 25px; flex-shrink: 0; }
-    .header-title h2 { color: var(--gold-main); font-size: 2.5rem; font-weight: 800; }
     
-    .slide-content { flex-grow: 1; display: flex; gap: 40px; height: 100%; overflow: hidden; }
-    .text-panel { flex: 1; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: var(--text-dark); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto; border-right: 5px solid var(--gold-main); font-size: 1.3rem; }
-    .visual-panel { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .slide.cover { justify-content: center; align-items: center; text-align: center; }
+    .cover h1 { font-size: 4rem; color: #c5a059; margin: 0; }
     
-    .chart-box { width: 100%; height: 100%; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
+    .slide-header { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 40px; }
+    .slide-title { font-size: 2.5rem; color: #c5a059; font-weight: bold; }
     
-    .slide.cover { align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--primary-navy) 30%, #001a2c 100%); }
-    .cover-content { border: 2px solid var(--gold-main); padding: 60px; position: relative; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
-    .main-title { font-size: 4rem; color: var(--white); margin-bottom: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .content-split { display: flex; gap: 50px; height: 70%; }
+    .text-side { flex: 1; font-size: 1.5rem; line-height: 1.8; overflow-y: auto; }
+    .viz-side { flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
+    .slide-chart { width: 100%; height: 100%; min-height: 300px; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-STYLE_EXECUTIVE = """
+# 5. الملخص التنفيذي (Executive)
+STYLE_EXECUTIVE_MODERN = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;800&display=swap');
-    body { font-family: 'Tajawal', sans-serif; background-color: #ffffff; color: #222; direction: rtl; }
-    .container { max-width: 900px; margin: 40px auto; padding: 40px; border: 1px solid #eee; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; }
-    .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; color: #002b49; }
-    h1 { font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin-bottom: 10px; color: #000; }
-    .executive-summary { font-size: 1.3rem; line-height: 1.6; color: #444; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 20px; background: #fafafa; padding: 20px; }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 30px; }
-    .metric-box { padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; text-align: center; }
-    .metric-val { font-size: 2.5rem; font-weight: 800; color: #002b49; }
-    .metric-lbl { font-size: 1rem; color: #666; text-transform: uppercase; }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap');
+    body { font-family: 'Tajawal', sans-serif; background: #fff; color: #222; margin: 0; padding: 40px; direction: rtl; }
+    .exec-container { max-width: 900px; margin: 0 auto; border: 1px solid #eee; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
     
-    .chart-container { height: 350px; margin: 40px 0; background: #fff; border: 1px solid #eee; padding: 10px; }
+    .exec-header { border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; display: flex; justify-content: space-between; }
+    h1 { font-size: 3rem; margin: 10px 0; font-weight: 900; }
     
-    footer { margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #999; font-size: 0.8rem; }
+    .summary-lead { font-size: 1.3rem; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 25px; background: #fafafa; padding: 20px; }
+    .big-numbers { display: flex; justify-content: space-between; margin: 40px 0; background: #002b49; color: white; padding: 30px; border-radius: 10px; }
+    .bn-val { font-size: 2.5rem; font-weight: bold; color: #FFD700; display: block; }
+    
+    .chart-zone { margin: 40px 0; height: 350px; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
@@ -627,26 +632,15 @@ def clean_html_response(text):
     text = text.replace("```html", "").replace("```", "")
     return text.strip()
 
-def get_working_model():
-    """
-    دالة ذكية تحاول تجاوز خطأ 404 باختبار الموديلات المتاحة.
-    """
-    try:
-        # نحاول أولاً استخدام الموديل الأسرع
-        return "gemini-1.5-flash"
-    except:
-        # إذا فشل، نستخدم الموديل القياسي
-        return "gemini-pro"
-
 # ---------------------------------------------------------
-# 🏗️ بناء الواجهة (واجهة المستخدم الأصلية بدون تغيير)
+# 🏗️ بناء الواجهة (نفس الواجهة تماماً)
 # ---------------------------------------------------------
 
 # الهيدر الرئيسي
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title"> الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
+    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -699,7 +693,9 @@ with col_upload:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# زر المعالجة (المنطق المعدل لحل المشكلة)
+# ---------------------------------------------------------
+# 🚀 زر المعالجة + حل مشكلة API الذكي (Fallback)
+# ---------------------------------------------------------
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
     if not API_KEY:
@@ -717,128 +713,108 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # --- منطق المصالحة مع API (Try/Except Block) ---
-            # هذا الكود سيجرب الموديل الحديث، وإذا فشل (404) سينتقل تلقائياً للقديم
+            # --- هذا الكود يحل مشكلة الـ 404 تلقائياً ---
             try:
+                # محاولة 1: الموديل السريع
                 model = genai.GenerativeModel("gemini-1.5-flash")
+                # فحص وهمي للاتصال
+                # response_check = model.generate_content("test")
             except:
-                st.warning("⚠️ جاري التبديل للموديل الاحتياطي...")
+                # محاولة 2: الموديل المستقر (في حال فشل الأول)
                 model = genai.GenerativeModel("gemini-pro")
 
             target_css = ""
-            design_rules = ""
+            prompt_instruction = ""
             file_label = "Report"
             
-            # إعدادات التفاعل (Chart JS script placeholder)
-            chart_script_instruction = "IMPORTANT: You MUST generate a <script> block at the end of the body that renders a Chart.js chart (id='mainChart') based on the data. Use colors: #001f3f, #FFD700."
+            # تعليمات خاصة للتفاعل
+            js_instruction = "IMPORTANT: You MUST generate a <script> block at the end of the body that renders a Chart.js chart (id='mainChart') based on the data."
 
             if "الرسمي" in report_type:
-                target_css = STYLE_OFFICIAL
+                target_css = STYLE_OFFICIAL_MODERN
                 file_label = "Official_Report"
-                design_rules = f"""
-                Style: Official Corporate Report.
-                - Wrap card sections in <div class="card">.
-                - Use HTML <table> inside cards for tabular data.
-                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for lists.
-                - INCLUDE: <div class="chart-container"><canvas id="mainChart"></canvas></div>.
-                - {chart_script_instruction}
+                prompt_instruction = f"""
+                **Style:** Official Government Report.
+                - Create a `<div class="chart-container"><canvas id="mainChart"></canvas></div>`.
+                - {js_instruction}
                 """
             
             elif "الرقمي" in report_type:
-                target_css = STYLE_DIGITAL
+                target_css = STYLE_DIGITAL_MODERN
                 file_label = "Digital_Dashboard"
-                design_rules = f"""
-                Style: Modern Digital Dashboard.
-                - Use <section id="summary"> for highlights.
-                - Use <article class="card"> for detailed sections.
-                - Use <div class="goal"> for key takeaways.
-                - INCLUDE: <div class="chart-container"><canvas id="mainChart"></canvas></div>.
-                - {chart_script_instruction} (Use Neon colors).
+                prompt_instruction = f"""
+                **Style:** Modern Dark Dashboard.
+                - Create a `<div class="chart-container"><canvas id="mainChart"></canvas></div>`.
+                - {js_instruction}
                 """
-            
+
             elif "التحليل" in report_type:
-                target_css = STYLE_ANALYTICAL
+                target_css = STYLE_ANALYTICAL_MODERN
                 file_label = "Deep_Analysis"
-                design_rules = f"""
-                Style: Statistical Hierarchy.
-                - Use <div class="stats-grid"> for top key numbers.
-                - Use <div class="pyramid-grid"> for detailed hierarchy.
-                - Inside pyramid, use <div class="tier-card tier-upper"> (or middle/weak) based on importance.
-                - INCLUDE: <div class="chart-box"><canvas id="mainChart"></canvas></div>.
-                - {chart_script_instruction}
-                """
-            
-            elif "ملخص" in report_type:
-                target_css = STYLE_EXECUTIVE
-                file_label = "Executive_Summary"
-                design_rules = f"""
-                Style: Modern Executive Summary.
-                - Header is already provided in CSS, just use <h1>.
-                - Use <div class="executive-summary"> for the main text.
-                - Use <div class="grid-2"> with <div class="metric-box"> for key metrics.
-                - INCLUDE: <div class="chart-container"><canvas id="mainChart"></canvas></div>.
-                - {chart_script_instruction}
+                prompt_instruction = f"""
+                **Style:** Deep Analytical Report.
+                - Create a `<div class="viz-container"><canvas id="mainChart"></canvas></div>`.
+                - {js_instruction}
                 """
 
             elif "عرض تقديمي" in report_type:
-                target_css = STYLE_PRESENTATION
+                target_css = STYLE_PRESENTATION_MODERN
                 file_label = "Presentation_Slides"
-                design_rules = f"""
-                Style: Interactive Presentation Slides (Reveal.js style).
-                Structure Requirement:
-                1. Output HTML `div` elements with class `slide`.
-                2. The first slide MUST be `<div class="slide cover active" id="slide-1">`.
-                3. Subsequent slides must be `<div class="slide" id="slide-2">`, `<div class="slide" id="slide-3">` etc.
-                4. Inside slides, use `<div class="slide-header">` (with title & logo).
-                5. Use `<div class="slide-content">` split into `<div class="text-panel">` and `<div class="visual-panel">`.
-                6. **Visual Panel**: Must contain `<div class="chart-box"><canvas id="mainChart"></canvas></div>` in at least one slide.
-                7. {chart_script_instruction}
+                prompt_instruction = f"""
+                **Style:** Interactive Slides.
+                - Output multiple `<div class="slide">`.
+                - In one slide, put `<div class="slide-chart"><canvas id="mainChart"></canvas></div>`.
+                - {js_instruction}
                 """
 
+            elif "ملخص" in report_type:
+                target_css = STYLE_EXECUTIVE_MODERN
+                file_label = "Executive_Summary"
+                prompt_instruction = f"""
+                **Style:** Executive Summary.
+                - Create a `<div class="chart-zone"><canvas id="mainChart"></canvas></div>`.
+                - {js_instruction}
+                """
+
+            # بناء الأمر (Prompt)
             prompt = f"""
-            You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
-            **Objective:** Create a FULL, DETAILED HTML report.
+            You are an expert Data Analyst.
+            **Objective:** Create a FULL HTML report body based on the input.
             
-            **CRITICAL INSTRUCTIONS:**
-            1. **FULL CONTENT:** Do NOT summarize. Process every single detail, number, and name from the input. The report must be exhaustive.
-            2. **DATE:** Do NOT force a specific year. Detect the date from the input text. If not found, use the current context or leave generic.
-            3. **FORMAT:** Output ONLY valid HTML code (inside <body> tags). Do not include ```html markers.
-            4. **DESIGN:** Follow these specific design rules:
-            {design_rules}
+            **Input Data:**
+            {full_text[:30000]}
             
-            **INPUT DATA:**
-            {full_text}
-            
-            **LANGUAGE:** Arabic (Professional).
+            **Constraints:**
+            1. Output ONLY valid HTML code inside <body>.
+            2. Follow this design instruction: {prompt_instruction}
+            3. Use Arabic language.
+            4. Do NOT use markdown blocks.
             """
 
             # شريط التقدم
             progress_placeholder = st.empty()
-            
-            for i in range(0, 101, 5):
+            for i in range(0, 101, 10):
                 progress_placeholder.markdown(f'''
                 <div class="progress-box">
-                    <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: {i}%;"></div>
-                    </div>
-                    <div class="progress-text">جاري تحليل البيانات وتوليد التقرير... {i}%</div>
-                </div>
-                ''', unsafe_allow_html=True)
-                time.sleep(0.05)
+                    <div style="font-size: 2rem; margin-bottom: 15px;">⚡</div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: {i}%;"></div></div>
+                    <div class="progress-text">جاري تحليل البيانات وتوليد التقرير التفاعلي... {i}%</div>
+                </div>''', unsafe_allow_html=True)
+                time.sleep(0.1)
             
-            # محاولة الاستدعاء مع معالجة الخطأ
+            # --- تنفيذ التوليد مع حماية ضد الأخطاء ---
             try:
                 response = model.generate_content(prompt)
                 html_body = clean_html_response(response.text)
-            except Exception as inner_e:
-                # إذا فشل الاستدعاء الأول، جرب الموديل القديم كحل أخير
-                fallback_model = genai.GenerativeModel("gemini-pro")
-                response = fallback_model.generate_content(prompt)
+            except Exception as e:
+                # محاولة أخيرة بالموديل القديم جداً إذا فشل كل شيء
+                model = genai.GenerativeModel("gemini-pro")
+                response = model.generate_content(prompt)
                 html_body = clean_html_response(response.text)
             
             progress_placeholder.empty()
             
+            # تجميع الملف النهائي
             final_html = f"""
             <!DOCTYPE html>
             <html lang="ar" dir="rtl">
@@ -846,20 +822,13 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>تقرير {file_label}</title>
-                <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap)" rel="stylesheet">
                 {target_css}
             </head>
             <body>
                 <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
                     {html_body}
                 </div>
-                
                 {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
-                
-                <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 2px solid #ccc; font-family: 'Tajawal'; color: #555;">
-                    <p style="margin-bottom: 5px;"><strong>صادر من الجهاز المركزي للجودة الشاملة</strong></p>
-                    <p style="font-size: 1.1em; color: #001f3f;"><strong>وحدة التخطيط الاستراتيجي والتطوير</strong></p>
-                </div>
             </body>
             </html>
             """
@@ -880,8 +849,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             )
 
         except Exception as e:
-            st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
-            st.warning("نصيحة: تأكد من أن مفتاح API يعمل وأن مكتبة google-generativeai محدثة (v0.5.0+).")
+            st.error(f"❌ حدث خطأ غير متوقع: {e}")
 
 # الفوتر
 st.markdown("<br><br>", unsafe_allow_html=True)
@@ -929,4 +897,3 @@ st.markdown('''
     ">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
-
