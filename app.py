@@ -1,6 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
-import pdfplumber  # <--- المكتبة الجديدة بدلاً من PyPDF2
+import fitz  # PyMuPDF <--- المكتبة الأقوى للنصوص العربية
 import pandas as pd
 from io import StringIO
 import time
@@ -651,37 +651,33 @@ SCRIPT_PRESENTATION = """
 """
 
 # ---------------------------------------------------------
-# 🛠️ دوال المساعدة (المحسنة جذرياً لاستخراج النص العربي)
+# 🛠️ دوال المساعدة (المحسنة باستخدام PyMuPDF)
 # ---------------------------------------------------------
 
 def extract_text_from_file(uploaded_file):
     """
-    نسخة محسنة باستخدام pdfplumber لدعم اللغة العربية بشكل أفضل.
+    استخراج النص باستخدام مكتبة fitz (PyMuPDF) القوية
     """
     text_content = ""
     try:
         if uploaded_file.type == "application/pdf":
             try:
-                # استخدام pdfplumber بدلاً من PyPDF2
-                with pdfplumber.open(uploaded_file) as pdf:
-                    for page in pdf.pages:
-                        # استخراج النص مع الحفاظ على التخطيط (يقلل من تداخل الكلمات)
-                        page_text = page.extract_text()
-                        if page_text:
-                            text_content += page_text + "\n"
+                # قراءة ملف PDF من الذاكرة مباشرة باستخدام fitz
+                # نستخدم uploaded_file.getvalue() للحصول على البيانات الخام
+                doc = fitz.open(stream=uploaded_file.getvalue(), filetype="pdf")
+                for page in doc:
+                    text_content += page.get_text() + "\n"
             except Exception as pdf_err:
-                return f"⚠️ خطأ في قراءة PDF (تأكد أن الملف غير تالف): {pdf_err}"
+                return f"⚠️ خطأ في قراءة PDF: {pdf_err}"
 
         elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
             try:
-                # استخدام openpyxl كمحرك لضمان التوافق
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
                 text_content = df.to_string()
             except Exception as xl_err:
                  return f"⚠️ خطأ في قراءة Excel: {xl_err}"
         
         else:
-            # قراءة الملفات النصية مع ترميز آمن
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8", errors='ignore'))
             text_content = stringio.read()
             
@@ -689,14 +685,11 @@ def extract_text_from_file(uploaded_file):
         return f"⚠️ خطأ عام في قراءة الملف: {e}"
         
     if not text_content.strip():
-        return "⚠️ تحذير: الملف يبدو فارغاً أو عبارة عن صور (Scanned). يرجى استخدام ملف نصي أو PDF رقمي."
+        return "⚠️ تحذير: الملف يبدو فارغاً."
         
     return text_content
 
 def clean_input_text(text):
-    """
-    تنظيف النص من التكرارات والفراغات الزائدة.
-    """
     if not text: return ""
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     return '\n'.join(lines)
@@ -706,9 +699,6 @@ def clean_html_response(text):
     return text.strip()
 
 def get_working_model():
-    """
-    اختيار الموديل الأنسب
-    """
     try:
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
@@ -782,22 +772,19 @@ st.markdown("<br>", unsafe_allow_html=True)
 # زر المعالجة
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
-    # التحقق من المفتاح قبل أي شيء آخر
     if not API_KEY:
         st.error("⚠️ لم يتم العثور على مفتاح API. يرجى إضافته في Secrets.")
         st.stop()
     
     full_text = user_text
     
-    # قراءة الملف مع التعامل مع الأخطاء
     if uploaded_file:
-        with st.spinner('📂 جاري قراءة الملف بدقة عالية (يدعم العربية)...'):
+        with st.spinner('📂 جاري قراءة الملف ومعالجة النصوص العربية...'):
             file_content = extract_text_from_file(uploaded_file)
             if "⚠️" in file_content and len(file_content) < 200: 
                 st.warning(file_content)
             full_text += f"\n\n[محتوى الملف]:\n{file_content}"
 
-    # تنظيف النص
     full_text = clean_input_text(full_text)
 
     if not full_text.strip():
@@ -888,16 +875,17 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
-            # تحسين الـ Prompt ليكون أكثر صرامة مع النصوص
+            # تعليمات خاصة للذكاء الاصطناعي لإصلاح النصوص المقلوبة
             prompt = f"""
             You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
             **Objective:** Create a FULL, DETAILED HTML report based on the provided text.
             
-            **CRITICAL INSTRUCTIONS FOR ACCURACY:**
-            1. **VERBATIM EXTRACTION:** Names, Titles, and Numbers MUST be extracted exactly as they appear in the input text. Do NOT hallucinate, change, or "autocorrect" names (e.g., 'Baligh' must not become 'Ali').
-            2. **FULL CONTENT:** Do NOT summarize. Process every single detail from the input.
-            3. **FORMAT:** Output ONLY valid HTML code (inside <body> tags).
-            4. **DESIGN:** Follow these specific design rules:
+            **CRITICAL INSTRUCTIONS FOR TEXT CORRECTION:**
+            1. **REVERSED TEXT DETECTION:** The input text might contain reversed Arabic letters (e.g., 'م ل ع' instead of 'علم', or 'ر وت ك د' instead of 'دكتور'). You MUST detect and correct this automatically to form meaningful sentences.
+            2. **VERBATIM EXTRACTION:** Names, Titles, and Numbers MUST be extracted accurately after correction.
+            3. **FULL CONTENT:** Do NOT summarize. Process every single detail from the input.
+            4. **FORMAT:** Output ONLY valid HTML code (inside <body> tags).
+            5. **DESIGN:** Follow these specific design rules:
             {design_rules}
             
             **INPUT DATA:**
@@ -906,7 +894,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             **LANGUAGE:** Arabic (Professional).
             """
 
-            # شريط التقدم
             progress_placeholder = st.empty()
             
             for i in range(0, 90, 10):
@@ -916,12 +903,11 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري تحليل البيانات واستخراج النصوص بدقة... {i}%</div>
+                    <div class="progress-text">جاري معالجة البيانات وتصحيح النصوص... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
                 time.sleep(0.1)
             
-            # استدعاء الذكاء الاصطناعي
             try:
                 response = model.generate_content(prompt)
                 
