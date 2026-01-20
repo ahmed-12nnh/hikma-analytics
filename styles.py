@@ -16,55 +16,95 @@ MAIN_CSS = """
         direction: rtl;
     }
 
-    /* ===== تصميم الشريط الجانبي ===== */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #001a2c 0%, #000d1a 100%) !important;
-        border-left: 2px solid rgba(255, 215, 0, 0.3) !important;
+    /* ===== تصميم الشريط الجانبي الاحترافي ===== */
+    
+    /* الشريط الجانبي الرئيسي */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%) !important;
+        border-left: 1px solid rgba(255, 215, 0, 0.15) !important;
+        width: 280px !important;
     }
     
-    [data-testid="stSidebar"] > div:first-child {
+    section[data-testid="stSidebar"] > div:first-child {
         background: transparent !important;
-        padding-top: 20px;
+        padding: 20px 15px !important;
     }
     
-    /* إخفاء شريط التمرير المزعج عند إغلاق الشريط الجانبي */
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        overflow: hidden !important;
-    }
-    
-    [data-testid="collapsedControl"] {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(0, 20, 40, 0.98)) !important;
+    /* زر إظهار/إخفاء الشريط الجانبي */
+    button[data-testid="stSidebarCollapseButton"],
+    button[data-testid="baseButton-headerNoPadding"] {
+        background: linear-gradient(135deg, #1a2d4a 0%, #0d1f3c 100%) !important;
         border: 1px solid rgba(255, 215, 0, 0.3) !important;
-        border-radius: 0 10px 10px 0 !important;
+        border-radius: 8px !important;
         color: #FFD700 !important;
+        width: 36px !important;
+        height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.3s ease !important;
+        margin: 10px !important;
+    }
+    
+    button[data-testid="stSidebarCollapseButton"]:hover,
+    button[data-testid="baseButton-headerNoPadding"]:hover {
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+        color: #001f3f !important;
+        border-color: #FFD700 !important;
+        transform: scale(1.05) !important;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3) !important;
+    }
+    
+    button[data-testid="stSidebarCollapseButton"] svg,
+    button[data-testid="baseButton-headerNoPadding"] svg {
+        fill: currentColor !important;
+        stroke: currentColor !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    /* زر الفتح عندما يكون الشريط مغلقاً */
+    [data-testid="collapsedControl"] {
+        background: linear-gradient(135deg, #1a2d4a 0%, #0d1f3c 100%) !important;
+        border: 1px solid rgba(255, 215, 0, 0.4) !important;
+        border-radius: 0 12px 12px 0 !important;
+        padding: 12px 8px !important;
+        margin-top: 60px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 3px 0 15px rgba(0, 0, 0, 0.3) !important;
     }
     
     [data-testid="collapsedControl"]:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 31, 63, 0.98)) !important;
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
         border-color: #FFD700 !important;
+        box-shadow: 5px 0 25px rgba(255, 215, 0, 0.3) !important;
+        padding-right: 12px !important;
     }
     
     [data-testid="collapsedControl"] svg {
         fill: #FFD700 !important;
         stroke: #FFD700 !important;
+        width: 24px !important;
+        height: 24px !important;
+        transition: all 0.3s ease !important;
     }
     
-    /* إخفاء عناصر الشريط الجانبي عندما يكون مغلقاً */
-    section[data-testid="stSidebar"][aria-expanded="false"] > div {
-        visibility: hidden !important;
-        overflow: hidden !important;
+    [data-testid="collapsedControl"]:hover svg {
+        fill: #001f3f !important;
+        stroke: #001f3f !important;
     }
-    
+
+    /* عناصر الشريط الجانبي */
     .sidebar-header {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        padding: 15px;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+        gap: 12px;
+        padding: 18px 15px;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02));
         border-radius: 12px;
-        margin-bottom: 10px;
-        border: 1px solid rgba(255, 215, 0, 0.2);
+        margin-bottom: 15px;
+        border: 1px solid rgba(255, 215, 0, 0.15);
     }
     
     .sidebar-icon {
@@ -73,7 +113,7 @@ MAIN_CSS = """
     
     .sidebar-title {
         color: #FFD700;
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         font-weight: 700;
     }
     
@@ -87,124 +127,117 @@ MAIN_CSS = """
     }
     
     .sidebar-hint {
-        color: rgba(255, 255, 255, 0.5) !important;
-        font-size: 0.8rem !important;
+        color: rgba(255, 255, 255, 0.45) !important;
+        font-size: 0.78rem !important;
         text-align: center !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 15px !important;
+        display: block !important;
     }
     
     .sidebar-report-card {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.8), rgba(0, 20, 40, 0.9));
+        background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
         border-radius: 10px;
-        padding: 12px 15px;
-        margin-bottom: 10px;
-        border: 1px solid rgba(255, 215, 0, 0.15);
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 215, 0, 0.1);
         transition: all 0.3s ease;
     }
     
     .sidebar-report-card:hover {
-        border-color: rgba(255, 215, 0, 0.4);
-        transform: translateX(-3px);
+        border-color: rgba(255, 215, 0, 0.35);
+        transform: translateX(-4px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
     
     .report-card-title {
         color: #FFD700;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         font-weight: 600;
-        margin-bottom: 5px;
+        margin-bottom: 6px;
     }
     
     .report-card-meta {
         display: flex;
         gap: 8px;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.72rem;
         margin-bottom: 5px;
     }
     
     .report-card-time {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.45);
         font-size: 0.7rem;
     }
     
     .sidebar-empty {
         text-align: center;
-        padding: 30px 15px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 10px;
-        border: 1px dashed rgba(255, 215, 0, 0.2);
+        padding: 35px 15px;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 215, 0, 0.15);
+        margin-top: 10px;
     }
     
     .sidebar-empty .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-        opacity: 0.6;
+        font-size: 2.8rem;
+        margin-bottom: 12px;
+        opacity: 0.5;
     }
     
     .sidebar-empty .empty-text {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.95rem;
-        margin-bottom: 5px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.92rem;
+        margin-bottom: 6px;
     }
     
     .sidebar-empty .empty-hint {
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 0.78rem;
     }
     
     /* أزرار الشريط الجانبي */
-    [data-testid="stSidebar"] .stButton > button {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
+    section[data-testid="stSidebar"] .stButton > button {
+        background: linear-gradient(135deg, rgba(26, 45, 74, 0.9), rgba(13, 31, 60, 0.95)) !important;
         color: #FFD700 !important;
-        border: 1px solid rgba(255, 215, 0, 0.3) !important;
-        font-size: 0.85rem !important;
-        padding: 8px 12px !important;
+        border: 1px solid rgba(255, 215, 0, 0.25) !important;
+        font-size: 0.82rem !important;
+        padding: 10px 14px !important;
         font-weight: 600 !important;
         animation: none !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
     }
     
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.1)) !important;
-        transform: none !important;
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
+        border-color: #FFD700 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.15) !important;
     }
     
-    [data-testid="stSidebar"] .stDownloadButton > button {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    section[data-testid="stSidebar"] .stDownloadButton > button {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
         color: white !important;
-        font-size: 0.85rem !important;
-        padding: 8px 12px !important;
+        font-size: 0.82rem !important;
+        padding: 10px 14px !important;
+        border: none !important;
+        border-radius: 8px !important;
+    }
+    
+    section[data-testid="stSidebar"] .stDownloadButton > button:hover {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
     }
 
-    /* إخفاء عناصر Streamlit */
-    header { visibility: hidden; }
+    /* إخفاء عناصر Streamlit الافتراضية */
+    header[data-testid="stHeader"] { 
+        background: transparent !important;
+        visibility: hidden !important;
+    }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     [data-testid="stToolbar"] { display: none; }
-    
-    /* إخفاء شريط التمرير المزعج من الشريط الجانبي المغلق */
-    [data-testid="stSidebarCollapsedControl"] + div {
-        overflow: hidden !important;
-    }
-    
-    /* إصلاح المساحة على يمين الصفحة */
-    .stApp > header + div > div:first-child {
-        overflow-x: hidden !important;
-    }
-    
-    /* منع ظهور شريط التمرير الأفقي */
-    .main .block-container {
-        overflow-x: hidden !important;
-        max-width: 100% !important;
-    }
-    
-    section[data-testid="stSidebar"] {
-        overflow: hidden !important;
-    }
-    
-    section[data-testid="stSidebar"] > div {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-    }
 
     /* ===== الهيدر الرئيسي ===== */
     .hero-section {
@@ -272,43 +305,46 @@ MAIN_CSS = """
     
     /* ===== تلميح فتح الشريط الجانبي ===== */
     .open-sidebar-hint {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.03));
         border: 1px solid rgba(255, 215, 0, 0.2);
         border-radius: 25px;
         padding: 10px 20px;
         text-align: center;
-        color: rgba(255, 215, 0, 0.8);
-        font-size: 0.9rem;
+        color: rgba(255, 215, 0, 0.7);
+        font-size: 0.88rem;
         margin: 10px auto;
         transition: all 0.3s ease;
+        max-width: 350px;
     }
     
     .open-sidebar-hint:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.08));
-        border-color: rgba(255, 215, 0, 0.4);
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.06));
+        border-color: rgba(255, 215, 0, 0.35);
+        color: #FFD700;
     }
     
     /* ===== بانر المعاينة ===== */
     .preview-banner {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
         color: white;
-        padding: 12px 20px;
-        border-radius: 10px;
+        padding: 14px 22px;
+        border-radius: 12px;
         margin: 20px;
         font-weight: 600;
         font-size: 1rem;
         text-align: center;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
     }
     
     /* ===== تلميح النجاح ===== */
     .success-hint {
-        background: rgba(34, 197, 94, 0.1);
-        border: 1px solid rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.25);
         border-radius: 10px;
         padding: 12px 20px;
         margin: 10px 20px;
-        color: rgba(34, 197, 94, 0.9);
-        font-size: 0.9rem;
+        color: rgba(34, 197, 94, 0.85);
+        font-size: 0.88rem;
         text-align: center;
     }
 
@@ -672,6 +708,7 @@ MAIN_CSS = """
         .sub-title { font-size: 14px; }
         .hero-section { padding: 30px 20px; margin: 10px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
+        section[data-testid="stSidebar"] { width: 260px !important; }
     }
 </style>
 """
