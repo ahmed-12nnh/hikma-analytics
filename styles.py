@@ -16,8 +16,138 @@ MAIN_CSS = """
         direction: rtl;
     }
 
+    /* ===== تصميم الشريط الجانبي ===== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #001a2c 0%, #000d1a 100%) !important;
+        border-left: 2px solid rgba(255, 215, 0, 0.3) !important;
+    }
+    
+    [data-testid="stSidebar"] > div:first-child {
+        background: transparent !important;
+        padding-top: 20px;
+    }
+    
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 15px;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+        border-radius: 12px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+    
+    .sidebar-icon {
+        font-size: 1.8rem;
+    }
+    
+    .sidebar-title {
+        color: #FFD700;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    
+    .sidebar-badge {
+        background: linear-gradient(135deg, #FFD700, #B8860B);
+        color: #001f3f;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 800;
+    }
+    
+    .sidebar-hint {
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.8rem !important;
+        text-align: center !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .sidebar-report-card {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.8), rgba(0, 20, 40, 0.9));
+        border-radius: 10px;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 215, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-report-card:hover {
+        border-color: rgba(255, 215, 0, 0.4);
+        transform: translateX(-3px);
+    }
+    
+    .report-card-title {
+        color: #FFD700;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .report-card-meta {
+        display: flex;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        margin-bottom: 5px;
+    }
+    
+    .report-card-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+    }
+    
+    .sidebar-empty {
+        text-align: center;
+        padding: 30px 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        border: 1px dashed rgba(255, 215, 0, 0.2);
+    }
+    
+    .sidebar-empty .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        opacity: 0.6;
+    }
+    
+    .sidebar-empty .empty-text {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-empty .empty-hint {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.8rem;
+    }
+    
+    /* أزرار الشريط الجانبي */
+    [data-testid="stSidebar"] .stButton > button {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
+        color: #FFD700 !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        font-size: 0.85rem !important;
+        padding: 8px 12px !important;
+        font-weight: 600 !important;
+        animation: none !important;
+    }
+    
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.1)) !important;
+        transform: none !important;
+    }
+    
+    [data-testid="stSidebar"] .stDownloadButton > button {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        color: white !important;
+        font-size: 0.85rem !important;
+        padding: 8px 12px !important;
+    }
+
     /* إخفاء عناصر Streamlit */
-    [data-testid="stSidebar"] { display: none; }
     header { visibility: hidden; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
@@ -45,7 +175,6 @@ MAIN_CSS = """
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* الخط الذهبي العلوي المتوهج */
     .hero-section::before {
         content: '';
         position: absolute;
@@ -63,7 +192,6 @@ MAIN_CSS = """
         50% { opacity: 1; }
     }
 
-    /* العنوان الرئيسي */
     .main-title {
         font-size: 52px;
         font-weight: 900;
@@ -81,13 +209,54 @@ MAIN_CSS = """
         to { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.6)); }
     }
 
-    /* العنوان الفرعي */
     .sub-title {
         color: #e0e0e0;
         font-size: 18px;
         letter-spacing: 2px;
         font-weight: 500;
         opacity: 0.9;
+    }
+    
+    /* ===== تلميح فتح الشريط الجانبي ===== */
+    .open-sidebar-hint {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        border-radius: 25px;
+        padding: 10px 20px;
+        text-align: center;
+        color: rgba(255, 215, 0, 0.8);
+        font-size: 0.9rem;
+        margin: 10px auto;
+        transition: all 0.3s ease;
+    }
+    
+    .open-sidebar-hint:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.08));
+        border-color: rgba(255, 215, 0, 0.4);
+    }
+    
+    /* ===== بانر المعاينة ===== */
+    .preview-banner {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        margin: 20px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: center;
+    }
+    
+    /* ===== تلميح النجاح ===== */
+    .success-hint {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 10px;
+        padding: 12px 20px;
+        margin: 10px 20px;
+        color: rgba(34, 197, 94, 0.9);
+        font-size: 0.9rem;
+        text-align: center;
     }
 
     /* ===== عنوان القسم ===== */
@@ -444,194 +613,18 @@ MAIN_CSS = """
         margin-top: 10px;
     }
 
-    /* ===== سجل التقارير المؤقت ===== */
-    .history-toggle-bar {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.85));
-        border-radius: 15px;
-        padding: 18px 25px;
-        margin: 20px;
-        border: 1px solid rgba(255, 215, 0, 0.25);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .history-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .history-icon {
-        font-size: 1.6rem;
-        animation: bookFloat 3s ease-in-out infinite;
-    }
-    
-    @keyframes bookFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-3px); }
-    }
-    
-    .history-text {
-        color: #FFD700;
-        font-size: 1.15rem;
-        font-weight: 700;
-    }
-    
-    .history-badge {
-        background: linear-gradient(135deg, #FFD700, #B8860B);
-        color: #001f3f;
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.95rem;
-        font-weight: 800;
-        box-shadow: 0 3px 10px rgba(255, 215, 0, 0.3);
-    }
-    
-    .history-hint {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.85rem;
-    }
-    
-    .history-container {
-        background: linear-gradient(180deg, rgba(0, 15, 30, 0.95), rgba(0, 10, 20, 0.98));
-        border-radius: 15px;
-        padding: 20px;
-        margin: 0 20px 20px 20px;
-        border: 1px solid rgba(255, 215, 0, 0.15);
-        max-height: 450px;
-        overflow-y: auto;
-        box-shadow: inset 0 5px 20px rgba(0, 0, 0, 0.3);
-    }
-    
-    .history-card {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.85), rgba(0, 20, 40, 0.9));
-        border-radius: 12px;
-        padding: 18px 22px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 215, 0, 0.12);
-        transition: all 0.3s ease;
-    }
-    
-    .history-card:hover {
-        border-color: rgba(255, 215, 0, 0.35);
-        transform: translateX(-8px);
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 215, 0, 0.1);
-    }
-    
-    .history-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-    
-    .history-card-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #FFD700;
-        font-size: 1.1rem;
-        font-weight: 700;
-    }
-    
-    .report-icon {
-        font-size: 1.4rem;
-    }
-    
-    .history-card-badge {
-        background: rgba(255, 215, 0, 0.12);
-        color: #FFD700;
-        padding: 5px 12px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border: 1px solid rgba(255, 215, 0, 0.2);
-    }
-    
-    .history-card-meta {
-        display: flex;
-        gap: 20px;
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 0.85rem;
-        flex-wrap: wrap;
-    }
-    
-    .empty-history {
-        text-align: center;
-        padding: 50px 20px;
-        margin: 0 20px 20px 20px;
-        background: linear-gradient(180deg, rgba(0, 15, 30, 0.85), rgba(0, 10, 20, 0.9));
-        border-radius: 15px;
-        border: 2px dashed rgba(255, 215, 0, 0.15);
-    }
-    
-    .empty-icon {
-        font-size: 3.5rem;
-        margin-bottom: 18px;
-        opacity: 0.7;
-    }
-    
-    .empty-text {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 1.15rem;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-    
-    .empty-hint {
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 0.9rem;
-    }
-    
-    .preview-header {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: white;
-        padding: 14px 22px;
-        border-radius: 12px 12px 0 0;
-        margin: 20px 20px 0 20px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 5px 20px rgba(99, 102, 241, 0.3);
-    }
-    
-    /* تخصيص شريط التمرير للسجل */
-    .history-container::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    .history-container::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 4px;
-    }
-    
-    .history-container::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, rgba(255, 215, 0, 0.4), rgba(184, 134, 11, 0.4));
-        border-radius: 4px;
-    }
-    
-    .history-container::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, rgba(255, 215, 0, 0.6), rgba(184, 134, 11, 0.6));
-    }
-
     /* ===== الاستجابة ===== */
     @media (max-width: 768px) {
         .main-title { font-size: 36px; }
         .sub-title { font-size: 14px; }
         .hero-section { padding: 30px 20px; margin: 10px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
-        .history-toggle-bar { flex-direction: column; gap: 10px; text-align: center; }
-        .history-card-meta { justify-content: center; }
     }
 </style>
 """
 
 # ---------------------------------------------------------
-# 🎨 القوالب (Templates) - تم تحديث هذا الجزء لحل مشكلة التصميم
+# 🎨 القوالب (Templates)
 # ---------------------------------------------------------
 
 STYLE_OFFICIAL = """
@@ -640,12 +633,10 @@ STYLE_OFFICIAL = """
     body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--text); line-height: 1.8; direction: rtl; text-align: right; margin: 0; padding: 0; }
     .container { max-width: 1200px; margin: 30px auto; padding: 40px; background: white; box-shadow: 0 0 50px rgba(0,0,0,0.05); }
     
-    /* ترويسة التقرير */
     header { border-bottom: 4px solid var(--navy-blue); padding-bottom: 20px; margin-bottom: 40px; text-align: center; }
     header h1 { color: var(--navy-blue); font-size: 2.2em; margin: 0; font-weight: 800; }
     header h2 { color: var(--gold); font-size: 1.4em; margin-top: 10px; font-weight: 600; }
     
-    /* البطاقات والأقسام */
     .card { background-color: #fff; margin-bottom: 30px; padding: 10px; }
     .card h3 { 
         color: var(--navy-blue); 
@@ -658,13 +649,11 @@ STYLE_OFFICIAL = """
         border-radius: 4px;
     }
     
-    /* الجداول */
     table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em; border: 1px solid #eee; }
     table th { background-color: var(--navy-blue); color: white; padding: 15px; font-weight: bold; border: 1px solid #001f3f; }
     table td { border: 1px solid #ddd; padding: 12px 15px; color: #444; }
     table tr:nth-child(even) { background-color: #f8f9fa; }
     
-    /* القوائم - تم إصلاح الخلفية المزعجة هنا */
     ul { list-style: none; padding: 0; margin: 0; }
     ul li { 
         padding: 12px 15px; 
@@ -676,15 +665,13 @@ STYLE_OFFICIAL = """
     }
     ul li:hover { background-color: #fcfcfc; }
     
-    /* القيم داخل القائمة (الأسماء والمناصب) */
     ul li span { font-weight: 600; color: #555; font-size: 1rem; }
     
-    /* تمييز القيمة المهمة (الاسم) بلون ذهبي/كحلي وبدون خلفية زرقاء ثقيلة */
     ul li span.value { 
         color: var(--navy-blue); 
         font-weight: 800; 
         font-size: 1.1rem; 
-        background: transparent; /* إزالة الخلفية */
+        background: transparent;
         padding: 0; 
         border: none;
     }
