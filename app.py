@@ -1,6 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
-import PyPDF2
+import pdfplumber  # <--- المكتبة الجديدة بدلاً من PyPDF2
 import pandas as pd
 from io import StringIO
 import time
@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 🎨 CSS المحسن - (تم الإبقاء عليه كما هو تماماً)
+# 🎨 CSS المحسن - (نفس التصميم الأصلي تماماً)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -651,26 +651,24 @@ SCRIPT_PRESENTATION = """
 """
 
 # ---------------------------------------------------------
-# 🛠️ دوال المساعدة (المحسنة)
+# 🛠️ دوال المساعدة (المحسنة جذرياً لاستخراج النص العربي)
 # ---------------------------------------------------------
 
 def extract_text_from_file(uploaded_file):
     """
-    نسخة محسنة لاستخراج النص مع معالجة الأخطاء والملفات المحمية.
+    نسخة محسنة باستخدام pdfplumber لدعم اللغة العربية بشكل أفضل.
     """
     text_content = ""
     try:
         if uploaded_file.type == "application/pdf":
             try:
-                reader = PyPDF2.PdfReader(uploaded_file)
-                # التحقق مما إذا كان الملف مشفر
-                if reader.is_encrypted:
-                    return "⚠️ خطأ: هذا الملف محمي بكلمة مرور. يرجى فك الحماية أولاً."
-                
-                for page in reader.pages:
-                    page_text = page.extract_text()
-                    if page_text: # تجنب الصفحات الفارغة
-                        text_content += page_text + "\n"
+                # استخدام pdfplumber بدلاً من PyPDF2
+                with pdfplumber.open(uploaded_file) as pdf:
+                    for page in pdf.pages:
+                        # استخراج النص مع الحفاظ على التخطيط (يقلل من تداخل الكلمات)
+                        page_text = page.extract_text()
+                        if page_text:
+                            text_content += page_text + "\n"
             except Exception as pdf_err:
                 return f"⚠️ خطأ في قراءة PDF (تأكد أن الملف غير تالف): {pdf_err}"
 
@@ -691,16 +689,15 @@ def extract_text_from_file(uploaded_file):
         return f"⚠️ خطأ عام في قراءة الملف: {e}"
         
     if not text_content.strip():
-        return "⚠️ تحذير: الملف يبدو فارغاً أو لا يحتوي على نصوص قابلة للقراءة."
+        return "⚠️ تحذير: الملف يبدو فارغاً أو عبارة عن صور (Scanned). يرجى استخدام ملف نصي أو PDF رقمي."
         
     return text_content
 
 def clean_input_text(text):
     """
-    تنظيف النص من التكرارات والفراغات الزائدة لتقليل حجم التوكن.
+    تنظيف النص من التكرارات والفراغات الزائدة.
     """
     if not text: return ""
-    # إزالة الأسطر الفارغة المتكررة
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     return '\n'.join(lines)
 
@@ -710,7 +707,7 @@ def clean_html_response(text):
 
 def get_working_model():
     """
-    اختيار الموديل الأنسب مع معالجة حالة عدم الاتصال
+    اختيار الموديل الأنسب
     """
     try:
         for m in genai.list_models():
@@ -729,7 +726,7 @@ def get_working_model():
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
+    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -794,13 +791,13 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
     
     # قراءة الملف مع التعامل مع الأخطاء
     if uploaded_file:
-        with st.spinner('📂 جاري قراءة الملف وتحليله...'):
+        with st.spinner('📂 جاري قراءة الملف بدقة عالية (يدعم العربية)...'):
             file_content = extract_text_from_file(uploaded_file)
-            if "⚠️" in file_content and len(file_content) < 200: # إذا كان هناك خطأ قصير
+            if "⚠️" in file_content and len(file_content) < 200: 
                 st.warning(file_content)
             full_text += f"\n\n[محتوى الملف]:\n{file_content}"
 
-    # تنظيف النص لتقليل حجم الطلب
+    # تنظيف النص
     full_text = clean_input_text(full_text)
 
     if not full_text.strip():
@@ -891,14 +888,15 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
+            # تحسين الـ Prompt ليكون أكثر صرامة مع النصوص
             prompt = f"""
             You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
-            **Objective:** Create a FULL, DETAILED HTML report.
+            **Objective:** Create a FULL, DETAILED HTML report based on the provided text.
             
-            **CRITICAL INSTRUCTIONS:**
-            1. **FULL CONTENT:** Do NOT summarize. Process every single detail, number, and name from the input. The report must be exhaustive.
-            2. **DATE:** Do NOT force a specific year. Detect the date from the input text. If not found, use the current context or leave generic.
-            3. **FORMAT:** Output ONLY valid HTML code (inside <body> tags). Do not include ```html markers.
+            **CRITICAL INSTRUCTIONS FOR ACCURACY:**
+            1. **VERBATIM EXTRACTION:** Names, Titles, and Numbers MUST be extracted exactly as they appear in the input text. Do NOT hallucinate, change, or "autocorrect" names (e.g., 'Baligh' must not become 'Ali').
+            2. **FULL CONTENT:** Do NOT summarize. Process every single detail from the input.
+            3. **FORMAT:** Output ONLY valid HTML code (inside <body> tags).
             4. **DESIGN:** Follow these specific design rules:
             {design_rules}
             
@@ -918,16 +916,15 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري معالجة البيانات بواسطة الذكاء الاصطناعي... {i}%</div>
+                    <div class="progress-text">جاري تحليل البيانات واستخراج النصوص بدقة... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
                 time.sleep(0.1)
             
-            # استدعاء الذكاء الاصطناعي مع معالجة الأخطاء
+            # استدعاء الذكاء الاصطناعي
             try:
                 response = model.generate_content(prompt)
                 
-                # التحقق من سلامة الاستجابة
                 if response.prompt_feedback.block_reason:
                     st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
                     st.stop()
@@ -943,7 +940,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>تقرير {file_label}</title>
-                    <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap)" rel="stylesheet">
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
                     {target_css}
                 </head>
                 <body>
@@ -1025,4 +1022,3 @@ st.markdown('''
     ">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
-
