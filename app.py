@@ -337,7 +337,10 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
     else:
         try:
             genai.configure(api_key=API_KEY)
-            model_name = get_working_model()
+            
+            # 🔥 التعديل الجوهري: تثبيت الموديل على gemini-1.5-flash لتجنب خطأ Quota 🔥
+            # تم حذف استدعاء get_working_model() الذي كان يختار الموديل الجديد المحدود
+            model_name = "gemini-1.5-flash"
             
             generation_config = genai.types.GenerationConfig(
                 temperature=0.0,
