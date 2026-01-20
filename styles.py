@@ -455,32 +455,65 @@ MAIN_CSS = """
 """
 
 # ---------------------------------------------------------
-# 🎨 القوالب (Templates)
+# 🎨 القوالب (Templates) - تم تحديث هذا الجزء لحل مشكلة التصميم
 # ---------------------------------------------------------
 
 STYLE_OFFICIAL = """
 <style>
-    :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
-    body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; margin: 0; padding: 0; }
-    .container { max-width: 1200px; margin: 20px auto; padding: 20px; display: block; }
-    .card-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    :root { --navy-blue: #001f3f; --gold: #c5a059; --light-gold: #f0e6d2; --white: #ffffff; --gray: #f9f9f9; --text: #333; }
+    body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--text); line-height: 1.8; direction: rtl; text-align: right; margin: 0; padding: 0; }
+    .container { max-width: 1200px; margin: 30px auto; padding: 40px; background: white; box-shadow: 0 0 50px rgba(0,0,0,0.05); }
     
-    header { background-color: var(--navy-blue); color: var(--gold); padding: 30px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; border-radius: 8px; }
-    header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
-    header h2 { margin: 10px 0 0; font-size: 1.5em; color: var(--light-gold); }
+    /* ترويسة التقرير */
+    header { border-bottom: 4px solid var(--navy-blue); padding-bottom: 20px; margin-bottom: 40px; text-align: center; }
+    header h1 { color: var(--navy-blue); font-size: 2.2em; margin: 0; font-weight: 800; }
+    header h2 { color: var(--gold); font-size: 1.4em; margin-top: 10px; font-weight: 600; }
     
-    .card { background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 25px; margin-bottom: 20px; break-inside: avoid; }
-    .card h3 { color: var(--navy-blue); font-size: 1.8em; margin-top: 0; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+    /* البطاقات والأقسام */
+    .card { background-color: #fff; margin-bottom: 30px; padding: 10px; }
+    .card h3 { 
+        color: var(--navy-blue); 
+        font-size: 1.6em; 
+        border-right: 5px solid var(--gold); 
+        padding-right: 15px; 
+        margin-bottom: 20px; 
+        background: linear-gradient(90deg, var(--light-gold) 0%, transparent 100%);
+        padding: 10px 15px;
+        border-radius: 4px;
+    }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
-    table th { background-color: var(--navy-blue); color: var(--light-gold); padding: 12px; border: 1px solid #ddd; }
-    table td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+    /* الجداول */
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em; border: 1px solid #eee; }
+    table th { background-color: var(--navy-blue); color: white; padding: 15px; font-weight: bold; border: 1px solid #001f3f; }
+    table td { border: 1px solid #ddd; padding: 12px 15px; color: #444; }
+    table tr:nth-child(even) { background-color: #f8f9fa; }
     
-    ul { list-style: none; padding: 0; }
-    ul li { padding: 10px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-    ul li span.value { font-weight: 700; color: var(--gold); font-size: 1.1em; background: #001f3f; padding: 2px 8px; border-radius: 4px; margin-right: 10px; }
+    /* القوائم - تم إصلاح الخلفية المزعجة هنا */
+    ul { list-style: none; padding: 0; margin: 0; }
+    ul li { 
+        padding: 12px 15px; 
+        border-bottom: 1px solid #eee; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        transition: background 0.2s;
+    }
+    ul li:hover { background-color: #fcfcfc; }
     
-    footer { grid-column: 1 / -1; text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 0.9em; border-top: 2px solid var(--navy-blue); }
+    /* القيم داخل القائمة (الأسماء والمناصب) */
+    ul li span { font-weight: 600; color: #555; font-size: 1rem; }
+    
+    /* تمييز القيمة المهمة (الاسم) بلون ذهبي/كحلي وبدون خلفية زرقاء ثقيلة */
+    ul li span.value { 
+        color: var(--navy-blue); 
+        font-weight: 800; 
+        font-size: 1.1rem; 
+        background: transparent; /* إزالة الخلفية */
+        padding: 0; 
+        border: none;
+    }
+    
+    footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; color: #888; font-size: 0.85rem; }
 </style>
 """
 
