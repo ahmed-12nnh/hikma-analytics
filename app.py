@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 🎨 CSS المحسن - نفس التصميم الأصلي مع تحسينات
+# 🎨 CSS المحسن - (تم الإبقاء عليه كما هو تماماً)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -651,31 +651,67 @@ SCRIPT_PRESENTATION = """
 """
 
 # ---------------------------------------------------------
-# 🛠️ دوال المساعدة
+# 🛠️ دوال المساعدة (المحسنة)
 # ---------------------------------------------------------
 
 def extract_text_from_file(uploaded_file):
+    """
+    نسخة محسنة لاستخراج النص مع معالجة الأخطاء والملفات المحمية.
+    """
     text_content = ""
     try:
         if uploaded_file.type == "application/pdf":
-            reader = PyPDF2.PdfReader(uploaded_file)
-            for page in reader.pages:
-                text_content += page.extract_text() + "\n"
+            try:
+                reader = PyPDF2.PdfReader(uploaded_file)
+                # التحقق مما إذا كان الملف مشفر
+                if reader.is_encrypted:
+                    return "⚠️ خطأ: هذا الملف محمي بكلمة مرور. يرجى فك الحماية أولاً."
+                
+                for page in reader.pages:
+                    page_text = page.extract_text()
+                    if page_text: # تجنب الصفحات الفارغة
+                        text_content += page_text + "\n"
+            except Exception as pdf_err:
+                return f"⚠️ خطأ في قراءة PDF (تأكد أن الملف غير تالف): {pdf_err}"
+
         elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-            df = pd.read_excel(uploaded_file)
-            text_content = df.to_string()
+            try:
+                # استخدام openpyxl كمحرك لضمان التوافق
+                df = pd.read_excel(uploaded_file, engine='openpyxl')
+                text_content = df.to_string()
+            except Exception as xl_err:
+                 return f"⚠️ خطأ في قراءة Excel: {xl_err}"
+        
         else:
-            stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+            # قراءة الملفات النصية مع ترميز آمن
+            stringio = StringIO(uploaded_file.getvalue().decode("utf-8", errors='ignore'))
             text_content = stringio.read()
+            
     except Exception as e:
-        return f"خطأ في قراءة الملف: {e}"
+        return f"⚠️ خطأ عام في قراءة الملف: {e}"
+        
+    if not text_content.strip():
+        return "⚠️ تحذير: الملف يبدو فارغاً أو لا يحتوي على نصوص قابلة للقراءة."
+        
     return text_content
+
+def clean_input_text(text):
+    """
+    تنظيف النص من التكرارات والفراغات الزائدة لتقليل حجم التوكن.
+    """
+    if not text: return ""
+    # إزالة الأسطر الفارغة المتكررة
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    return '\n'.join(lines)
 
 def clean_html_response(text):
     text = text.replace("```html", "").replace("```", "")
     return text.strip()
 
 def get_working_model():
+    """
+    اختيار الموديل الأنسب مع معالجة حالة عدم الاتصال
+    """
     try:
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
@@ -693,7 +729,7 @@ def get_working_model():
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير </div>
+    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -749,21 +785,31 @@ st.markdown("<br>", unsafe_allow_html=True)
 # زر المعالجة
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
+    # التحقق من المفتاح قبل أي شيء آخر
     if not API_KEY:
         st.error("⚠️ لم يتم العثور على مفتاح API. يرجى إضافته في Secrets.")
         st.stop()
     
     full_text = user_text
+    
+    # قراءة الملف مع التعامل مع الأخطاء
     if uploaded_file:
-        with st.spinner('📂 جاري قراءة الملف...'):
-            full_text += f"\n\n[محتوى الملف]:\n{extract_text_from_file(uploaded_file)}"
+        with st.spinner('📂 جاري قراءة الملف وتحليله...'):
+            file_content = extract_text_from_file(uploaded_file)
+            if "⚠️" in file_content and len(file_content) < 200: # إذا كان هناك خطأ قصير
+                st.warning(file_content)
+            full_text += f"\n\n[محتوى الملف]:\n{file_content}"
+
+    # تنظيف النص لتقليل حجم الطلب
+    full_text = clean_input_text(full_text)
 
     if not full_text.strip():
-        st.warning("⚠️ الرجاء إدخال بيانات أو رفع ملف.")
+        st.warning("⚠️ الرجاء إدخال بيانات أو رفع ملف صالح.")
     else:
         try:
             genai.configure(api_key=API_KEY)
-            model = genai.GenerativeModel(get_working_model())
+            model_name = get_working_model()
+            model = genai.GenerativeModel(model_name)
 
             target_css = ""
             design_rules = ""
@@ -865,61 +911,73 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             # شريط التقدم
             progress_placeholder = st.empty()
             
-            for i in range(0, 101, 5):
+            for i in range(0, 90, 10):
                 progress_placeholder.markdown(f'''
                 <div class="progress-box">
                     <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري تحليل البيانات وتوليد التقرير... {i}%</div>
+                    <div class="progress-text">جاري معالجة البيانات بواسطة الذكاء الاصطناعي... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
-                time.sleep(0.05)
+                time.sleep(0.1)
             
-            response = model.generate_content(prompt)
-            html_body = clean_html_response(response.text)
-            
-            progress_placeholder.empty()
-            
-            final_html = f"""
-            <!DOCTYPE html>
-            <html lang="ar" dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>تقرير {file_label}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-                {target_css}
-            </head>
-            <body>
-                <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
-                    {html_body}
-                    {unified_signature}
-                </div>
+            # استدعاء الذكاء الاصطناعي مع معالجة الأخطاء
+            try:
+                response = model.generate_content(prompt)
                 
-                {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
-            </body>
-            </html>
-            """
+                # التحقق من سلامة الاستجابة
+                if response.prompt_feedback.block_reason:
+                    st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
+                    st.stop()
+                    
+                html_body = clean_html_response(response.text)
+                
+                progress_placeholder.empty()
+                
+                final_html = f"""
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>تقرير {file_label}</title>
+                    <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap)" rel="stylesheet">
+                    {target_css}
+                </head>
+                <body>
+                    <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
+                        {html_body}
+                        {unified_signature}
+                    </div>
+                    
+                    {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
+                </body>
+                </html>
+                """
 
-            st.markdown('''
-            <div class="success-banner">
-                <span>✅ تم إنشاء التقرير بنجاح!</span>
-            </div>
-            ''', unsafe_allow_html=True)
+                st.markdown('''
+                <div class="success-banner">
+                    <span>✅ تم إنشاء التقرير بنجاح!</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                st.components.v1.html(final_html, height=850, scrolling=True)
+
+                st.download_button(
+                    label="📥 تحميل التقرير (HTML)",
+                    data=final_html,
+                    file_name=f"{file_label}.html",
+                    mime="text/html"
+                )
             
-            st.components.v1.html(final_html, height=850, scrolling=True)
-
-            st.download_button(
-                label="📥 تحميل التقرير (HTML)",
-                data=final_html,
-                file_name=f"{file_label}.html",
-                mime="text/html"
-            )
+            except Exception as api_error:
+                progress_placeholder.empty()
+                st.error(f"❌ حدث خطأ أثناء الاتصال بـ Google AI: {api_error}")
 
         except Exception as e:
-            st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
+            st.error(f"❌ حدث خطأ غير متوقع: {e}")
 
 # الفوتر
 st.markdown("<br><br>", unsafe_allow_html=True)
@@ -967,4 +1025,3 @@ st.markdown('''
     ">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
-
