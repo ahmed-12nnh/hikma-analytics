@@ -6,7 +6,7 @@ from io import StringIO
 import time
 import streamlit.components.v1 as components
 import re
-from datetime import datetime  # <--- إضافة جديدة
+from datetime import datetime  # إضافة جديدة للتخزين المؤقت
 
 # استيراد التصاميم من ملف styles.py
 from styles import (
@@ -35,6 +35,9 @@ if 'reports_history' not in st.session_state:
 
 if 'show_history' not in st.session_state:
     st.session_state.show_history = False
+
+if 'preview_report' not in st.session_state:
+    st.session_state.preview_report = None
 
 # ---------------------------------------------------------
 # 🎨 إعدادات الصفحة وتطبيق الـ CSS الرئيسي
@@ -89,19 +92,24 @@ def clean_input_text(text):
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     return '\n'.join(lines)
 
+# 🔥 التعديل الجوهري والنهائي: استخدام Regex لاستخراج الكود بدقة 🔥
 def clean_html_response(text):
+    # محاولة 1: البحث عن النص المحصور بين علامات الكود ```html ... ```
     match = re.search(r"```html(.*?)```", text, re.DOTALL)
     if match:
         return match.group(1).strip()
     
+    # محاولة 2: البحث عن النص المحصور بين علامات الكود العامة ``` ... ```
     match = re.search(r"```(.*?)```", text, re.DOTALL)
     if match:
         return match.group(1).strip()
         
+    # محاولة 3: إذا فشل ما سبق، ابحث عن أول علامة تاج HTML (<) واسترجع كل شيء بعدها
     match = re.search(r"(<html|<!DOCTYPE)(.*)", text, re.DOTALL)
     if match:
         return match.group(1) + match.group(2)
     
+    # إذا فشل كل شيء، أعد النص كما هو
     return text.strip()
 
 def get_working_model():
@@ -115,12 +123,12 @@ def get_working_model():
         return "gemini-1.5-flash"
 
 # ---------------------------------------------------------
-# 📚 دالة حفظ التقرير في السجل
+# 📚 دوال التخزين المؤقت
 # ---------------------------------------------------------
 def save_report_to_history(title, report_type, html_content, source_name=""):
     """حفظ التقرير في سجل الجلسة"""
     report_entry = {
-        'id': len(st.session_state.reports_history) + 1,
+        'id': int(time.time() * 1000),  # معرف فريد
         'title': title,
         'type': report_type,
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -128,7 +136,7 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         'source': source_name,
         'size': f"{len(html_content) / 1024:.1f} KB"
     }
-    st.session_state.reports_history.insert(0, report_entry)  # الأحدث أولاً
+    st.session_state.reports_history.insert(0, report_entry)
     
     # الاحتفاظ بآخر 10 تقارير فقط لتوفير الذاكرة
     if len(st.session_state.reports_history) > 10:
@@ -157,7 +165,7 @@ st.markdown('''
 ''', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 📚 شريط سجل التقارير (أعلى الصفحة)
+# 📚 قسم سجل التقارير المؤقت
 # ---------------------------------------------------------
 reports_count = len(st.session_state.reports_history)
 
@@ -168,16 +176,16 @@ st.markdown(f'''
         <span class="history-text">سجل التقارير المؤقت</span>
         <span class="history-badge">{reports_count}</span>
     </div>
+    <div class="history-hint">التقارير تُحفظ مؤقتاً خلال الجلسة الحالية</div>
 </div>
 ''', unsafe_allow_html=True)
 
-# زر عرض/إخفاء السجل
+# أزرار التحكم في السجل
 col_toggle, col_clear = st.columns([4, 1])
 
 with col_toggle:
-    if st.button(f"{'🔽 إخفاء' if st.session_state.show_history else '🔼 عرض'} سجل التقارير ({reports_count})", 
-                 key="toggle_history", 
-                 use_container_width=True):
+    toggle_label = f"{'🔽 إخفاء' if st.session_state.show_history else '🔼 عرض'} سجل التقارير ({reports_count})"
+    if st.button(toggle_label, key="toggle_history", use_container_width=True):
         st.session_state.show_history = not st.session_state.show_history
         st.rerun()
 
@@ -185,79 +193,82 @@ with col_clear:
     if reports_count > 0:
         if st.button("🗑️ مسح الكل", key="clear_all", use_container_width=True):
             clear_all_reports()
+            st.session_state.preview_report = None
             st.rerun()
 
-# عرض سجل التقارير
-if st.session_state.show_history and reports_count > 0:
-    st.markdown('<div class="history-container">', unsafe_allow_html=True)
-    
-    for report in st.session_state.reports_history:
-        st.markdown(f'''
-        <div class="history-card">
-            <div class="history-card-header">
-                <div class="history-card-title">
-                    <span class="report-icon">📄</span>
-                    <span>{report['title']}</span>
+# عرض سجل التقارير إذا كان مفعّلاً
+if st.session_state.show_history:
+    if reports_count > 0:
+        st.markdown('<div class="history-container">', unsafe_allow_html=True)
+        
+        for report in st.session_state.reports_history:
+            st.markdown(f'''
+            <div class="history-card">
+                <div class="history-card-header">
+                    <div class="history-card-title">
+                        <span class="report-icon">📄</span>
+                        <span>{report['title']}</span>
+                    </div>
+                    <div class="history-card-badge">{report['type']}</div>
                 </div>
-                <div class="history-card-badge">{report['type']}</div>
+                <div class="history-card-meta">
+                    <span>🕐 {report['timestamp']}</span>
+                    <span>📦 {report['size']}</span>
+                    {f"<span>📎 {report['source']}</span>" if report['source'] else ""}
+                </div>
             </div>
-            <div class="history-card-meta">
-                <span>🕐 {report['timestamp']}</span>
-                <span>📦 {report['size']}</span>
-                {f"<span>📎 {report['source']}</span>" if report['source'] else ""}
-            </div>
+            ''', unsafe_allow_html=True)
+            
+            col_view, col_download, col_delete = st.columns([2, 2, 1])
+            
+            with col_view:
+                if st.button(f"👁️ معاينة", key=f"view_{report['id']}", use_container_width=True):
+                    st.session_state.preview_report = report['html']
+                    st.rerun()
+                    
+            with col_download:
+                st.download_button(
+                    label="📥 تحميل",
+                    data=report['html'],
+                    file_name=f"{report['title']}_{report['timestamp'].replace(':', '-').replace(' ', '_')}.html",
+                    mime="text/html",
+                    key=f"download_{report['id']}",
+                    use_container_width=True
+                )
+            
+            with col_delete:
+                if st.button("🗑️", key=f"delete_{report['id']}", use_container_width=True):
+                    delete_report(report['id'])
+                    st.session_state.preview_report = None
+                    st.rerun()
+            
+            st.markdown("<hr style='border: none; border-top: 1px solid rgba(255,215,0,0.1); margin: 15px 0;'>", unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('''
+        <div class="empty-history">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">لا توجد تقارير محفوظة بعد</div>
+            <div class="empty-hint">ستظهر التقارير هنا تلقائياً بعد إنشائها</div>
         </div>
         ''', unsafe_allow_html=True)
-        
-        col_view, col_download, col_delete = st.columns([2, 2, 1])
-        
-        with col_view:
-            if st.button(f"👁️ معاينة", key=f"view_{report['id']}", use_container_width=True):
-                st.session_state.preview_report = report['html']
-                
-        with col_download:
-            st.download_button(
-                label="📥 تحميل",
-                data=report['html'],
-                file_name=f"{report['title']}_{report['timestamp'].replace(':', '-')}.html",
-                mime="text/html",
-                key=f"download_{report['id']}",
-                use_container_width=True
-            )
-        
-        with col_delete:
-            if st.button("🗑️", key=f"delete_{report['id']}", use_container_width=True):
-                delete_report(report['id'])
-                st.rerun()
-        
-        st.markdown("<hr style='border: 1px solid rgba(255,215,0,0.1); margin: 10px 0;'>", unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
-# معاينة التقرير المحدد
-if 'preview_report' in st.session_state and st.session_state.preview_report:
+# عرض معاينة التقرير المحدد
+if st.session_state.preview_report:
     st.markdown('''
     <div class="preview-header">
-        <span>👁️ معاينة التقرير</span>
+        <span>👁️ معاينة التقرير المحفوظ</span>
     </div>
     ''', unsafe_allow_html=True)
     
     components.html(st.session_state.preview_report, height=600, scrolling=True)
     
-    if st.button("❌ إغلاق المعاينة", use_container_width=True):
+    if st.button("❌ إغلاق المعاينة", key="close_preview", use_container_width=True):
         st.session_state.preview_report = None
         st.rerun()
     
     st.markdown("<br>", unsafe_allow_html=True)
-
-elif st.session_state.show_history and reports_count == 0:
-    st.markdown('''
-    <div class="empty-history">
-        <div class="empty-icon">📭</div>
-        <div class="empty-text">لا توجد تقارير محفوظة بعد</div>
-        <div class="empty-hint">ستظهر التقارير هنا بعد إنشائها</div>
-    </div>
-    ''', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -338,6 +349,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             genai.configure(api_key=API_KEY)
             model_name = get_working_model()
             
+            # إعدادات صارمة
             generation_config = genai.types.GenerationConfig(
                 temperature=0.0,
                 top_p=0.95,
@@ -433,16 +445,17 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
+            # تعديل الأمر لإجبار النموذج على وضع الكود داخل بلوك
             prompt = f"""
             You are a strict Data Analyst & Developer.
             **Objective:** Convert the provided text into a Professional HTML Report.
             
             **CRITICAL RULES (ZERO TOLERANCE):**
             1. **OUTPUT FORMAT:** You MUST wrap the HTML code inside a markdown block like this:
-```html
+               ```html
                <!DOCTYPE html>
                ... code ...
-```
+               ```
                Do NOT include any text before or after this block.
             2. **NAMES PRESERVATION:** Copy person names EXACTLY (e.g. "بليغ ابو كلل").
             3. **REVERSED TEXT:** Fix reversed Arabic letters but keep words unchanged.
@@ -476,6 +489,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
                     st.stop()
                     
+                # استخدام دالة التنظيف الجديدة المعتمدة على Regex
                 html_body = clean_html_response(response.text)
                 
                 progress_placeholder.empty()
@@ -501,7 +515,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 </html>
                 """
 
-                # ✅ حفظ التقرير في السجل
+                # ✅ حفظ التقرير في السجل المؤقت
                 save_report_to_history(
                     title=file_label,
                     report_type=report_type_short,
