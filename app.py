@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 🎨 CSS المحسن (واجهة المنصة الخارجية - كما هي)
+# 🎨 CSS المحسن (واجهة المنصة الخارجية)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -142,112 +142,234 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب (تم تحديثها لتكون عصرية جداً)
+# 🎨 القوالب (تم التحديث لتصميم مودرن جداً)
 # ---------------------------------------------------------
 
 STYLE_OFFICIAL = """
 <style>
-    :root { --navy: #002b49; --gold: #c5a059; --bg-light: #f8f9fa; --white: #ffffff; --text: #333; }
-    body { font-family: 'Tajawal', sans-serif; background-color: var(--bg-light); color: var(--text); line-height: 1.8; direction: rtl; margin: 0; padding: 0; }
-    .container { max-width: 1000px; margin: 40px auto; padding: 40px; background: var(--white); box-shadow: 0 10px 40px rgba(0,0,0,0.05); border-radius: 16px; border-top: 6px solid var(--navy); }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+    
+    :root { 
+        --navy: #002b49; 
+        --gold: #c5a059; 
+        --bg-light: #f8f9fa; 
+        --white: #ffffff; 
+        --text: #2d3748; 
+    }
+    
+    body { 
+        font-family: 'Cairo', sans-serif; 
+        background-color: var(--bg-light); 
+        color: var(--text); 
+        line-height: 1.8; 
+        direction: rtl; 
+        margin: 0; 
+        padding: 0; 
+    }
+    
+    .container { 
+        max-width: 900px; 
+        margin: 40px auto; 
+        padding: 50px; 
+        background: var(--white); 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.06); 
+        border-radius: 20px; 
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* الشريط العلوي للورقة */
+    .container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, var(--navy) 0%, var(--gold) 100%);
+    }
     
     /* Header Modern */
-    header { text-align: center; margin-bottom: 50px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-    header h1 { color: var(--navy); font-size: 2.2rem; margin: 0; font-weight: 800; letter-spacing: -0.5px; }
-    header h2 { color: var(--gold); font-size: 1.2rem; margin-top: 8px; font-weight: 500; }
-    
-    /* Modern Cards for Content */
-    .section-card { margin-bottom: 30px; }
-    h3.section-title { color: var(--navy); font-size: 1.4rem; font-weight: 700; margin-bottom: 15px; border-right: 4px solid var(--gold); padding-right: 15px; display: flex; align-items: center; }
-    
-    /* The List Grid Design */
-    .members-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
-    .member-item { 
-        background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 15px 20px; 
-        display: flex; justify-content: space-between; align-items: center;
-        transition: transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    header { 
+        text-align: center; 
+        margin-bottom: 50px; 
+        padding-bottom: 30px; 
+        border-bottom: 1px solid #edf2f7; 
     }
-    .member-item:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-color: var(--gold); }
     
-    .role-badge { background: rgba(0, 43, 73, 0.05); color: var(--navy); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
-    .member-name { font-weight: 700; color: #222; font-size: 1.05rem; }
+    header h1 { 
+        color: var(--navy); 
+        font-size: 2.4rem; 
+        margin: 0; 
+        font-weight: 800; 
+        letter-spacing: -0.5px; 
+    }
+    
+    header h2 { 
+        color: var(--gold); 
+        font-size: 1.3rem; 
+        margin-top: 10px; 
+        font-weight: 600; 
+        opacity: 0.9;
+    }
+    
+    /* Modern Cards for Content Sections */
+    .section-card { 
+        margin-bottom: 40px; 
+        background: #fff;
+    }
+    
+    h3.section-title { 
+        color: var(--navy); 
+        font-size: 1.6rem; 
+        font-weight: 700; 
+        margin-bottom: 25px; 
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(197, 160, 89, 0.3);
+        display: inline-block;
+    }
+    
+    /* Paragraphs */
+    p {
+        font-size: 1.1rem;
+        color: #4a5568;
+        text-align: justify;
+        margin-bottom: 15px;
+    }
+
+    /* The List Grid Design (Modern Cards for Members) */
+    .members-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+        gap: 20px; 
+        margin-top: 25px; 
+    }
+    
+    .member-item { 
+        background: #fff; 
+        border: 1px solid #e2e8f0; 
+        border-radius: 12px; 
+        padding: 20px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .member-item::after {
+        content: '';
+        position: absolute;
+        right: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--navy);
+        transition: width 0.3s ease;
+    }
+    
+    .member-item:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
+        border-color: #cbd5e0;
+    }
+    
+    .member-item:hover::after {
+        width: 6px;
+        background: var(--gold);
+    }
+    
+    .role-badge { 
+        background: #ebf8ff; 
+        color: #2b6cb0; 
+        padding: 6px 14px; 
+        border-radius: 20px; 
+        font-size: 0.85rem; 
+        font-weight: 700; 
+    }
+    
+    .member-name { 
+        font-weight: 700; 
+        color: #2d3748; 
+        font-size: 1.1rem; 
+    }
 
     /* Clean Tables */
-    table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
-    th { background: var(--navy); color: #fff; padding: 15px; font-weight: 500; text-align: right; }
-    td { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; color: #555; }
+    table { 
+        width: 100%; 
+        border-collapse: separate; 
+        border-spacing: 0; 
+        margin: 25px 0; 
+        border-radius: 10px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    
+    th { 
+        background: var(--navy); 
+        color: #fff; 
+        padding: 18px; 
+        font-weight: 600; 
+        text-align: right; 
+    }
+    
+    td { 
+        padding: 15px 18px; 
+        border-bottom: 1px solid #edf2f7; 
+        color: #4a5568; 
+    }
+    
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background-color: #fcfcfc; }
+    tr:hover td { background-color: #f7fafc; }
 
-    footer { text-align: center; margin-top: 50px; font-size: 0.85rem; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+    footer { 
+        text-align: center; 
+        margin-top: 60px; 
+        font-size: 0.9rem; 
+        color: #a0aec0; 
+        border-top: 1px solid #edf2f7; 
+        padding-top: 25px; 
+    }
 </style>
 """
 
+# باقي القوالب (الرقمي، العرض التقديمي...)
 STYLE_DIGITAL = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
     body { font-family: 'Cairo', sans-serif; background: #f0f2f5; color: #444; direction: rtl; }
     .container { max-width: 1200px; margin: 30px auto; padding: 20px; }
-    
-    /* Dashboard Header */
     .dash-header { background: #fff; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
     .dash-title h1 { margin: 0; font-size: 1.8rem; color: #1a1a1a; font-weight: 700; }
     .dash-badge { background: #e3f2fd; color: #1565c0; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
-
-    /* KPI Cards */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
     .kpi-card { background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border-bottom: 4px solid #3b82f6; }
     .kpi-val { font-size: 2rem; font-weight: 700; color: #1e293b; }
     .kpi-label { color: #64748b; font-size: 0.9rem; margin-top: 5px; }
-
-    /* Content Area */
     .content-box { background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-bottom: 20px; }
     h2 { font-size: 1.3rem; color: #334155; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-    
-    /* List styling */
     ul { list-style: none; padding: 0; }
     ul li { background: #f8fafc; margin-bottom: 10px; padding: 15px; border-radius: 8px; border-right: 3px solid #3b82f6; display: flex; justify-content: space-between; }
 </style>
 """
 
-# باقي القوالب (التحليل، العرض التقديمي، الملخص) تبقى كما هي لأنها جيدة، لكن يمكن تحسينها بنفس المنطق
-STYLE_ANALYTICAL = STYLE_OFFICIAL # استخدام الرسمي كقاعدة للتحليل مع تعديلات بسيطة لو لزم
+STYLE_ANALYTICAL = STYLE_OFFICIAL
 STYLE_EXECUTIVE = STYLE_OFFICIAL
 
 STYLE_PRESENTATION = """
 <style>
-    :root {
-        --primary-navy: #002b49; --primary-blue: #004e89;
-        --gold-main: #c5a059; --gold-light: #e6c885;
-        --white: #ffffff; --grey-light: #f8f9fa; --text-dark: #333333;
-    }
+    :root { --primary-navy: #002b49; --primary-blue: #004e89; --gold-main: #c5a059; --white: #ffffff; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow: hidden; height: 100vh; width: 100vw; direction: rtl; margin:0;}
     .presentation-container { width: 100%; height: 100%; position: relative; background: radial-gradient(circle at center, #003865 0%, #002035 100%); }
-    .slide {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        opacity: 0; visibility: hidden; transform: scale(0.95);
-        transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-        display: flex; flex-direction: column; padding: 40px 60px;
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
-    }
+    .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transform: scale(0.95); transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); display: flex; flex-direction: column; padding: 40px 60px; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg=='); }
     .slide.active { opacity: 1; visibility: visible; transform: scale(1); z-index: 10; }
     .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 15px; margin-bottom: 25px; flex-shrink: 0; }
     .header-title h2 { color: var(--gold-main); font-size: 2rem; font-weight: 800; }
-    .header-logo { font-family: 'Tajawal'; color: var(--white); font-weight: bold; display: flex; align-items: center; gap: 10px; }
     .slide-content { flex-grow: 1; display: flex; gap: 40px; height: 100%; overflow: hidden; }
-    .text-panel { flex: 3; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: var(--text-dark); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto; border-right: 5px solid var(--gold-main); }
+    .text-panel { flex: 3; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto; border-right: 5px solid var(--gold-main); }
     .visual-panel { flex: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--white); text-align: center; }
     h3 { color: var(--primary-blue); font-size: 1.6rem; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
     p { font-size: 1.2rem; line-height: 1.8; margin-bottom: 20px; text-align: justify; }
     li { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.6; }
-    strong { color: var(--primary-navy); font-weight: 800; }
     .icon-box { font-size: 5rem; color: var(--gold-main); margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; }
-    .slide.cover { align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--primary-navy) 30%, #001a2c 100%); }
-    .cover-content { border: 2px solid var(--gold-main); padding: 60px; position: relative; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
-    .main-title { font-size: 3.5rem; color: var(--white); margin-bottom: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-    .sub-title { font-size: 1.8rem; color: var(--gold-main); margin-bottom: 40px; font-weight: 300; }
     .nav-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 100; }
     .nav-btn { background: transparent; border: 2px solid var(--gold-main); color: var(--gold-main); width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
     .nav-btn:hover { background: var(--gold-main); color: var(--primary-navy); transform: scale(1.1); }
@@ -267,12 +389,9 @@ SCRIPT_PRESENTATION = """
         const slides = document.querySelectorAll('.slide');
         const totalSlides = slides.length;
         if(totalSlides === 0) return;
-        
         slides.forEach(slide => { slide.classList.remove('active'); });
-        
         const activeSlide = document.getElementById(`slide-${currentSlideIndex}`);
         if(activeSlide) activeSlide.classList.add('active');
-        
         const pageNum = document.getElementById('page-num');
         if(pageNum) pageNum.innerText = `${currentSlideIndex} / ${totalSlides}`;
     }
@@ -300,7 +419,6 @@ def extract_text_from_file(uploaded_file):
     try:
         if uploaded_file.type == "application/pdf":
             try:
-                # fitz هو الأفضل لدعم العربية
                 doc = fitz.open(stream=uploaded_file.getvalue(), filetype="pdf")
                 for page in doc:
                     text_content += page.get_text() + "\n"
@@ -468,12 +586,12 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
             
-            else: # Fallback for other types to Official style for now
+            else:
                 target_css = STYLE_OFFICIAL
                 file_label = "Report"
                 design_rules = "Style: Clean Corporate Report. Use cards and grids."
 
-            # هندسة الأوامر (Prompt Engineering) لحل مشكلة الأسماء
+            # هندسة الأوامر (Prompt Engineering) لحل مشكلة الأسماء والمحاكاة الهيكلية
             prompt = f"""
             You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
             **Objective:** Create a STUNNING, MODERN HTML report.
@@ -484,7 +602,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                - IF text says "أبو كلل", DO NOT write "أبو هلال".
                - IF text says "الدراجي", DO NOT write "الراجحي".
                - Copy the characters exactly, even if they seem rare.
-            2. **Fix Reversed Text:** If input has "ل ل ك و ب أ", output "أبو كلل".
+            2. **STRUCTURE REPLICATION:** Replicate the exact structure of the input text (Introduction -> List of Members -> Body -> Conclusion). Do not merge sections.
+            3. **Fix Reversed Text:** If input has "ل ل ك و ب أ", output "أبو كلل".
             
             **DESIGN INSTRUCTIONS:**
             {design_rules}
