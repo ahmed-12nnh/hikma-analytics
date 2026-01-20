@@ -4,11 +4,10 @@ import PyPDF2
 import pandas as pd
 from io import StringIO
 import time
-import random
 
-# =========================================================
-# 1. إعدادات النظام والأمان (System Setup)
-# =========================================================
+# ---------------------------------------------------------
+# 🔑 إعدادات المفتاح
+# ---------------------------------------------------------
 try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
@@ -24,10 +23,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# =========================================================
-# 2. تصميم الواجهة الأصلي (The Original UI CSS)
-# (لم يتم تغيير أي شيء هنا حفاظاً على الهوية التي طلبتها)
-# =========================================================
+# ---------------------------------------------------------
+# 🎨 CSS المحسن - (نفس التصميم الأصلي تماماً كما طلبت)
+# ---------------------------------------------------------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
@@ -479,12 +477,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# 3. القوالب التفاعلية (المحرك الجديد + تصميمك)
-# =========================================================
+# ---------------------------------------------------------
+# 🎨 القوالب التفاعلية المدمجة (مع JS & Chart.js)
+# ---------------------------------------------------------
 
-# --- 1. القالب الرسمي (Interactive Official) ---
-TEMPLATE_OFFICIAL_MODERN = """
+# 1. القالب الرسمي (Interactive Official)
+STYLE_OFFICIAL_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -535,7 +533,7 @@ TEMPLATE_OFFICIAL_MODERN = """
 </html>
 """
 
-# --- 2. القالب الرقمي (Interactive Dashboard) ---
+# 2. القالب الرقمي (Interactive Dashboard)
 TEMPLATE_DIGITAL_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -580,7 +578,7 @@ TEMPLATE_DIGITAL_MODERN = """
 </html>
 """
 
-# --- 3. القالب التحليلي (Interactive Analysis) ---
+# 3. القالب التحليلي (Interactive Analysis)
 TEMPLATE_ANALYTICAL_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -600,7 +598,7 @@ TEMPLATE_ANALYTICAL_MODERN = """
         
         .viz-container { background: white; border: 1px solid #eee; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-radius: 10px; margin: 20px 0; height: 350px; }
         
-        table { width: 100%; border: 1px solid #ddd; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #0056b3; color: white; padding: 10px; }
         td { border: 1px solid #ddd; padding: 10px; text-align: center; }
     </style>
@@ -612,7 +610,7 @@ TEMPLATE_ANALYTICAL_MODERN = """
 </html>
 """
 
-# --- 4. قالب العرض التقديمي (Slides) ---
+# 4. قالب العرض التقديمي (Slides)
 TEMPLATE_PRESENTATION_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -656,7 +654,7 @@ TEMPLATE_PRESENTATION_MODERN = """
 </html>
 """
 
-# --- 5. الملخص التنفيذي (Executive) ---
+# 5. الملخص التنفيذي (Executive)
 TEMPLATE_EXECUTIVE_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -692,24 +690,8 @@ TEMPLATE_EXECUTIVE_MODERN = """
 """
 
 # =========================================================
-# 4. المنطق البرمجي (المحرك) - مع حل مشكلة 404
+# 4. دوال المساعدة (المحرك) - مع حل مشكلة 404
 # =========================================================
-
-def get_working_model():
-    """
-    دالة ذكية تحل مشكلة 404.
-    تقوم بفحص الموديلات المتاحة وتختار الموديل الشغال.
-    """
-    try:
-        # قائمة الموديلات التي سنحاول استخدامها بالترتيب
-        priority_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
-        
-        # محاولة الوصول لقائمة الموديلات من حسابك
-        # ملاحظة: قد تتطلب google-generativeai تحديثاً لتعمل list_models بشكل صحيح مع المفاتيح الجديدة
-        # لذلك سنستخدم منطق التجربة والخطأ (Try/Except) فهو أكثر أماناً
-        return "gemini-1.5-flash" 
-    except:
-        return "gemini-pro"
 
 def extract_text_from_file(uploaded_file):
     text_content = ""
@@ -794,7 +776,7 @@ with col_upload:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =========================================================
-# 6. زر المعالجة والمنطق الرئيسي (The Core Logic)
+# 6. زر المعالجة والمنطق الرئيسي (The Core Logic) - مع إصلاح الخطأ
 # =========================================================
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
@@ -813,12 +795,18 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # --- الإصلاح: اختيار الموديل مع Fallback ---
+            # --- نقطة الإصلاح الحاسمة (Fallback Logic) ---
+            # نحاول استخدام الموديل الحديث (Flash)، وإذا فشل نعود للموديل القديم (Pro) تلقائياً
+            selected_model_name = "gemini-1.5-flash"
+            model = None
+            
             try:
-                model = genai.GenerativeModel("gemini-1.5-flash")
+                # محاولة أولى
+                model = genai.GenerativeModel(selected_model_name)
             except:
-                st.warning("⚠️ جاري التحويل للموديل البديل...")
-                model = genai.GenerativeModel("gemini-pro")
+                # إذا فشل التعريف، نستخدم البديل
+                selected_model_name = "gemini-pro"
+                model = genai.GenerativeModel(selected_model_name)
 
             target_template = ""
             prompt_instruction = ""
@@ -923,33 +911,46 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 </div>''', unsafe_allow_html=True)
                 time.sleep(0.3)
             
-            # إرسال الطلب
-            response = model.generate_content(prompt)
-            generated_html = clean_html_response(response.text)
-            
-            # دمج النتيجة مع القالب المختار
-            final_output = target_template.replace("", generated_html)
-            
-            progress_placeholder.empty()
+            # --- محاولة التوليد مع معالجة الأخطاء (Retry Logic) ---
+            response = None
+            try:
+                # المحاولة الأولى (الموديل الافتراضي)
+                response = model.generate_content(prompt)
+            except Exception as e:
+                # إذا فشل، نجرب الموديل القديم الاحتياطي
+                try:
+                    fallback_model = genai.GenerativeModel("gemini-pro")
+                    response = fallback_model.generate_content(prompt)
+                except Exception as final_e:
+                    st.error(f"عذراً، الخادم مشغول حالياً أو لا يدعم منطقتك. التفاصيل: {final_e}")
+                    st.stop()
 
-            # عرض النتيجة
-            st.markdown('''
-            <div class="success-banner">
-                <span>✅ تم إنشاء التقرير التفاعلي بنجاح!</span>
-            </div>
-            ''', unsafe_allow_html=True)
-            
-            st.components.v1.html(final_output, height=850, scrolling=True)
+            if response:
+                generated_html = clean_html_response(response.text)
+                
+                # دمج النتيجة مع القالب المختار
+                final_output = target_template.replace("", generated_html)
+                
+                progress_placeholder.empty()
 
-            st.download_button(
-                label="📥 تحميل التقرير (HTML تفاعلي)",
-                data=final_output,
-                file_name=f"{file_label}.html",
-                mime="text/html"
-            )
+                # عرض النتيجة
+                st.markdown('''
+                <div class="success-banner">
+                    <span>✅ تم إنشاء التقرير التفاعلي بنجاح!</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                st.components.v1.html(final_output, height=850, scrolling=True)
+
+                st.download_button(
+                    label="📥 تحميل التقرير (HTML تفاعلي)",
+                    data=final_output,
+                    file_name=f"{file_label}.html",
+                    mime="text/html"
+                )
 
         except Exception as e:
-            st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
+            st.error(f"❌ حدث خطأ غير متوقع: {e}")
             st.warning("نصيحة: تأكد من أن مفتاح API يعمل وأنك تستخدم مكتبة google-generativeai محدثة.")
 
 # الفوتر
