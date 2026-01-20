@@ -5,6 +5,7 @@ import pandas as pd
 from io import StringIO
 import time
 import streamlit.components.v1 as components
+import re  # <--- هام جداً: إضافة مكتبة التعابير النمطية
 
 # استيراد التصاميم من ملف styles.py
 from styles import (
@@ -78,21 +79,26 @@ def clean_input_text(text):
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     return '\n'.join(lines)
 
-# 🔥 التعديل الجوهري لحل المشكلة هنا 🔥
+# 🔥 التعديل الجوهري والنهائي: استخدام Regex لاستخراج الكود بدقة 🔥
 def clean_html_response(text):
-    # 1. تنظيف علامات الماركدوان
-    text = text.replace("```html", "").replace("```", "")
+    # محاولة 1: البحث عن النص المحصور بين علامات الكود ```html ... ```
+    match = re.search(r"```html(.*?)```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
     
-    # 2. البحث الذكي عن بداية HTML وحذف أي كلام قبله
-    # نبحث عن <!DOCTYPE html> أو <html
-    start_index = text.find("<!DOCTYPE html>")
-    if start_index == -1:
-        start_index = text.find("<html")
-    
-    # إذا وجدنا البداية، نقص النص من هناك
-    if start_index != -1:
-        return text[start_index:].strip()
+    # محاولة 2: البحث عن النص المحصور بين علامات الكود العامة ``` ... ```
+    match = re.search(r"```(.*?)```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
         
+    # محاولة 3: إذا فشل ما سبق، ابحث عن أول علامة تاج HTML (<) واسترجع كل شيء بعدها
+    # هذا سيحذف أي جملة مثل "Here is the code" في البداية
+    match = re.search(r"(<html|<!DOCTYPE)(.*)", text, re.DOTALL)
+    if match:
+        # نعيد التاج الذي وجدناه + باقي النص
+        return match.group(1) + match.group(2)
+    
+    # إذا فشل كل شيء، أعد النص كما هو (حالة نادرة جداً)
     return text.strip()
 
 def get_working_model():
@@ -191,7 +197,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             genai.configure(api_key=API_KEY)
             model_name = get_working_model()
             
-            # إعدادات صارمة لمنع الهلوسة
+            # إعدادات صارمة
             generation_config = genai.types.GenerationConfig(
                 temperature=0.0,
                 top_p=0.95,
@@ -281,14 +287,19 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
-            # تعليمات صارمة (تم إضافة سطر يمنع الحديث الجانبي)
+            # تعديل الأمر لإجبار النموذج على وضع الكود داخل بلوك
             prompt = f"""
             You are a strict Data Analyst & Developer.
             **Objective:** Convert the provided text into a Professional HTML Report.
             
-            **CRITICAL RULES FOR ACCURACY (ZERO TOLERANCE):**
-            1. **OUTPUT FORMAT:** Return ONLY raw HTML code. DO NOT include any introductory text (e.g., "Here is the code", "Okay I will..."). Start immediately with <!DOCTYPE html>.
-            2. **NAMES PRESERVATION:** You MUST copy person names EXACTLY as they appear in the input (e.g. "بليغ ابو كلل"). DO NOT change them.
+            **CRITICAL RULES (ZERO TOLERANCE):**
+            1. **OUTPUT FORMAT:** You MUST wrap the HTML code inside a markdown block like this:
+               ```html
+               <!DOCTYPE html>
+               ... code ...
+               ```
+               Do NOT include any text before or after this block.
+            2. **NAMES PRESERVATION:** Copy person names EXACTLY (e.g. "بليغ ابو كلل").
             3. **REVERSED TEXT:** Fix reversed Arabic letters but keep words unchanged.
             4. **DESIGN:** Follow these rules:
             {design_rules}
@@ -320,7 +331,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
                     st.stop()
                     
-                # استخدام دالة التنظيف الذكية الجديدة
+                # استخدام دالة التنظيف الجديدة المعتمدة على Regex
                 html_body = clean_html_response(response.text)
                 
                 progress_placeholder.empty()
