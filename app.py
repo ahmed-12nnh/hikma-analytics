@@ -110,15 +110,33 @@ def clean_html_response(text):
     
     return text.strip()
 
-def get_working_model():
+# 🔥 دالة ذكية لاختيار الموديل الموجود فعلياً وتجنب المشاكل 🔥
+def find_best_model():
     try:
+        # جلب قائمة الموديلات المتاحة لهذا المفتاح
+        available_models = []
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
-                if "flash" in m.name:
-                    return m.name
-        return "gemini-1.5-flash"
+                available_models.append(m.name)
+        
+        # 1. البحث عن gemini-1.5-flash (أفضل خيار) وتجنب 2.5
+        for model in available_models:
+            if "gemini-1.5-flash" in model and "001" in model: # النسخة المستقرة 001
+                return model
+        
+        # 2. البحث عن أي فلاش آخر (ما عدا 2.5)
+        for model in available_models:
+            if "flash" in model and "2.5" not in model:
+                return model
+                
+        # 3. العودة إلى gemini-pro (الخيار الآمن دائماً)
+        for model in available_models:
+            if "gemini-pro" in model:
+                return model
+                
+        return "gemini-pro" # احتياطي أخير
     except:
-        return "gemini-1.5-flash"
+        return "gemini-pro"
 
 # ---------------------------------------------------------
 # 📚 دوال التخزين المؤقت
@@ -338,9 +356,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # 🔥 التعديل الجوهري: تثبيت الموديل على gemini-1.5-flash لتجنب خطأ Quota 🔥
-            # تم حذف استدعاء get_working_model() الذي كان يختار الموديل الجديد المحدود
-            model_name = "gemini-1.5-flash"
+            # 🔥 التعديل الجوهري: البحث عن الموديل المناسب تلقائياً 🔥
+            selected_model = find_best_model()
             
             generation_config = genai.types.GenerationConfig(
                 temperature=0.0,
@@ -349,7 +366,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 max_output_tokens=8192,
             )
             
-            model = genai.GenerativeModel(model_name)
+            model = genai.GenerativeModel(selected_model)
 
             target_css = ""
             design_rules = ""
@@ -468,7 +485,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري معالجة البيانات وتصحيح النصوص... {i}%</div>
+                    <div class="progress-text">جاري معالجة البيانات باستخدام ({selected_model})... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
                 time.sleep(0.1)
