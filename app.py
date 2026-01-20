@@ -57,7 +57,6 @@ def extract_text_from_file(uploaded_file):
         elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
             try:
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
-                # تحسين: استخدام to_csv بدلاً من to_string لتقليل الحجم
                 text_content = df.to_csv(index=False)
             except Exception as xl_err:
                  return f"⚠️ خطأ في قراءة Excel: {xl_err}"
@@ -79,8 +78,21 @@ def clean_input_text(text):
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     return '\n'.join(lines)
 
+# 🔥 التعديل الجوهري لحل المشكلة هنا 🔥
 def clean_html_response(text):
+    # 1. تنظيف علامات الماركدوان
     text = text.replace("```html", "").replace("```", "")
+    
+    # 2. البحث الذكي عن بداية HTML وحذف أي كلام قبله
+    # نبحث عن <!DOCTYPE html> أو <html
+    start_index = text.find("<!DOCTYPE html>")
+    if start_index == -1:
+        start_index = text.find("<html")
+    
+    # إذا وجدنا البداية، نقص النص من هناك
+    if start_index != -1:
+        return text[start_index:].strip()
+        
     return text.strip()
 
 def get_working_model():
@@ -179,11 +191,9 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             genai.configure(api_key=API_KEY)
             model_name = get_working_model()
             
-            # ---------------------------------------------------------
-            # 🔥 التعديل الجوهري: إعدادات التوليد الصارمة (Temperature = 0)
-            # ---------------------------------------------------------
+            # إعدادات صارمة لمنع الهلوسة
             generation_config = genai.types.GenerationConfig(
-                temperature=0.0,  # صفر للإبداع = دقة 100% في النقل
+                temperature=0.0,
                 top_p=0.95,
                 top_k=40,
                 max_output_tokens=8192,
@@ -271,21 +281,16 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
-            # ---------------------------------------------------------
-            # 🔥 التعديل الجوهري: تحسين الأمر (Prompt) لمنع تغيير الأسماء
-            # ---------------------------------------------------------
+            # تعليمات صارمة (تم إضافة سطر يمنع الحديث الجانبي)
             prompt = f"""
             You are a strict Data Analyst & Developer.
             **Objective:** Convert the provided text into a Professional HTML Report.
             
             **CRITICAL RULES FOR ACCURACY (ZERO TOLERANCE):**
-            1. **NAMES PRESERVATION:** You MUST copy person names EXACTLY as they appear in the input. 
-               - Example: If input is "بليغ ابو كلل", DO NOT change it to "ابو هيل" or anything else.
-               - DO NOT autocorrect names even if they look like typos.
-            2. **REVERSED TEXT:** Fix reversed Arabic letters (e.g., 'م ل ع' -> 'علم') BUT keep the words themselves unchanged.
-            3. **FULL CONTENT:** Do NOT summarize or skip details.
-            4. **FORMAT:** Output ONLY valid HTML code (inside <body> tags).
-            5. **DESIGN:** Follow these specific design rules:
+            1. **OUTPUT FORMAT:** Return ONLY raw HTML code. DO NOT include any introductory text (e.g., "Here is the code", "Okay I will..."). Start immediately with <!DOCTYPE html>.
+            2. **NAMES PRESERVATION:** You MUST copy person names EXACTLY as they appear in the input (e.g. "بليغ ابو كلل"). DO NOT change them.
+            3. **REVERSED TEXT:** Fix reversed Arabic letters but keep words unchanged.
+            4. **DESIGN:** Follow these rules:
             {design_rules}
             
             **INPUT DATA:**
@@ -309,13 +314,13 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 time.sleep(0.1)
             
             try:
-                # تمرير إعدادات generation_config هنا
                 response = model.generate_content(prompt, generation_config=generation_config)
                 
                 if response.prompt_feedback.block_reason:
                     st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
                     st.stop()
                     
+                # استخدام دالة التنظيف الذكية الجديدة
                 html_body = clean_html_response(response.text)
                 
                 progress_placeholder.empty()
