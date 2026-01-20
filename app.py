@@ -178,6 +178,17 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             model_name = get_working_model()
+            
+            # ---------------------------------------------------------
+            # 🔥 التعديل الجوهري: إعدادات التوليد الصارمة (Temperature = 0)
+            # ---------------------------------------------------------
+            generation_config = genai.types.GenerationConfig(
+                temperature=0.0,  # صفر للإبداع = دقة 100% في النقل
+                top_p=0.95,
+                top_k=40,
+                max_output_tokens=8192,
+            )
+            
             model = genai.GenerativeModel(model_name)
 
             target_css = ""
@@ -260,14 +271,19 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
+            # ---------------------------------------------------------
+            # 🔥 التعديل الجوهري: تحسين الأمر (Prompt) لمنع تغيير الأسماء
+            # ---------------------------------------------------------
             prompt = f"""
-            You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
-            **Objective:** Create a FULL, DETAILED HTML report based on the provided text.
+            You are a strict Data Analyst & Developer.
+            **Objective:** Convert the provided text into a Professional HTML Report.
             
-            **CRITICAL INSTRUCTIONS FOR TEXT CORRECTION:**
-            1. **REVERSED TEXT DETECTION:** The input text might contain reversed Arabic letters. You MUST detect and correct this automatically.
-            2. **VERBATIM EXTRACTION:** Names, Titles, and Numbers MUST be extracted accurately after correction.
-            3. **FULL CONTENT:** Do NOT summarize. Process every single detail from the input.
+            **CRITICAL RULES FOR ACCURACY (ZERO TOLERANCE):**
+            1. **NAMES PRESERVATION:** You MUST copy person names EXACTLY as they appear in the input. 
+               - Example: If input is "بليغ ابو كلل", DO NOT change it to "ابو هيل" or anything else.
+               - DO NOT autocorrect names even if they look like typos.
+            2. **REVERSED TEXT:** Fix reversed Arabic letters (e.g., 'م ل ع' -> 'علم') BUT keep the words themselves unchanged.
+            3. **FULL CONTENT:** Do NOT summarize or skip details.
             4. **FORMAT:** Output ONLY valid HTML code (inside <body> tags).
             5. **DESIGN:** Follow these specific design rules:
             {design_rules}
@@ -293,7 +309,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 time.sleep(0.1)
             
             try:
-                response = model.generate_content(prompt)
+                # تمرير إعدادات generation_config هنا
+                response = model.generate_content(prompt, generation_config=generation_config)
                 
                 if response.prompt_feedback.block_reason:
                     st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
