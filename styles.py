@@ -27,6 +27,34 @@ MAIN_CSS = """
         padding-top: 20px;
     }
     
+    /* إخفاء شريط التمرير المزعج عند إغلاق الشريط الجانبي */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        overflow: hidden !important;
+    }
+    
+    [data-testid="collapsedControl"] {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(0, 20, 40, 0.98)) !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        border-radius: 0 10px 10px 0 !important;
+        color: #FFD700 !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 31, 63, 0.98)) !important;
+        border-color: #FFD700 !important;
+    }
+    
+    [data-testid="collapsedControl"] svg {
+        fill: #FFD700 !important;
+        stroke: #FFD700 !important;
+    }
+    
+    /* إخفاء عناصر الشريط الجانبي عندما يكون مغلقاً */
+    section[data-testid="stSidebar"][aria-expanded="false"] > div {
+        visibility: hidden !important;
+        overflow: hidden !important;
+    }
+    
     .sidebar-header {
         display: flex;
         align-items: center;
@@ -152,6 +180,31 @@ MAIN_CSS = """
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     [data-testid="stToolbar"] { display: none; }
+    
+    /* إخفاء شريط التمرير المزعج من الشريط الجانبي المغلق */
+    [data-testid="stSidebarCollapsedControl"] + div {
+        overflow: hidden !important;
+    }
+    
+    /* إصلاح المساحة على يمين الصفحة */
+    .stApp > header + div > div:first-child {
+        overflow-x: hidden !important;
+    }
+    
+    /* منع ظهور شريط التمرير الأفقي */
+    .main .block-container {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+    }
+    
+    section[data-testid="stSidebar"] {
+        overflow: hidden !important;
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
 
     /* ===== الهيدر الرئيسي ===== */
     .hero-section {
