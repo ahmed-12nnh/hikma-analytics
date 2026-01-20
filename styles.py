@@ -334,24 +334,26 @@ MAIN_CSS = """
         opacity: 0.9;
     }
     
-    /* ===== تلميح فتح الشريط الجانبي ===== */
-    .open-sidebar-hint {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.03));
-        border: 1px solid rgba(255, 215, 0, 0.2);
-        border-radius: 25px;
-        padding: 10px 20px;
-        text-align: center;
-        color: rgba(255, 215, 0, 0.7);
-        font-size: 0.88rem;
-        margin: 10px auto;
-        transition: all 0.3s ease;
-        max-width: 350px;
+    /* ===== زر فتح سجل التقارير ===== */
+    /* تخصيص الزر ليبدو مختلفاً عن زر المعالجة */
+    div[data-testid="column"]:has(button[key="open_sidebar_btn"]) .stButton > button,
+    button[kind="secondary"] {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9)) !important;
+        color: white !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        padding: 12px 25px !important;
+        border-radius: 25px !important;
+        border: 1px solid rgba(139, 92, 246, 0.5) !important;
+        animation: none !important;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
     }
     
-    .open-sidebar-hint:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.06));
-        border-color: rgba(255, 215, 0, 0.35);
-        color: #FFD700;
+    div[data-testid="column"]:has(button[key="open_sidebar_btn"]) .stButton > button:hover,
+    button[kind="secondary"]:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(139, 92, 246, 1)) !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
     }
     
     /* ===== بانر المعاينة ===== */
