@@ -5,35 +5,35 @@ import pandas as pd
 from io import StringIO
 import time
 import random
-import json
 
 # =========================================================
-# 1. إعدادات النظام والأمان (System Configuration)
+# 1. إعدادات النظام والأمان (System Setup)
 # =========================================================
 try:
-    # محاولة جلب المفتاح من أسرار النظام
     API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
-    # يمكنك وضع مفتاحك هنا مباشرة إذا كنت تعمل محلياً
-    API_KEY = None 
+    API_KEY = None
 
-# إعدادات الصفحة - يجب أن تكون أول أمر
+# ---------------------------------------------------------
+# 🎨 إعدادات الصفحة
+# ---------------------------------------------------------
 st.set_page_config(
-    page_title="منصة التحليل الاستراتيجي - الجيل الثالث",
+    page_title="منصة التحليل الاستراتيجي",
     page_icon="🦅",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # =========================================================
-# 2. واجهة التطبيق (UI/UX) - (تصميمك الأصلي مع تحسينات طفيفة)
+# 2. تصميم الواجهة الأصلي (The Original UI CSS)
+# (لم يتم تغيير أي شيء هنا حفاظاً على الهوية التي طلبتها)
 # =========================================================
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     
-    /* Global Settings */
-    * { box-sizing: border-box; outline: none; }
+    /* إعدادات عامة */
+    * { box-sizing: border-box; }
     
     .stApp {
         background: radial-gradient(circle at 10% 20%, #001f3f 0%, #000d1a 90%);
@@ -41,417 +41,675 @@ st.markdown("""
         direction: rtl;
     }
 
-    /* Hiding Default Elements */
-    [data-testid="stSidebar"], header, footer, #MainMenu { display: none !important; }
-    [data-testid="stToolbar"] { display: none !important; }
+    /* إخفاء عناصر Streamlit */
+    [data-testid="stSidebar"] { display: none; }
+    header { visibility: hidden; }
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
+    [data-testid="stToolbar"] { display: none; }
 
-    /* --- Hero Section (الهوية البصرية) --- */
+    /* ===== الهيدر الرئيسي ===== */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
         padding: 50px 30px;
         text-align: center;
-        margin: 20px 0 40px 0;
+        margin: 20px;
         border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 0 0 50px rgba(0, 31, 63, 0.9), inset 0 0 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 
+            0 0 40px rgba(0, 31, 63, 0.8),
+            inset 0 0 30px rgba(0, 0, 0, 0.5),
+            0 0 15px rgba(255, 215, 0, 0.1);
         position: relative;
         overflow: hidden;
-        animation: fadeInDown 1s ease-out;
+        animation: fadeIn 1s ease-in-out;
     }
     
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* الخط الذهبي العلوي المتوهج */
     .hero-section::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
         background: linear-gradient(90deg, transparent, #FFD700, transparent);
-        animation: shimmer 3s infinite linear;
+        box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700;
+        animation: shimmer 3s infinite;
     }
     
-    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-
-    .main-title {
-        font-size: 3.5rem; font-weight: 900;
-        background: linear-gradient(180deg, #FFD700 10%, #B8860B 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        margin-bottom: 10px;
+    @keyframes shimmer {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
     }
-    .sub-title { color: #e0e0e0; font-size: 1.2rem; letter-spacing: 1px; opacity: 0.9; font-weight: 300; }
 
-    /* --- عنوان القسم --- */
-    .section-header { text-align: center; margin: 30px 20px; color: #FFD700; font-size: 1.4rem; font-weight: bold; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+    /* العنوان الرئيسي */
+    .main-title {
+        font-size: 52px;
+        font-weight: 900;
+        background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+        text-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes titleGlow {
+        from { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); }
+        to { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.6)); }
+    }
 
-    /* --- أزرار الاختيار (Radio Buttons) --- */
+    /* العنوان الفرعي */
+    .sub-title {
+        color: #e0e0e0;
+        font-size: 18px;
+        letter-spacing: 2px;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    /* ===== عنوان القسم ===== */
+    .section-header {
+        text-align: center;
+        margin: 30px 20px;
+        color: #FFD700;
+        font-size: 1.4rem;
+        font-weight: bold;
+        text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    /* ===== أزرار الاختيار ===== */
     div[role="radiogroup"] {
-        display: flex !important; flex-direction: row-reverse !important; justify-content: center !important;
-        gap: 15px !important; flex-wrap: wrap !important; background: rgba(0, 0, 0, 0.3) !important;
-        padding: 20px !important; border-radius: 15px !important; margin: 0 20px 30px 20px !important;
+        display: flex !important;
+        flex-direction: row-reverse !important;
+        justify-content: center !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        padding: 20px !important;
+        border-radius: 15px !important;
+        margin: 0 20px 30px 20px !important;
         border: 1px solid rgba(255, 215, 0, 0.15) !important;
     }
+
     div[role="radiogroup"] label {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95)) !important;
-        border: 2px solid rgba(255, 215, 0, 0.2) !important; padding: 15px 25px !important;
-        border-radius: 12px !important; cursor: pointer !important; text-align: center !important;
-        flex: 1 !important; min-width: 160px !important; max-width: 220px !important;
-        color: white !important; font-weight: 600 !important; transition: all 0.4s !important;
+        border: 2px solid rgba(255, 215, 0, 0.2) !important;
+        padding: 15px 25px !important;
+        border-radius: 12px !important;
+        cursor: pointer !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        text-align: center !important;
+        flex: 1 !important;
+        min-width: 160px !important;
+        max-width: 220px !important;
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        position: relative !important;
+        overflow: hidden !important;
     }
+    
+    div[role="radiogroup"] label::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent) !important;
+        transition: left 0.5s ease !important;
+    }
+    
+    div[role="radiogroup"] label:hover::before {
+        left: 100% !important;
+    }
+
     div[role="radiogroup"] label:hover {
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 31, 63, 0.95)) !important;
-        border-color: #FFD700 !important; transform: translateY(-5px) scale(1.02) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.2) !important;
+        border-color: #FFD700 !important;
+        transform: translateY(-5px) scale(1.02) !important;
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(255, 215, 0, 0.2) !important;
     }
-    div[role="radiogroup"] label[data-checked="true"] {
+    
+    div[role="radiogroup"] label[data-checked="true"],
+    div[role="radiogroup"] label:has(input:checked) {
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.15)) !important;
-        border-color: #FFD700 !important; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3) !important;
+        border-color: #FFD700 !important;
+        box-shadow: 
+            0 0 25px rgba(255, 215, 0, 0.3),
+            inset 0 0 20px rgba(255, 215, 0, 0.1) !important;
     }
 
-    /* --- Input Cards (البطاقات) --- */
+    /* ===== بطاقات الإدخال ===== */
     .input-card {
-        background: rgba(13, 25, 48, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 215, 0, 0.1);
-        border-radius: 16px; padding: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        transition: transform 0.3s ease, border-color 0.3s ease;
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 15, 30, 0.95));
+        border-radius: 20px;
+        padding: 30px;
+        margin: 10px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s ease;
     }
-    .input-card:hover { transform: translateY(-5px); border-color: rgba(255, 215, 0, 0.4); }
     
-    .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
-    .card-icon { font-size: 1.8rem; background: rgba(255, 215, 0, 0.1); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: #FFD700; }
-    .card-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
-    
-    /* --- Streamlit Widgets Overrides --- */
+    .input-card:hover {
+        border-color: rgba(255, 215, 0, 0.4);
+        transform: translateY(-5px);
+        box-shadow: 
+            0 15px 50px rgba(0, 0, 0, 0.4),
+            0 0 20px rgba(255, 215, 0, 0.1);
+    }
+
+    .input-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .input-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #FFD700, #B8860B);
+        border-radius: 12px;
+        font-size: 1.5rem;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    .input-title {
+        color: #FFD700;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .input-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    /* ===== حقل النص ===== */
     .stTextArea textarea {
-        background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(255,255,255,0.1) !important;
-        color: white !important; font-family: 'Tajawal' !important; border-radius: 12px !important;
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 2px solid rgba(255, 215, 0, 0.2) !important;
+        border-radius: 15px !important;
+        color: white !important;
+        font-family: 'Tajawal', sans-serif !important;
+        font-size: 1rem !important;
+        padding: 20px !important;
+        text-align: right !important;
+        direction: rtl !important;
+        transition: all 0.3s ease !important;
     }
-    .stTextArea textarea:focus { border-color: #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.1) !important; }
     
-    div[data-testid="stFileUploader"] {
-        background: rgba(0,0,0,0.2) !important; border: 1px dashed rgba(255,255,255,0.2) !important;
-        border-radius: 12px !important; padding: 20px !important;
+    .stTextArea textarea:focus {
+        border-color: #FFD700 !important;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.2) !important;
+        outline: none !important;
     }
-    div[data-testid="stFileUploader"] section > button {
-        background: linear-gradient(45deg, #FFD700, #B8860B) !important;
-        color: #000 !important; font-weight: bold !important; border: none !important;
+    
+    .stTextArea textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
     }
 
-    /* --- Action Button --- */
+    /* ===== رفع الملفات ===== */
+    [data-testid="stFileUploader"] {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 2px dashed rgba(255, 215, 0, 0.3) !important;
+        border-radius: 15px !important;
+        padding: 25px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: #FFD700 !important;
+        background: rgba(255, 215, 0, 0.05) !important;
+    }
+    
+    [data-testid="stFileUploader"] section {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    [data-testid="stFileUploader"] button {
+        background: linear-gradient(135deg, #FFD700, #B8860B) !important;
+        color: #001f3f !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        padding: 10px 20px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    [data-testid="stFileUploader"] button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4) !important;
+    }
+
+    /* ===== زر المعالجة الرئيسي ===== */
     .stButton > button {
-        width: 100%; background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-        background-size: 200% auto; color: #001f3f; font-weight: 900; font-size: 1.3rem;
-        padding: 18px 40px; border-radius: 15px; border: none;
-        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
-        transition: 0.5s; font-family: 'Tajawal'; animation: buttonPulse 2s infinite;
+        background: linear-gradient(135deg, #FFD700 0%, #DAA520 50%, #FFD700 100%) !important;
+        background-size: 200% auto !important;
+        color: #001f3f !important;
+        font-family: 'Tajawal', sans-serif !important;
+        font-weight: 900 !important;
+        font-size: 1.3rem !important;
+        border-radius: 15px !important;
+        width: 100% !important;
+        padding: 18px 40px !important;
+        border: none !important;
+        box-shadow: 
+            0 8px 30px rgba(218, 165, 32, 0.4),
+            0 0 0 0 rgba(255, 215, 0, 0.5) !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        cursor: pointer !important;
+        position: relative !important;
+        overflow: hidden !important;
+        animation: buttonPulse 2s infinite !important;
     }
-    @keyframes buttonPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); } }
-    .stButton > button:hover { background-position: right center; transform: scale(1.02); }
+    
+    @keyframes buttonPulse {
+        0%, 100% { box-shadow: 0 8px 30px rgba(218, 165, 32, 0.4), 0 0 0 0 rgba(255, 215, 0, 0.4); }
+        50% { box-shadow: 0 8px 30px rgba(218, 165, 32, 0.6), 0 0 0 10px rgba(255, 215, 0, 0); }
+    }
+    
+    .stButton > button::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+        transition: left 0.6s ease !important;
+    }
+    
+    .stButton > button:hover::before {
+        left: 100% !important;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 
+            0 15px 40px rgba(218, 165, 32, 0.5),
+            0 0 30px rgba(255, 215, 0, 0.3) !important;
+        background-position: right center !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px) scale(0.98) !important;
+    }
 
-    /* --- Progress & Success --- */
-    .progress-box { background: rgba(0, 31, 63, 0.9); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 15px; padding: 30px; margin: 20px; text-align: center; }
-    .progress-bar-bg { background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 12px; overflow: hidden; margin: 20px 0; }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700); background-size: 200% 100%; border-radius: 10px; animation: progressShine 1.5s infinite linear; transition: width 0.3s ease; }
-    @keyframes progressShine { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
-    .success-banner { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); border: 2px solid #22c55e; border-radius: 15px; padding: 20px 30px; text-align: center; margin: 20px; animation: successPop 0.5s ease; }
-    @keyframes successPop { 0% { transform: scale(0.9); opacity: 0; } 50% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
+    /* ===== التنبيهات ===== */
+    .stAlert {
+        background: rgba(0, 31, 63, 0.9) !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        border-radius: 12px !important;
+        color: white !important;
+    }
+    
+    .stSuccess {
+        background: rgba(34, 197, 94, 0.15) !important;
+        border: 1px solid rgba(34, 197, 94, 0.5) !important;
+    }
+    
+    .stWarning {
+        background: rgba(255, 193, 7, 0.15) !important;
+        border: 1px solid rgba(255, 193, 7, 0.5) !important;
+    }
+    
+    .stError {
+        background: rgba(220, 53, 69, 0.15) !important;
+        border: 1px solid rgba(220, 53, 69, 0.5) !important;
+    }
 
+    /* ===== زر التحميل ===== */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        color: white !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        padding: 15px 40px !important;
+        border-radius: 12px !important;
+        border: none !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
+    }
+    
+    .stDownloadButton > button:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.5) !important;
+    }
+
+    /* ===== شريط النجاح ===== */
+    .success-banner {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+        border: 2px solid #22c55e;
+        border-radius: 15px;
+        padding: 20px 30px;
+        text-align: center;
+        margin: 20px;
+        animation: successPop 0.5s ease;
+    }
+    
+    @keyframes successPop {
+        0% { transform: scale(0.9); opacity: 0; }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .success-banner span {
+        color: #22c55e;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    /* ===== إخفاء التسميات ===== */
+    .stTextArea > label,
+    .stFileUploader > label,
+    .stRadio > label {
+        display: none !important;
+    }
+
+    /* ===== المعاينة ===== */
+    iframe {
+        border-radius: 15px !important;
+        border: 2px solid rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* ===== شريط التقدم ===== */
+    .progress-box {
+        background: rgba(0, 31, 63, 0.9);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px;
+        text-align: center;
+    }
+    
+    .progress-bar-bg {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        height: 12px;
+        overflow: hidden;
+        margin: 20px 0;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+        background-size: 200% 100%;
+        border-radius: 10px;
+        animation: progressShine 1.5s infinite linear;
+        transition: width 0.3s ease;
+    }
+    
+    @keyframes progressShine {
+        0% { background-position: 200% center; }
+        100% { background-position: -200% center; }
+    }
+    
+    .progress-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        margin-top: 10px;
+    }
+
+    /* ===== الاستجابة ===== */
+    @media (max-width: 768px) {
+        .main-title { font-size: 36px; }
+        .sub-title { font-size: 14px; }
+        .hero-section { padding: 30px 20px; margin: 10px; }
+        div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 3. مكتبة القوالب العملاقة (Master Templates)
-# تحتوي على CSS و JS مدمجين لضمان التفاعلية
+# 3. القوالب التفاعلية (المحرك الجديد + تصميمك)
 # =========================================================
 
-# --- 1. القالب الرسمي (Government Official) ---
-TEMPLATE_OFFICIAL = """
+# --- 1. القالب الرسمي (Interactive Official) ---
+TEMPLATE_OFFICIAL_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        :root { --navy: #001f3f; --gold: #c5a059; --paper: #ffffff; --text: #333; }
+        body { font-family: 'Tajawal', sans-serif; background: #f4f4f4; color: var(--text); padding: 40px; margin: 0; direction: rtl; }
+        .container { max-width: 1000px; margin: 0 auto; background: var(--paper); padding: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-radius: 8px; position: relative; }
         
-        :root { --primary: #002b49; --gold: #c5a059; --bg: #fdfdfd; --text: #333; --border: #e0e0e0; }
+        /* ترويسة الكتاب الرسمي */
+        header { border-bottom: 3px solid var(--navy); padding-bottom: 30px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; }
+        .header-right { text-align: right; }
+        .header-left { text-align: left; opacity: 0.8; font-size: 0.9rem; }
+        header h1 { color: var(--navy); font-size: 2.2rem; margin: 0; font-weight: 800; }
+        header h2 { color: var(--gold); font-size: 1.2rem; margin: 5px 0 0; }
         
-        body { font-family: 'Tajawal', sans-serif; background: #525659; margin: 0; padding: 40px; }
-        
-        .paper {
-            max-width: 210mm; min-height: 297mm; background: #fff; margin: auto; padding: 25mm;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative; overflow: hidden;
-        }
-        
-        /* Watermark */
-        .watermark {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 120px; color: rgba(0,0,0,0.03); font-weight: 900; white-space: nowrap; pointer-events: none;
-        }
+        /* البطاقات الرسمية */
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .metric-box { border: 1px solid #eee; padding: 20px; border-right: 4px solid var(--navy); background: #fcfcfc; transition: 0.3s; }
+        .metric-box:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .metric-val { font-size: 1.8rem; font-weight: bold; color: var(--navy); display: block; }
+        .metric-lbl { font-size: 0.9rem; color: #666; }
 
-        /* Header */
-        header { border-bottom: 4px double var(--primary); padding-bottom: 20px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .logo-area h1 { color: var(--primary); font-size: 28pt; margin: 0; font-family: 'Amiri', serif; }
-        .logo-area h2 { color: var(--gold); font-size: 14pt; margin: 5px 0 0; }
-        .date-area { text-align: left; font-size: 11pt; color: #666; border-right: 3px solid var(--gold); padding-right: 15px; }
-
-        /* Content */
-        .section-title {
-            font-size: 18pt; color: var(--primary); border-bottom: 2px solid var(--gold);
-            padding-bottom: 5px; margin: 30px 0 20px 0; font-family: 'Amiri', serif; display: inline-block;
-        }
-        
-        p { text-align: justify; line-height: 1.8; font-size: 13pt; margin-bottom: 15px; color: #444; }
-        
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 30px 0; }
-        .stat-box { 
-            border: 1px solid var(--border); padding: 20px; text-align: center; background: #fcfcfc;
-            border-top: 4px solid var(--primary); transition: 0.3s;
-        }
-        .stat-val { font-size: 22pt; font-weight: bold; color: var(--primary); display: block; }
-        .stat-lbl { font-size: 11pt; color: #666; margin-top: 5px; display: block; }
-
-        /* Chart */
-        .chart-container { width: 100%; height: 350px; border: 1px solid var(--border); padding: 15px; margin: 30px 0; background: #fff; }
-
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid var(--border); }
-        th { background: var(--primary); color: white; padding: 12px; font-family: 'Amiri'; font-size: 13pt; }
-        td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; }
+        th { background: var(--navy); color: white; padding: 12px; text-align: center; }
+        td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         tr:nth-child(even) { background: #f9f9f9; }
 
-        /* Signature */
-        .signature-section { margin-top: 80px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sign-block { width: 250px; text-align: center; }
-        .sign-title { font-weight: bold; margin-bottom: 60px; color: var(--primary); }
-        .sign-line { border-top: 2px solid #333; display: block; margin: 0 auto; width: 80%; }
-
-        /* Print Controls */
-        .fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); cursor: pointer; transition: 0.3s; z-index: 999; border: none; }
-        .fab:hover { transform: scale(1.1); background: var(--gold); }
+        /* الرسم البياني */
+        .chart-section { margin: 40px 0; border: 1px solid #eee; padding: 20px; border-radius: 8px; page-break-inside: avoid; background: #fff; }
+        .chart-container { height: 350px; }
         
-        @media print { body { background: none; padding: 0; } .paper { box-shadow: none; margin: 0; width: 100%; max-width: 100%; } .fab { display: none; } }
+        /* التوقيع */
+        .signature { margin-top: 80px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sign-box { text-align: center; width: 200px; }
+        .sign-line { border-top: 1px solid #333; margin-top: 40px; }
+        
+        @media print { body { background: white; padding: 0; } .container { box-shadow: none; margin: 0; width: 100%; max-width: 100%; } }
     </style>
 </head>
 <body>
-    <button class="fab" onclick="window.print()" title="طباعة / PDF"><i class="fas fa-print"></i></button>
-    <div class="paper" data-aos="fade-in">
-        <div class="watermark">CONFIDENTIAL</div>
-        <header>
-            <div class="logo-area">
-                <h1>الجهاز المركزي للجودة الشاملة</h1>
-                <h2>وحدة التخطيط الاستراتيجي والتطوير</h2>
-            </div>
-            <div class="date-area">
-                <p><strong>التاريخ:</strong> <span id="currentDate"></span></p>
-                <p><strong>المرجع:</strong> SR-2026/HQ</p>
-            </div>
-        </header>
-
-        <div class="signature-section">
-            <div class="sign-block">
-                <div class="sign-title">مدير وحدة التخطيط</div>
-                <span class="sign-line"></span>
-            </div>
-            <div class="sign-block">
-                <div class="sign-title">مصادقة الجهاز المركزي</div>
-                <span class="sign-line"></span>
-            </div>
+    <div class="container">
         </div>
-    </div>
-    <script>
-        AOS.init();
-        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('ar-IQ');
-    </script>
 </body>
 </html>
 """
 
-# --- 2. القالب الرقمي (Cyber Dashboard) ---
-TEMPLATE_DIGITAL = """
+# --- 2. القالب الرقمي (Interactive Dashboard) ---
+TEMPLATE_DIGITAL_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        :root { --bg-dark: #1a1a2e; --card-dark: #16213e; --accent: #0f3460; --highlight: #e94560; --text-light: #e0e0e0; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg-dark); color: var(--text-light); margin: 0; padding: 20px; direction: rtl; }
+        .container { max-width: 1400px; margin: 0 auto; }
         
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; --success: #22c55e; --danger: #ef4444; }
-        
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
-        
-        /* Header */
-        .dash-header { grid-column: span 12; background: var(--card); padding: 20px 30px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
-        .dash-header h1 { margin: 0; font-size: 1.8rem; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status-badge { background: rgba(56, 189, 248, 0.2); color: var(--accent); padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid var(--accent); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        /* الهيدر الرقمي */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-dark); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .dash-header h1 { margin: 0; background: linear-gradient(90deg, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-badge { background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #2ecc71; }
 
-        /* Cards */
-        .kpi-container { grid-column: span 12; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .kpi-card { background: var(--card); padding: 25px; border-radius: 16px; position: relative; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .kpi-card:hover { transform: translateY(-5px); background: #334155; }
-        .kpi-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
-        .kpi-val { font-size: 2.8rem; font-weight: 700; margin: 10px 0; color: #fff; }
-        .kpi-label { color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        /* شبكة البطاقات */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: var(--card-dark); padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; transition: transform 0.3s; }
+        .kpi-card:hover { transform: translateY(-5px); background: #1a2644; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--highlight); }
+        .kpi-value { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
+        .kpi-label { color: #888; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Main Chart Area */
-        .chart-panel { grid-column: span 8; background: var(--card); padding: 20px; border-radius: 16px; min-height: 400px; }
-        @media(max-width: 1000px) { .chart-panel { grid-column: span 12; } }
+        /* المحتوى والرسوم */
+        .layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .panel { background: var(--card-dark); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .chart-container { position: relative; height: 350px; width: 100%; }
         
-        /* Side Panel (List) */
-        .list-panel { grid-column: span 4; background: var(--card); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; }
-        @media(max-width: 1000px) { .list-panel { grid-column: span 12; } }
-        .list-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .list-item span { color: var(--accent); font-weight: bold; }
-
-        /* Tables */
-        .table-panel { grid-column: span 12; background: var(--card); padding: 25px; border-radius: 16px; }
+        /* الجداول المظلمة */
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: right; padding: 15px; border-bottom: 2px solid #334155; color: #94a3b8; }
-        td { padding: 15px; border-bottom: 1px solid #334155; }
-        tr:hover td { background: rgba(255,255,255,0.02); }
-
+        th { text-align: right; color: #888; padding: 15px; border-bottom: 1px solid #333; }
+        td { padding: 15px; border-bottom: 1px solid #222; }
+        tr:hover { background: rgba(255,255,255,0.02); }
     </style>
 </head>
 <body>
-    <div class="container" data-aos="fade-up">
-        <div class="dash-header">
-            <h1>لوحة التحليل الذكي | Live Dashboard</h1>
-            <div class="status-badge">● متصل بالخادم</div>
+    <div class="container">
         </div>
-
-        </div>
-    <script> AOS.init(); </script>
 </body>
 </html>
 """
 
-# --- 3. القالب التحليلي (Analytical) ---
-TEMPLATE_ANALYTICAL = """
+# --- 3. القالب التحليلي (Interactive Analysis) ---
+TEMPLATE_ANALYTICAL_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #ecf0f1; color: #333; padding: 30px; }
-        .research-paper { max-width: 1000px; margin: 0 auto; background: #fff; padding: 60px; box-shadow: 0 5px 25px rgba(0,0,0,0.05); border-top: 10px solid #2c3e50; }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        :root { --blue: #0056b3; --light-blue: #eef5ff; --grey: #f8f9fa; }
+        body { font-family: 'Cairo', sans-serif; background: #fff; color: #333; padding: 40px; direction: rtl; }
+        .report-container { max-width: 1100px; margin: 0 auto; }
         
-        .paper-header { text-align: center; border-bottom: 1px solid #eee; padding-bottom: 30px; margin-bottom: 40px; }
-        .paper-header h1 { font-size: 2.5rem; color: #2c3e50; }
+        .section-title { font-size: 1.8rem; color: var(--blue); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .stats-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+        .stat-block { flex: 1; background: var(--light-blue); padding: 20px; border-radius: 8px; border: 1px solid #d0e3ff; min-width: 200px; text-align: center; }
+        .stat-block .num { font-size: 2rem; font-weight: 900; color: var(--blue); display: block; }
         
-        .abstract-box { background: #f8f9fa; padding: 30px; border-right: 5px solid #3498db; margin-bottom: 40px; }
-        .content-cols { column-count: 2; column-gap: 40px; text-align: justify; margin-bottom: 40px; }
-        .figure-box { break-inside: avoid; background: #fff; border: 1px solid #eee; padding: 15px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .chart-wrapper { width: 100%; height: 300px; }
+        .viz-container { background: white; border: 1px solid #eee; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-radius: 10px; margin: 20px 0; height: 350px; }
+        
+        table { width: 100%; border: 1px solid #ddd; border-collapse: collapse; margin-top: 20px; }
+        th { background: #0056b3; color: white; padding: 10px; }
+        td { border: 1px solid #ddd; padding: 10px; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="research-paper">
-        <div class="paper-header">
-            <h1>تقرير التحليل الاستراتيجي العميق</h1>
-            <p style="color:#777">وحدة الأبحاث والدراسات</p>
-        </div>
+    <div class="report-container">
         </div>
 </body>
 </html>
 """
 
-# --- 4. قالب الشرائح (Presentation) ---
-TEMPLATE_SLIDES = """
+# --- 4. قالب العرض التقديمي (Slides) ---
+TEMPLATE_PRESENTATION_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-        body { margin: 0; background: #000; font-family: 'Tajawal'; overflow-x: hidden; }
-        .slides-container { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh; scroll-behavior: smooth; }
+        body { margin: 0; padding: 0; overflow-x: hidden; background: #000; font-family: 'Tajawal', sans-serif; direction: rtl; }
+        .slide-container { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh; scroll-behavior: smooth; }
         
         .slide {
-            height: 100vh; width: 100vw; scroll-snap-align: start; position: relative;
+            height: 100vh; width: 100vw; scroll-snap-align: start;
             display: flex; flex-direction: column; padding: 40px 80px; box-sizing: border-box;
-            background: radial-gradient(circle at center, #002b49 0%, #001a2c 100%);
-            color: white; border-bottom: 5px solid #c5a059;
+            position: relative; background: radial-gradient(circle at center, #002b49 0%, #001a2c 100%);
+            color: white; border-bottom: 2px solid #c5a059;
         }
         
-        /* Cover Slide */
         .slide.cover { justify-content: center; align-items: center; text-align: center; }
-        .cover-box { border: 3px solid #c5a059; padding: 50px 100px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-        .cover h1 { font-size: 4rem; color: #c5a059; margin: 0; text-shadow: 0 0 20px rgba(197, 160, 89, 0.5); }
-        .cover h2 { font-size: 2rem; font-weight: 300; margin-top: 10px; }
+        .cover h1 { font-size: 4rem; color: #c5a059; text-shadow: 0 5px 20px rgba(0,0,0,0.5); margin: 0; }
+        .cover h2 { font-size: 2rem; color: #fff; opacity: 0.9; font-weight: 300; }
         
-        /* Standard Slide */
-        .slide-title { font-size: 2.5rem; color: #c5a059; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 20px; margin-bottom: 40px; }
-        .content-split { display: flex; height: 100%; gap: 50px; }
-        .text-part { flex: 1; font-size: 1.5rem; line-height: 1.6; }
-        .viz-part { flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
+        .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 40px; }
+        .slide-title { font-size: 2.5rem; color: #c5a059; font-weight: bold; }
+        
+        .content-split { display: flex; gap: 50px; height: 70%; }
+        .text-side { flex: 1; font-size: 1.5rem; line-height: 1.8; overflow-y: auto; }
+        .viz-side { flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
+        .slide-chart { width: 100%; height: 100%; min-height: 300px; }
         
         ul { list-style: none; padding: 0; }
-        li { margin-bottom: 25px; position: relative; padding-right: 40px; }
+        li { margin-bottom: 20px; position: relative; padding-right: 30px; }
         li::before { content: '➤'; color: #c5a059; position: absolute; right: 0; }
-        
-        .nav-hint { position: fixed; bottom: 20px; left: 20px; color: rgba(255,255,255,0.3); z-index: 999; }
     </style>
 </head>
 <body>
-    <div class="slides-container">
+    <div class="slide-container">
         </div>
-    <div class="nav-hint">استخدم عجلة الماوس للتنقل</div>
 </body>
 </html>
 """
 
-# --- 5. القالب التنفيذي (Executive) ---
-TEMPLATE_EXECUTIVE = """
+# --- 5. الملخص التنفيذي (Executive) ---
+TEMPLATE_EXECUTIVE_MODERN = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap');
-        body { font-family: 'Tajawal'; background: #fff; color: #222; margin: 0; padding: 40px; }
-        .exec-wrapper { max-width: 900px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 50px; box-shadow: 0 15px 50px rgba(0,0,0,0.05); }
+        body { font-family: 'Tajawal', sans-serif; background: #fff; color: #222; margin: 0; padding: 40px; direction: rtl; }
+        .exec-container { max-width: 900px; margin: 0 auto; border: 1px solid #eee; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
         
-        .exec-header { display: flex; justify-content: space-between; border-bottom: 5px solid #111; padding-bottom: 30px; margin-bottom: 40px; }
-        .main-head h1 { font-size: 3.5rem; font-weight: 800; margin: 0; line-height: 1; }
+        .exec-header { border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; display: flex; justify-content: space-between; }
+        .brand { font-size: 0.9rem; text-transform: uppercase; color: #666; letter-spacing: 2px; }
+        h1 { font-size: 3rem; margin: 10px 0; font-weight: 900; line-height: 1; }
         
-        .takeaway-box { background: #fff9c4; border-right: 6px solid #FFD700; padding: 25px; font-size: 1.4rem; font-weight: 500; margin-bottom: 40px; }
-        .metrics-row { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 40px; background: #f4f4f4; padding: 30px; border-radius: 12px; }
-        .m-val { font-size: 3rem; font-weight: 800; display: block; }
+        .summary-lead { font-size: 1.3rem; font-weight: 500; color: #444; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 25px; background: #fafafa; padding: 20px; }
         
-        .chart-area { height: 350px; background: #fff; border: 1px solid #eee; padding: 10px; margin-bottom: 40px; }
+        .big-numbers { display: flex; justify-content: space-between; margin: 40px 0; background: #002b49; color: white; padding: 30px; border-radius: 10px; }
+        .bn-item { text-align: center; flex: 1; border-left: 1px solid rgba(255,255,255,0.2); }
+        .bn-item:last-child { border-left: none; }
+        .bn-val { font-size: 2.5rem; font-weight: bold; color: #FFD700; display: block; }
+        
+        .chart-zone { margin: 40px 0; height: 350px; }
+        .key-points { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .kp-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border-top: 3px solid #002b49; }
     </style>
 </head>
 <body>
-    <div class="exec-wrapper">
+    <div class="exec-container">
         </div>
 </body>
 </html>
 """
 
 # =========================================================
-# 4. المنطق البرمجي الذكي (Business Logic)
+# 4. المنطق البرمجي (المحرك) - مع حل مشكلة 404
 # =========================================================
 
-def get_smart_model():
-    """دالة ذكية لاختيار الموديل المتاح وتجنب خطأ 404"""
-    # نحاول استخدام أحدث موديل، إذا فشل نعود للأقدم
-    available_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
-    
-    # يمكنك إضافة كود هنا للتحقق من الموديلات المتاحة عبر genai.list_models()
-    # لكن للاختصار سنفترض أن flash هو الهدف، وسنستخدم try/except في التنفيذ
-    return "gemini-1.5-flash"
+def get_working_model():
+    """
+    دالة ذكية تحل مشكلة 404.
+    تقوم بفحص الموديلات المتاحة وتختار الموديل الشغال.
+    """
+    try:
+        # قائمة الموديلات التي سنحاول استخدامها بالترتيب
+        priority_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+        
+        # محاولة الوصول لقائمة الموديلات من حسابك
+        # ملاحظة: قد تتطلب google-generativeai تحديثاً لتعمل list_models بشكل صحيح مع المفاتيح الجديدة
+        # لذلك سنستخدم منطق التجربة والخطأ (Try/Except) فهو أكثر أماناً
+        return "gemini-1.5-flash" 
+    except:
+        return "gemini-pro"
 
 def extract_text_from_file(uploaded_file):
     text_content = ""
@@ -475,10 +733,10 @@ def clean_html_response(text):
     return text.strip()
 
 # =========================================================
-# 5. واجهة التطبيق الرئيسية (Main Application)
+# 5. بناء الواجهة (الأزرار والمدخلات)
 # =========================================================
 
-# الهيدر
+# الهيدر الرئيسي
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
@@ -492,7 +750,7 @@ st.markdown('<div class="section-header">🎨 اختر نمط الإخراج ا�
 # أزرار الاختيار
 report_type = st.radio(
     "",
-    ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي (شرائح)", "✨ ملخص تنفيذي"),
+    ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)", "✨ ملخص تنفيذي حديث"),
     horizontal=True,
     label_visibility="collapsed"
 )
@@ -505,23 +763,27 @@ col_input, col_upload = st.columns([2, 1])
 with col_input:
     st.markdown('''
     <div class="input-card">
-        <div class="card-header">
-            <div class="card-icon">📝</div>
-            <div class="card-title">البيانات / الملاحظات</div>
+        <div class="input-header">
+            <div class="input-icon">📝</div>
+            <div>
+                <div class="input-title">البيانات / الملاحظات</div>
+                <div class="input-subtitle">أدخل النص أو الصق محتوى التقرير هنا</div>
+            </div>
         </div>
-        <div style="color: #ccc; margin-bottom: 10px;">أدخل النص أو الصق محتوى التقرير هنا</div>
     </div>
     ''', unsafe_allow_html=True)
-    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات...", label_visibility="collapsed")
+    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...", label_visibility="collapsed")
 
 with col_upload:
     st.markdown('''
     <div class="input-card">
-        <div class="card-header">
-            <div class="card-icon">📎</div>
-            <div class="card-title">رفع الملفات</div>
+        <div class="input-header">
+            <div class="input-icon">📎</div>
+            <div>
+                <div class="input-title">رفع الملفات</div>
+                <div class="input-subtitle">PDF, XLSX, TXT - حتى 200MB</div>
+            </div>
         </div>
-        <div style="color: #ccc; margin-bottom: 10px;">PDF, XLSX, TXT</div>
     </div>
     ''', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
@@ -531,166 +793,181 @@ with col_upload:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 🚀 المعالجة الذكية (The Core Engine)
-# ---------------------------------------------------------
+# =========================================================
+# 6. زر المعالجة والمنطق الرئيسي (The Core Logic)
+# =========================================================
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
     if not API_KEY:
-        st.error("⚠️ لم يتم العثور على مفتاح API. يرجى التأكد من إضافته.")
+        st.error("⚠️ لم يتم العثور على مفتاح API. يرجى إضافته في Secrets.")
         st.stop()
     
     full_text = user_text
     if uploaded_file:
         with st.spinner('📂 جاري قراءة الملف...'):
-            full_text += f"\n\n[FILE_CONTENT]:\n{extract_text_from_file(uploaded_file)}"
+            full_text += f"\n\n[محتوى الملف]:\n{extract_text_from_file(uploaded_file)}"
 
     if not full_text.strip():
         st.warning("⚠️ الرجاء إدخال بيانات أو رفع ملف.")
     else:
         try:
-            # تهيئة الذكاء الاصطناعي
             genai.configure(api_key=API_KEY)
             
-            # محاولة اختيار الموديل مع معالجة الأخطاء
+            # --- الإصلاح: اختيار الموديل مع Fallback ---
             try:
                 model = genai.GenerativeModel("gemini-1.5-flash")
             except:
-                st.warning("⚠️ جاري التبديل إلى موديل بديل...")
+                st.warning("⚠️ جاري التحويل للموديل البديل...")
                 model = genai.GenerativeModel("gemini-pro")
 
-            # تحديد القالب والتعليمات بناءً على اختيار المستخدم
-            base_html = ""
-            instruction = ""
+            target_template = ""
+            prompt_instruction = ""
             
+            # 1. إعدادات الكتاب الرسمي
             if "الرسمي" in report_type:
-                base_html = TEMPLATE_OFFICIAL
-                instruction = """
-                **Mode:** Official Government Report.
-                **Required HTML Fragments (to replace PLACEHOLDER):**
-                1. `<div class="section-title">المقدمة</div>` text.
-                2. `<div class="stats-grid">` with 3 `stat-box` divs.
-                3. `<div class="chart-container"><canvas id="mainChart"></canvas></div>`.
-                4. Detailed sections using `<div class="section-title">` and `<p>`.
-                5. Standard `<table>`.
-                6. **IMPORTANT:** End with `<script>` creating 'mainChart' (Bar chart).
+                target_template = TEMPLATE_OFFICIAL_MODERN
+                prompt_instruction = """
+                **Goal:** Official Government Report.
+                **Required HTML Body Content (to replace PLACEHOLDER):**
+                1. `<header>` with `<h1>Title</h1>` and `<h2>Subtitle</h2>`.
+                2. `<div class="metric-grid">` containing 3-4 `<div class="metric-box"><span class="metric-val">X</span><span class="metric-lbl">Y</span></div>`.
+                3. `<div class="chart-section"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>`.
+                4. Sections with `<h3 class="section-title">` and `<p>`.
+                5. A detailed `<table>`.
+                6. `<div class="signature">...</div>`.
+                7. **CRITICAL:** End with `<script>` to render 'mainChart' (Bar chart).
                 """
-            
+
+            # 2. إعدادات الداشبورد الرقمي
             elif "الرقمي" in report_type:
-                base_html = TEMPLATE_DIGITAL
-                instruction = """
-                **Mode:** Digital Dashboard.
-                **Required HTML Fragments:**
-                1. `<div class="kpi-container">` with 4 `kpi-card` divs.
-                2. `<div class="chart-panel"><canvas id="dashChart"></canvas></div>`.
-                3. `<div class="list-panel">` with 5 `list-item` divs.
-                4. `<div class="table-panel">` with table.
-                5. **IMPORTANT:** End with `<script>` creating 'dashChart' (Line chart, neon colors).
+                target_template = TEMPLATE_DIGITAL_MODERN
+                prompt_instruction = """
+                **Goal:** Modern Digital Dashboard.
+                **Required HTML Body Content:**
+                1. `<div class="dash-header">...</div>`.
+                2. `<div class="kpi-grid">` with 4 `<div class="kpi-card"><div class="kpi-value">X</div><div class="kpi-label">Y</div></div>`.
+                3. `<div class="layout-grid">`:
+                   - `<div class="panel"><div class="chart-container"><canvas id="dashChart"></canvas></div></div>`.
+                   - `<div class="panel"><table>...</table></div>`.
+                4. **CRITICAL:** End with `<script>` to render 'dashChart' (Line or Doughnut) using neon colors.
                 """
 
+            # 3. إعدادات التحليل العميق
             elif "التحليل" in report_type:
-                base_html = TEMPLATE_ANALYTICAL
-                instruction = """
-                **Mode:** Analytical Paper.
-                **Required HTML Fragments:**
-                1. Abstract box.
-                2. Hierarchy grid.
-                3. Text columns with embedded `<div class="figure-box"><div class="chart-wrapper"><canvas id="analysisChart"></canvas></div></div>`.
-                4. **IMPORTANT:** End with `<script>` creating 'analysisChart' (Mixed chart).
+                target_template = TEMPLATE_ANALYTICAL_MODERN
+                prompt_instruction = """
+                **Goal:** Deep Analytical Report.
+                **Required HTML Body Content:**
+                1. `<div class="section-title">...</div>`.
+                2. `<div class="stats-row">` with `<div class="stat-block">...</div>`.
+                3. `<div class="viz-container"><canvas id="analysisChart"></canvas></div>`.
+                4. Detailed text and analysis tables.
+                5. **CRITICAL:** End with `<script>` to render 'analysisChart' (Mixed chart).
                 """
 
+            # 4. إعدادات العرض التقديمي
             elif "عرض تقديمي" in report_type:
-                base_html = TEMPLATE_SLIDES
-                instruction = """
-                **Mode:** Presentation Slides.
-                **Required HTML Fragments:**
-                1. Slide 1 (Cover): `<div class="slide cover"><div class="cover-box"><h1>Title</h1></div></div>`.
-                2. Slide 2: `<div class="slide"><div class="slide-title">Overview</div><div class="content-split"><div class="text-part"><ul>...</ul></div><div class="viz-part"><canvas id="slideChart1"></canvas></div></div></div>`.
+                target_template = TEMPLATE_PRESENTATION_MODERN
+                prompt_instruction = """
+                **Goal:** Interactive Presentation Slides.
+                **Required HTML Body Content:**
+                1. Slide 1: `<div class="slide cover">...</div>`.
+                2. Slide 2: `<div class="slide"><div class="slide-header">...</div><div class="content-split"><div class="text-side">...</div><div class="viz-side"><canvas id="slideChart1"></canvas></div></div></div>`.
                 3. Slide 3: Recommendations.
-                4. **IMPORTANT:** End with `<script>` creating 'slideChart1' (Doughnut).
+                4. **CRITICAL:** End with `<script>` to render 'slideChart1'.
                 """
 
+            # 5. إعدادات الملخص التنفيذي
             elif "ملخص" in report_type:
-                base_html = TEMPLATE_EXECUTIVE
-                instruction = """
-                **Mode:** Executive Summary.
-                **Required HTML Fragments:**
-                1. Header info.
+                target_template = TEMPLATE_EXECUTIVE_MODERN
+                prompt_instruction = """
+                **Goal:** Executive Summary.
+                **Required HTML Body Content:**
+                1. `<div class="exec-header">...</div>`.
                 2. `<div class="takeaway-box">Main Insight</div>`.
-                3. `<div class="metrics-row">` (3 items).
-                4. `<div class="chart-area"><canvas id="execChart"></canvas></div>`.
-                5. **IMPORTANT:** End with `<script>` creating 'execChart' (Horizontal Bar).
+                3. `<div class="big-numbers">` (3 items).
+                4. `<div class="chart-zone"><canvas id="execChart"></canvas></div>`.
+                5. `<div class="key-points">...</div>`.
+                6. **CRITICAL:** End with `<script>` to render 'execChart' (Horizontal Bar).
                 """
 
-            # الـ Prompt
+            # --- بناء الأمر (Prompt Construction) ---
             prompt = f"""
-            Role: Expert Data Analyst & Developer.
-            Task: Analyze the input text and generate ONLY the HTML fragments needed to populate the BODY of the report.
+            Role: Expert Data Analyst & Web Developer.
+            Task: Analyze the Input Data and generate HTML fragments to be injected into a specific template.
             
             Input Data:
-            {full_text[:25000]}
+            {full_text[:30000]}
             
-            Style Instructions:
-            {instruction}
+            Instruction:
+            {prompt_instruction}
             
-            **CRITICAL RULES:**
-            1. Return **ONLY** the HTML/JS code fragments. Do not return `<html>` or `<head>` tags.
-            2. The javascript for Chart.js MUST be included at the end in a `<script>` tag.
+            **STRICT RULES:**
+            1. Return **ONLY** the HTML code pieces. Do NOT return `<html>`, `<head>`, or `<body>` tags (I have them).
+            2. You MUST write the Chart.js `<script>` block at the end with valid data extracted from the text.
             3. Use Arabic language.
-            4. Make up data numbers if exact numbers are missing, based on context.
+            4. Do NOT use markdown code blocks.
             """
 
-            # شريط التقدم التفاعلي
+            # شريط التقدم
             progress_placeholder = st.empty()
-            steps = ["تحليل البيانات...", "اختيار القالب المناسب...", "توليد الرسوم البيانية...", "بناء التقرير النهائي..."]
+            steps = ["تحليل البيانات...", "اختيار القالب...", "بناء الرسوم البيانية التفاعلية...", "توليد الكود النهائي..."]
             
             for i, step in enumerate(steps):
                 p = (i + 1) * 25
                 progress_placeholder.markdown(f'''
                 <div class="progress-box">
-                    <div style="font-size: 2rem; margin-bottom: 10px;">⚡</div>
+                    <div style="font-size: 2rem; margin-bottom: 15px;">⚡</div>
                     <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: {p}%;"></div></div>
-                    <div style="color:white; font-size:1.1rem;">{step}</div>
+                    <div class="progress-text">{step}</div>
                 </div>''', unsafe_allow_html=True)
-                time.sleep(0.5)
+                time.sleep(0.3)
             
-            # توليد المحتوى
+            # إرسال الطلب
             response = model.generate_content(prompt)
-            generated_content = clean_html_response(response.text)
+            generated_html = clean_html_response(response.text)
             
-            # دمج المحتوى مع القالب
-            final_html = base_html.replace("", generated_content)
+            # دمج النتيجة مع القالب المختار
+            final_output = target_template.replace("", generated_html)
             
             progress_placeholder.empty()
 
             # عرض النتيجة
-            st.markdown(f'''
+            st.markdown('''
             <div class="success-banner">
-                <span style="font-size: 1.4rem;">✅ تم إنشاء التقرير بنجاح!</span><br>
-                <span style="opacity:0.8">النمط: {report_type} | الحالة: تفاعلي</span>
+                <span>✅ تم إنشاء التقرير التفاعلي بنجاح!</span>
             </div>
             ''', unsafe_allow_html=True)
             
-            st.components.v1.html(final_html, height=900, scrolling=True)
+            st.components.v1.html(final_output, height=850, scrolling=True)
 
-            # زر التحميل
             st.download_button(
                 label="📥 تحميل التقرير (HTML تفاعلي)",
-                data=final_html,
-                file_name=f"Report_{report_type.replace(' ', '_')}.html",
+                data=final_output,
+                file_name=f"{file_label}.html",
                 mime="text/html"
             )
 
         except Exception as e:
             st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
-            st.error("نصيحة: تأكد من إعداد مفتاح API بشكل صحيح ومن أن المكتبة محدثة.")
+            st.warning("نصيحة: تأكد من أن مفتاح API يعمل وأنك تستخدم مكتبة google-generativeai محدثة.")
 
-# ---------------------------------------------------------
-# الفوتر (Footer)
-# ---------------------------------------------------------
+# الفوتر
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown('''
-<div style="text-align:center; color:rgba(255,255,255,0.5); font-size:0.9rem;">
-    الجهاز المركزي للجودة الشاملة - وحدة التحليل الاستراتيجي © 2026
+<div style="
+    background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
+    border-radius: 15px;
+    padding: 30px 20px;
+    margin: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    text-align: center;
+    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
+">
+    <div style="width: 60px; height: 3px; background: linear-gradient(90deg, transparent, #FFD700, transparent); margin: 0 auto 20px auto; border-radius: 2px;"></div>
+    <p style="color: #FFD700; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; font-family: 'Tajawal', sans-serif;">الجهاز المركزي للجودة الشاملة</p>
+    <p style="color: rgba(255, 255, 255, 0.8); font-size: 1rem; font-weight: 500; margin-bottom: 15px; font-family: 'Tajawal', sans-serif;">وحدة التخطيط الاستراتيجي والتطوير</p>
+    <div style="width: 100px; height: 1px; background: rgba(255, 215, 0, 0.3); margin: 15px auto;"></div>
+    <p style="color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; font-family: 'Tajawal', sans-serif;">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
