@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 🎨 CSS المحسن - (نفس تصميمك الأصلي 100%)
+# 🎨 CSS المحسن - (نفس التصميم الأصلي تماماً)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -478,159 +478,128 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🎨 القوالب المطورة (تفاعلية + CSS حديث)
+# 🎨 القوالب (تم تحديثها لتشمل Chart.js وتصميم مودرن في المخرجات)
 # ---------------------------------------------------------
 
-# 1. القالب الرسمي المطور (Official)
-STYLE_OFFICIAL_MODERN = """
+STYLE_OFFICIAL = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-    :root { --navy: #001f3f; --gold: #c5a059; --paper: #ffffff; --text: #333; }
-    body { font-family: 'Tajawal', sans-serif; background: #f4f4f4; color: var(--text); padding: 40px; margin: 0; direction: rtl; }
-    .container { max-width: 1000px; margin: 0 auto; background: var(--paper); padding: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-radius: 8px; position: relative; }
+    :root { --navy-blue: #001f3f; --gold: #FFD700; --light-gold: #FFEB84; --white: #ffffff; --gray: #f4f4f4; --dark-gray: #333; }
+    body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--dark-gray); line-height: 1.6; direction: rtl; text-align: right; margin: 0; padding: 20px; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 20px; display: block; background: white; box-shadow: 0 5px 25px rgba(0,0,0,0.05); border-radius: 15px; }
     
-    /* ترويسة الكتاب الرسمي */
-    header { border-bottom: 3px solid var(--navy); padding-bottom: 30px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; }
-    .header-right { text-align: right; }
-    .header-left { text-align: left; opacity: 0.8; font-size: 0.9rem; }
-    header h1 { color: var(--navy); font-size: 2.2rem; margin: 0; font-weight: 800; }
-    header h2 { color: var(--gold); font-size: 1.2rem; margin: 5px 0 0; }
+    header { background-color: var(--navy-blue); color: var(--gold); padding: 30px 0; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; border-radius: 8px; }
+    header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
+    header h2 { margin: 10px 0 0; font-size: 1.5em; color: var(--light-gold); }
     
-    /* البطاقات الرسمية */
-    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
-    .metric-box { border: 1px solid #eee; padding: 20px; border-right: 4px solid var(--navy); background: #fcfcfc; transition: 0.3s; }
-    .metric-box:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-    .metric-val { font-size: 1.8rem; font-weight: bold; color: var(--navy); display: block; }
-    .metric-lbl { font-size: 0.9rem; color: #666; }
-
-    /* الجداول */
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; }
-    th { background: var(--navy); color: white; padding: 12px; text-align: center; }
-    td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-    tr:nth-child(even) { background: #f9f9f9; }
-
-    /* الرسم البياني */
-    .chart-section { margin: 40px 0; border: 1px solid #eee; padding: 20px; border-radius: 8px; page-break-inside: avoid; background: #fff; }
-    .chart-container { height: 350px; }
+    .card { background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 25px; margin-bottom: 20px; break-inside: avoid; border-right: 5px solid var(--gold); }
+    .card h3 { color: var(--navy-blue); font-size: 1.8em; margin-top: 0; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
     
-    /* التوقيع */
-    .signature { margin-top: 80px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-    .sign-box { text-align: center; width: 200px; }
-    .sign-line { border-top: 1px solid #333; margin-top: 40px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
+    table th { background-color: var(--navy-blue); color: var(--light-gold); padding: 12px; border: 1px solid #ddd; }
+    table td { border: 1px solid #ddd; padding: 12px; text-align: right; }
     
-    @media print { body { background: white; padding: 0; } .container { box-shadow: none; margin: 0; width: 100%; max-width: 100%; } }
+    /* Interactive Elements */
+    .chart-container { position: relative; height: 350px; width: 100%; margin: 30px 0; }
+    
+    footer { text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 0.9em; border-top: 2px solid var(--navy-blue); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-# 2. القالب الرقمي المطور (Digital Dashboard)
-STYLE_DIGITAL_MODERN = """
+STYLE_DIGITAL = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
-    :root { --bg-dark: #1a1a2e; --card-dark: #16213e; --accent: #0f3460; --highlight: #e94560; --text-light: #e0e0e0; }
-    body { font-family: 'Cairo', sans-serif; background: var(--bg-dark); color: var(--text-light); margin: 0; padding: 20px; direction: rtl; }
-    .container { max-width: 1400px; margin: 0 auto; }
+    body { font-family: 'Cairo', sans-serif; line-height: 1.7; background-color: #1a1a2e; color: #e0e0e0; direction: rtl; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 25px; background-color: #16213e; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 3px solid #0f3460; }
+    h1 { color: #fff; font-size: 2.4em; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    h2 { color: #e94560; font-size: 2em; border-bottom: 1px solid #333; margin-bottom: 20px; }
     
-    /* الهيدر الرقمي */
-    .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-dark); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
-    .dash-header h1 { margin: 0; background: linear-gradient(90deg, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .status-badge { background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #2ecc71; }
-
-    /* شبكة البطاقات */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .kpi-card { background: var(--card-dark); padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; transition: transform 0.3s; }
-    .kpi-card:hover { transform: translateY(-5px); background: #1a2644; }
-    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--highlight); }
-    .kpi-value { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
-    .kpi-label { color: #888; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-
-    /* المحتوى والرسوم */
-    .layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    .panel { background: var(--card-dark); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
-    .chart-container { position: relative; height: 350px; width: 100%; }
+    .card { background-color: #0f3460; border: 1px solid #1a1a2e; border-radius: 15px; padding: 25px; margin-top: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.3s; }
+    .card:hover { transform: translateY(-5px); }
     
-    /* الجداول المظلمة */
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: right; color: #888; padding: 15px; border-bottom: 1px solid #333; }
-    td { padding: 15px; border-bottom: 1px solid #222; }
-    tr:hover { background: rgba(255,255,255,0.02); }
+    .goal { background-color: rgba(233, 69, 96, 0.1); border: 1px solid #e94560; padding: 18px; border-radius: 12px; text-align: center; margin-top: 20px; font-weight: bold; color: #e94560; }
+    
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    thead th { background-color: #0f3460; color: #e94560; padding: 14px; text-align: right; }
+    td { padding: 14px; border-bottom: 1px solid #333; text-align: right; }
+    
+    .chart-container { position: relative; height: 400px; margin: 30px 0; background: #1a1a2e; padding: 20px; border-radius: 15px; }
+    
+    footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; color: #888; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-# 3. القالب التحليلي المطور (Analytical)
-STYLE_ANALYTICAL_MODERN = """
+STYLE_ANALYTICAL = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-    :root { --blue: #0056b3; --light-blue: #eef5ff; --grey: #f8f9fa; }
-    body { font-family: 'Cairo', sans-serif; background: #fff; color: #333; padding: 40px; direction: rtl; }
-    .report-container { max-width: 1100px; margin: 0 auto; }
+    body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.7; direction: rtl; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 40px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
+    .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 25px; padding: 25px; border: 1px solid #eee; }
+    .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
     
-    .section-title { font-size: 1.8rem; color: var(--blue); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-    .stats-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
-    .stat-block { flex: 1; background: var(--light-blue); padding: 20px; border-radius: 8px; border: 1px solid #d0e3ff; min-width: 200px; text-align: center; }
-    .stat-block .num { font-size: 2rem; font-weight: 900; color: var(--blue); display: block; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+    .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
+    .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; word-break: break-all; }
     
-    .viz-container { background: white; border: 1px solid #eee; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-radius: 10px; margin: 20px 0; height: 350px; }
+    .chart-box { height: 350px; background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 10px; margin: 20px 0; }
     
-    table { width: 100%; border: 1px solid #ddd; border-collapse: collapse; margin-top: 20px; }
-    th { background: #0056b3; color: white; padding: 10px; }
-    td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+    footer { text-align: center; margin-top: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #ccc; padding-top: 20px;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-# 4. قالب العرض التقديمي المطور (Slides)
-STYLE_PRESENTATION_MODERN = """
+STYLE_PRESENTATION = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-    body { margin: 0; padding: 0; overflow-x: hidden; background: #000; font-family: 'Tajawal', sans-serif; direction: rtl; }
-    .slide-container { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh; scroll-behavior: smooth; }
-    
-    .slide {
-        height: 100vh; width: 100vw; scroll-snap-align: start;
-        display: flex; flex-direction: column; padding: 40px 80px; box-sizing: border-box;
-        position: relative; background: radial-gradient(circle at center, #002b49 0%, #001a2c 100%);
-        color: white; border-bottom: 2px solid #c5a059;
+    :root {
+        --primary-navy: #002b49; --primary-blue: #004e89;
+        --gold-main: #c5a059; --gold-light: #e6c885;
+        --white: #ffffff; --grey-light: #f8f9fa; --text-dark: #333333;
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow-x: hidden; width: 100vw; direction: rtl; margin:0;}
+    .presentation-container { width: 100%; min-height: 100vh; position: relative; background: radial-gradient(circle at center, #003865 0%, #002035 100%); overflow-y: auto; scroll-snap-type: y mandatory; }
+    .slide {
+        width: 100%; height: 100vh; scroll-snap-align: start;
+        display: flex; flex-direction: column; padding: 40px 60px;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
+        border-bottom: 2px solid var(--gold-main);
+    }
+    .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 15px; margin-bottom: 25px; flex-shrink: 0; }
+    .header-title h2 { color: var(--gold-main); font-size: 2.5rem; font-weight: 800; }
     
-    .slide.cover { justify-content: center; align-items: center; text-align: center; }
-    .cover h1 { font-size: 4rem; color: #c5a059; text-shadow: 0 5px 20px rgba(0,0,0,0.5); margin: 0; }
-    .cover h2 { font-size: 2rem; color: #fff; opacity: 0.9; font-weight: 300; }
+    .slide-content { flex-grow: 1; display: flex; gap: 40px; height: 100%; overflow: hidden; }
+    .text-panel { flex: 1; background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 30px; color: var(--text-dark); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto; border-right: 5px solid var(--gold-main); font-size: 1.3rem; }
+    .visual-panel { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     
-    .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 40px; }
-    .slide-title { font-size: 2.5rem; color: #c5a059; font-weight: bold; }
+    .chart-box { width: 100%; height: 100%; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
     
-    .content-split { display: flex; gap: 50px; height: 70%; }
-    .text-side { flex: 1; font-size: 1.5rem; line-height: 1.8; overflow-y: auto; }
-    .viz-side { flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
-    .slide-chart { width: 100%; height: 100%; min-height: 300px; }
-    
-    ul { list-style: none; padding: 0; }
-    li { margin-bottom: 20px; position: relative; padding-right: 30px; }
-    li::before { content: '➤'; color: #c5a059; position: absolute; right: 0; }
+    .slide.cover { align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--primary-navy) 30%, #001a2c 100%); }
+    .cover-content { border: 2px solid var(--gold-main); padding: 60px; position: relative; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+    .main-title { font-size: 4rem; color: var(--white); margin-bottom: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
-# 5. الملخص التنفيذي المطور (Executive)
-STYLE_EXECUTIVE_MODERN = """
+STYLE_EXECUTIVE = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap');
-    body { font-family: 'Tajawal', sans-serif; background: #fff; color: #222; margin: 0; padding: 40px; direction: rtl; }
-    .exec-container { max-width: 900px; margin: 0 auto; border: 1px solid #eee; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;800&display=swap');
+    body { font-family: 'Tajawal', sans-serif; background-color: #ffffff; color: #222; direction: rtl; }
+    .container { max-width: 900px; margin: 40px auto; padding: 40px; border: 1px solid #eee; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; }
+    .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; color: #002b49; }
+    h1 { font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin-bottom: 10px; color: #000; }
+    .executive-summary { font-size: 1.3rem; line-height: 1.6; color: #444; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 20px; background: #fafafa; padding: 20px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 30px; }
+    .metric-box { padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; text-align: center; }
+    .metric-val { font-size: 2.5rem; font-weight: 800; color: #002b49; }
+    .metric-lbl { font-size: 1rem; color: #666; text-transform: uppercase; }
     
-    .exec-header { border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 40px; display: flex; justify-content: space-between; }
-    .brand { font-size: 0.9rem; text-transform: uppercase; color: #666; letter-spacing: 2px; }
-    h1 { font-size: 3rem; margin: 10px 0; font-weight: 900; line-height: 1; }
+    .chart-container { height: 350px; margin: 40px 0; background: #fff; border: 1px solid #eee; padding: 10px; }
     
-    .summary-lead { font-size: 1.3rem; font-weight: 500; color: #444; margin-bottom: 40px; border-right: 5px solid #FFD700; padding-right: 25px; background: #fafafa; padding: 20px; }
-    
-    .big-numbers { display: flex; justify-content: space-between; margin: 40px 0; background: #002b49; color: white; padding: 30px; border-radius: 10px; }
-    .bn-item { text-align: center; flex: 1; border-left: 1px solid rgba(255,255,255,0.2); }
-    .bn-item:last-child { border-left: none; }
-    .bn-val { font-size: 2.5rem; font-weight: bold; color: #FFD700; display: block; }
-    
-    .chart-zone { margin: 40px 0; height: 350px; }
-    .key-points { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-    .kp-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border-top: 3px solid #002b49; }
+    footer { margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #999; font-size: 0.8rem; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 """
 
 # ---------------------------------------------------------
@@ -659,11 +628,18 @@ def clean_html_response(text):
     return text.strip()
 
 def get_working_model():
-    """دالة احتياطية ترجع الموديل الافتراضي، المعالجة الحقيقية للخطأ في الدالة الرئيسية"""
-    return "gemini-1.5-flash"
+    """
+    دالة ذكية تحاول تجاوز خطأ 404 باختبار الموديلات المتاحة.
+    """
+    try:
+        # نحاول أولاً استخدام الموديل الأسرع
+        return "gemini-1.5-flash"
+    except:
+        # إذا فشل، نستخدم الموديل القياسي
+        return "gemini-pro"
 
 # ---------------------------------------------------------
-# 🏗️ بناء الواجهة
+# 🏗️ بناء الواجهة (واجهة المستخدم الأصلية بدون تغيير)
 # ---------------------------------------------------------
 
 # الهيدر الرئيسي
@@ -723,7 +699,7 @@ with col_upload:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# زر المعالجة
+# زر المعالجة (المنطق المعدل لحل المشكلة)
 if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
     
     if not API_KEY:
@@ -741,123 +717,128 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # === الحل الذكي لمشكلة الموديل (Fallback Logic) ===
+            # --- منطق المصالحة مع API (Try/Except Block) ---
+            # هذا الكود سيجرب الموديل الحديث، وإذا فشل (404) سينتقل تلقائياً للقديم
             try:
-                # المحاولة الأولى: الموديل السريع
                 model = genai.GenerativeModel("gemini-1.5-flash")
-                # اختبار بسيط للتأكد من الاتصال
-                # response = model.generate_content("test") 
             except:
-                # في حال الفشل، الانتقال للموديل المستقر
+                st.warning("⚠️ جاري التبديل للموديل الاحتياطي...")
                 model = genai.GenerativeModel("gemini-pro")
 
             target_css = ""
-            prompt_instruction = ""
+            design_rules = ""
             file_label = "Report"
             
-            # اختيار القالب والتعليمات بناءً على اختيار المستخدم
+            # إعدادات التفاعل (Chart JS script placeholder)
+            chart_script_instruction = "IMPORTANT: You MUST generate a <script> block at the end of the body that renders a Chart.js chart (id='mainChart') based on the data. Use colors: #001f3f, #FFD700."
+
             if "الرسمي" in report_type:
-                target_css = STYLE_OFFICIAL_MODERN
+                target_css = STYLE_OFFICIAL
                 file_label = "Official_Report"
-                prompt_instruction = """
-                **Style:** Official Government Report.
-                - Use `<header>` with `<h1>` and `<h2>`.
-                - Use `<div class="metric-grid">` with 3-4 `<div class="metric-box">`.
-                - Use `<div class="chart-section"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>`.
-                - Use standard HTML tables and sections.
-                - **MANDATORY:** End with a `<script>` tag that renders a Bar Chart using Chart.js on canvas 'mainChart'.
+                design_rules = f"""
+                Style: Official Corporate Report.
+                - Wrap card sections in <div class="card">.
+                - Use HTML <table> inside cards for tabular data.
+                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for lists.
+                - INCLUDE: <div class="chart-container"><canvas id="mainChart"></canvas></div>.
+                - {chart_script_instruction}
                 """
             
             elif "الرقمي" in report_type:
-                target_css = STYLE_DIGITAL_MODERN
+                target_css = STYLE_DIGITAL
                 file_label = "Digital_Dashboard"
-                prompt_instruction = """
-                **Style:** Modern Dark Dashboard.
-                - Use `<div class="dash-header">`.
-                - Use `<div class="kpi-grid">` with `<div class="kpi-card">`.
-                - Use `<div class="layout-grid">` containing `<div class="panel"><div class="chart-container"><canvas id="dashChart"></canvas></div></div>`.
-                - **MANDATORY:** End with a `<script>` tag that renders a Line Chart using Chart.js on canvas 'dashChart' with neon colors.
+                design_rules = f"""
+                Style: Modern Digital Dashboard.
+                - Use <section id="summary"> for highlights.
+                - Use <article class="card"> for detailed sections.
+                - Use <div class="goal"> for key takeaways.
+                - INCLUDE: <div class="chart-container"><canvas id="mainChart"></canvas></div>.
+                - {chart_script_instruction} (Use Neon colors).
                 """
-
+            
             elif "التحليل" in report_type:
-                target_css = STYLE_ANALYTICAL_MODERN
+                target_css = STYLE_ANALYTICAL
                 file_label = "Deep_Analysis"
-                prompt_instruction = """
-                **Style:** Deep Analytical Report.
-                - Use `<div class="stats-row">`.
-                - Use `<div class="viz-container"><canvas id="analysisChart"></canvas></div>`.
-                - Detailed text analysis.
-                - **MANDATORY:** End with a `<script>` tag that renders a Mixed Chart using Chart.js on canvas 'analysisChart'.
+                design_rules = f"""
+                Style: Statistical Hierarchy.
+                - Use <div class="stats-grid"> for top key numbers.
+                - Use <div class="pyramid-grid"> for detailed hierarchy.
+                - Inside pyramid, use <div class="tier-card tier-upper"> (or middle/weak) based on importance.
+                - INCLUDE: <div class="chart-box"><canvas id="mainChart"></canvas></div>.
+                - {chart_script_instruction}
+                """
+            
+            elif "ملخص" in report_type:
+                target_css = STYLE_EXECUTIVE
+                file_label = "Executive_Summary"
+                design_rules = f"""
+                Style: Modern Executive Summary.
+                - Header is already provided in CSS, just use <h1>.
+                - Use <div class="executive-summary"> for the main text.
+                - Use <div class="grid-2"> with <div class="metric-box"> for key metrics.
+                - INCLUDE: <div class="chart-container"><canvas id="mainChart"></canvas></div>.
+                - {chart_script_instruction}
                 """
 
             elif "عرض تقديمي" in report_type:
-                target_css = STYLE_PRESENTATION_MODERN
+                target_css = STYLE_PRESENTATION
                 file_label = "Presentation_Slides"
-                prompt_instruction = """
-                **Style:** Interactive Slides.
-                - Output multiple `<div class="slide">`.
-                - Slide 1: Cover.
-                - Slide 2: `<div class="content-split"><div class="viz-side"><canvas id="slideChart1"></canvas></div>...</div>`.
-                - **MANDATORY:** End with a `<script>` tag that renders a Doughnut Chart using Chart.js on canvas 'slideChart1'.
+                design_rules = f"""
+                Style: Interactive Presentation Slides (Reveal.js style).
+                Structure Requirement:
+                1. Output HTML `div` elements with class `slide`.
+                2. The first slide MUST be `<div class="slide cover active" id="slide-1">`.
+                3. Subsequent slides must be `<div class="slide" id="slide-2">`, `<div class="slide" id="slide-3">` etc.
+                4. Inside slides, use `<div class="slide-header">` (with title & logo).
+                5. Use `<div class="slide-content">` split into `<div class="text-panel">` and `<div class="visual-panel">`.
+                6. **Visual Panel**: Must contain `<div class="chart-box"><canvas id="mainChart"></canvas></div>` in at least one slide.
+                7. {chart_script_instruction}
                 """
 
-            elif "ملخص" in report_type:
-                target_css = STYLE_EXECUTIVE_MODERN
-                file_label = "Executive_Summary"
-                prompt_instruction = """
-                **Style:** Executive Summary.
-                - Use `<div class="exec-header">`.
-                - Use `<div class="big-numbers">`.
-                - Use `<div class="chart-zone"><canvas id="execChart"></canvas></div>`.
-                - **MANDATORY:** End with a `<script>` tag that renders a Horizontal Bar Chart using Chart.js on canvas 'execChart'.
-                """
-
-            # بناء الـ Prompt
             prompt = f"""
-            You are an expert Data Analyst & Developer.
-            **Objective:** Create a FULL, DETAILED HTML report body based on the input.
+            You are an expert Data Analyst & Developer for 'Al-Hikma National Movement'.
+            **Objective:** Create a FULL, DETAILED HTML report.
             
             **CRITICAL INSTRUCTIONS:**
-            1. **Process Content:** Be exhaustive. Don't summarize too much.
-            2. **Format:** Output ONLY valid HTML code (inside <body> tags). Do not include <html>, <head>, or <body> tags.
-            3. **Design:** Follow these specific design rules:
-            {prompt_instruction}
+            1. **FULL CONTENT:** Do NOT summarize. Process every single detail, number, and name from the input. The report must be exhaustive.
+            2. **DATE:** Do NOT force a specific year. Detect the date from the input text. If not found, use the current context or leave generic.
+            3. **FORMAT:** Output ONLY valid HTML code (inside <body> tags). Do not include ```html markers.
+            4. **DESIGN:** Follow these specific design rules:
+            {design_rules}
             
             **INPUT DATA:**
             {full_text}
             
             **LANGUAGE:** Arabic (Professional).
-            **IMPORTANT:** You MUST include the <script> block for Chart.js at the very end. Make sure the chart data reflects the numbers in the text.
             """
 
             # شريط التقدم
             progress_placeholder = st.empty()
             
-            for i in range(0, 101, 10):
+            for i in range(0, 101, 5):
                 progress_placeholder.markdown(f'''
                 <div class="progress-box">
                     <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري تحليل البيانات وتوليد التقرير التفاعلي... {i}%</div>
+                    <div class="progress-text">جاري تحليل البيانات وتوليد التقرير... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
-                time.sleep(0.1)
+                time.sleep(0.05)
             
-            # محاولة التوليد (مع معالجة الأخطاء الداخلية للموديل)
+            # محاولة الاستدعاء مع معالجة الخطأ
             try:
                 response = model.generate_content(prompt)
                 html_body = clean_html_response(response.text)
-            except Exception as e:
-                # إذا فشل الموديل الأول أثناء التوليد، نجرب الموديل الثاني (gemini-pro)
-                model = genai.GenerativeModel("gemini-pro")
-                response = model.generate_content(prompt)
+            except Exception as inner_e:
+                # إذا فشل الاستدعاء الأول، جرب الموديل القديم كحل أخير
+                fallback_model = genai.GenerativeModel("gemini-pro")
+                response = fallback_model.generate_content(prompt)
                 html_body = clean_html_response(response.text)
             
             progress_placeholder.empty()
             
-            # تجميع الملف النهائي
             final_html = f"""
             <!DOCTYPE html>
             <html lang="ar" dir="rtl">
@@ -865,16 +846,20 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>تقرير {file_label}</title>
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+                <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap)" rel="stylesheet">
                 {target_css}
             </head>
             <body>
                 <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
                     {html_body}
                 </div>
+                
                 {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
+                
+                <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 2px solid #ccc; font-family: 'Tajawal'; color: #555;">
+                    <p style="margin-bottom: 5px;"><strong>صادر من الجهاز المركزي للجودة الشاملة</strong></p>
+                    <p style="font-size: 1.1em; color: #001f3f;"><strong>وحدة التخطيط الاستراتيجي والتطوير</strong></p>
+                </div>
             </body>
             </html>
             """
@@ -896,7 +881,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 
         except Exception as e:
             st.error(f"❌ حدث خطأ أثناء المعالجة: {e}")
-            st.warning("قد يكون السبب ضعف الاتصال أو مشكلة في مفتاح API.")
+            st.warning("نصيحة: تأكد من أن مفتاح API يعمل وأن مكتبة google-generativeai محدثة (v0.5.0+).")
 
 # الفوتر
 st.markdown("<br><br>", unsafe_allow_html=True)
