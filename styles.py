@@ -16,80 +16,109 @@ MAIN_CSS = """
         direction: rtl;
     }
 
-    /* ===== تصميم الشريط الجانبي الاحترافي ===== */
+    /* ===== حل نهائي للشريط الجانبي ===== */
     
-    /* الشريط الجانبي الرئيسي */
+    /* الشريط الجانبي عند الفتح */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%) !important;
-        border-left: 1px solid rgba(255, 215, 0, 0.15) !important;
+        border-left: 1px solid rgba(255, 215, 0, 0.2) !important;
         width: 280px !important;
+        min-width: 280px !important;
     }
     
     section[data-testid="stSidebar"] > div:first-child {
         background: transparent !important;
         padding: 20px 15px !important;
+        width: 100% !important;
     }
     
-    /* زر إظهار/إخفاء الشريط الجانبي */
-    button[data-testid="stSidebarCollapseButton"],
-    button[data-testid="baseButton-headerNoPadding"] {
+    /* ✅ إخفاء الشريط تماماً عند الإغلاق */
+    section[data-testid="stSidebar"][aria-expanded="false"] {
+        width: 0px !important;
+        min-width: 0px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+    }
+    
+    section[data-testid="stSidebar"][aria-expanded="false"] > div {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* ✅ زر فتح الشريط (الخطوط الثلاث) - يظهر فقط عند الإغلاق */
+    [data-testid="collapsedControl"] {
+        position: fixed !important;
+        top: 14px !important;
+        right: 14px !important;
+        left: auto !important;
+        z-index: 999999 !important;
         background: linear-gradient(135deg, #1a2d4a 0%, #0d1f3c 100%) !important;
+        border: 2px solid rgba(255, 215, 0, 0.4) !important;
+        border-radius: 10px !important;
+        width: 44px !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover {
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+        border-color: #FFD700 !important;
+        transform: scale(1.08) !important;
+        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.4) !important;
+    }
+    
+    [data-testid="collapsedControl"] svg {
+        width: 22px !important;
+        height: 22px !important;
+        fill: #FFD700 !important;
+        stroke: #FFD700 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover svg {
+        fill: #001f3f !important;
+        stroke: #001f3f !important;
+    }
+    
+    /* زر إغلاق الشريط (داخل الشريط) */
+    button[data-testid="stSidebarCollapseButton"] {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
         border: 1px solid rgba(255, 215, 0, 0.3) !important;
         border-radius: 8px !important;
-        color: #FFD700 !important;
         width: 36px !important;
         height: 36px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         transition: all 0.3s ease !important;
-        margin: 10px !important;
+        position: absolute !important;
+        top: 10px !important;
+        left: 10px !important;
     }
     
-    button[data-testid="stSidebarCollapseButton"]:hover,
-    button[data-testid="baseButton-headerNoPadding"]:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
-        color: #001f3f !important;
+    button[data-testid="stSidebarCollapseButton"]:hover {
+        background: linear-gradient(135deg, #FFD700, #B8860B) !important;
         border-color: #FFD700 !important;
-        transform: scale(1.05) !important;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3) !important;
     }
     
-    button[data-testid="stSidebarCollapseButton"] svg,
-    button[data-testid="baseButton-headerNoPadding"] svg {
-        fill: currentColor !important;
-        stroke: currentColor !important;
-        width: 20px !important;
-        height: 20px !important;
-    }
-    
-    /* زر الفتح عندما يكون الشريط مغلقاً */
-    [data-testid="collapsedControl"] {
-        background: linear-gradient(135deg, #1a2d4a 0%, #0d1f3c 100%) !important;
-        border: 1px solid rgba(255, 215, 0, 0.4) !important;
-        border-radius: 0 12px 12px 0 !important;
-        padding: 12px 8px !important;
-        margin-top: 60px !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 3px 0 15px rgba(0, 0, 0, 0.3) !important;
-    }
-    
-    [data-testid="collapsedControl"]:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
-        border-color: #FFD700 !important;
-        box-shadow: 5px 0 25px rgba(255, 215, 0, 0.3) !important;
-        padding-right: 12px !important;
-    }
-    
-    [data-testid="collapsedControl"] svg {
+    button[data-testid="stSidebarCollapseButton"] svg {
         fill: #FFD700 !important;
         stroke: #FFD700 !important;
-        width: 24px !important;
-        height: 24px !important;
-        transition: all 0.3s ease !important;
+        width: 18px !important;
+        height: 18px !important;
     }
     
-    [data-testid="collapsedControl"]:hover svg {
+    button[data-testid="stSidebarCollapseButton"]:hover svg {
         fill: #001f3f !important;
         stroke: #001f3f !important;
     }
@@ -103,6 +132,7 @@ MAIN_CSS = """
         padding: 18px 15px;
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02));
         border-radius: 12px;
+        margin-top: 40px;
         margin-bottom: 15px;
         border: 1px solid rgba(255, 215, 0, 0.15);
     }
@@ -234,6 +264,7 @@ MAIN_CSS = """
     header[data-testid="stHeader"] { 
         background: transparent !important;
         visibility: hidden !important;
+        height: 0 !important;
     }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
@@ -708,7 +739,13 @@ MAIN_CSS = """
         .sub-title { font-size: 14px; }
         .hero-section { padding: 30px 20px; margin: 10px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
-        section[data-testid="stSidebar"] { width: 260px !important; }
+        
+        [data-testid="collapsedControl"] {
+            top: 10px !important;
+            right: 10px !important;
+            width: 40px !important;
+            height: 40px !important;
+        }
     }
 </style>
 """
