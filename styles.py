@@ -16,70 +16,36 @@ MAIN_CSS = """
         direction: rtl;
     }
 
-    /* ===== حل نهائي للشريط الجانبي ===== */
+    /* ===== الشريط الجانبي - تصميم فخم ===== */
     
-    /* الشريط الجانبي عند الفتح */
+    /* خلفية الشريط الجانبي */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%) !important;
-        border-left: 1px solid rgba(255, 215, 0, 0.2) !important;
-        width: 280px !important;
-        min-width: 280px !important;
+        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
+        border-left: 2px solid rgba(255, 215, 0, 0.4) !important;
     }
     
     section[data-testid="stSidebar"] > div:first-child {
         background: transparent !important;
         padding: 20px 15px !important;
-        width: 100% !important;
     }
     
-    /* ✅ إخفاء الشريط تماماً عند الإغلاق */
-    section[data-testid="stSidebar"][aria-expanded="false"] {
-        width: 0px !important;
-        min-width: 0px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        overflow: hidden !important;
-        visibility: hidden !important;
-    }
-    
-    section[data-testid="stSidebar"][aria-expanded="false"] > div {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        overflow: hidden !important;
-    }
-    
-    /* ✅ زر فتح الشريط (الخطوط الثلاث) - يظهر فقط عند الإغلاق */
+    /* ===== زر الهامبرغر (فتح الشريط) ===== */
     [data-testid="collapsedControl"] {
-        position: fixed !important;
-        top: 14px !important;
-        right: 14px !important;
-        left: auto !important;
-        z-index: 999999 !important;
-        background: linear-gradient(135deg, #1a2d4a 0%, #0d1f3c 100%) !important;
-        border: 2px solid rgba(255, 215, 0, 0.4) !important;
+        background: linear-gradient(135deg, #001f3f 0%, #0a2647 100%) !important;
+        border: 2px solid rgba(255, 215, 0, 0.5) !important;
         border-radius: 10px !important;
-        width: 44px !important;
-        height: 44px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     }
     
     [data-testid="collapsedControl"]:hover {
         background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
         border-color: #FFD700 !important;
-        transform: scale(1.08) !important;
-        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.4) !important;
+        transform: scale(1.05) !important;
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3) !important;
     }
     
     [data-testid="collapsedControl"] svg {
-        width: 22px !important;
-        height: 22px !important;
         fill: #FFD700 !important;
         stroke: #FFD700 !important;
         transition: all 0.3s ease !important;
@@ -90,32 +56,25 @@ MAIN_CSS = """
         stroke: #001f3f !important;
     }
     
-    /* زر إغلاق الشريط (داخل الشريط) */
+    /* ===== زر إغلاق الشريط (X) ===== */
     button[data-testid="stSidebarCollapseButton"] {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
-        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05)) !important;
+        border: 1px solid rgba(255, 215, 0, 0.4) !important;
         border-radius: 8px !important;
-        width: 36px !important;
-        height: 36px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
         transition: all 0.3s ease !important;
-        position: absolute !important;
-        top: 10px !important;
-        left: 10px !important;
     }
     
     button[data-testid="stSidebarCollapseButton"]:hover {
         background: linear-gradient(135deg, #FFD700, #B8860B) !important;
         border-color: #FFD700 !important;
+        transform: scale(1.1) !important;
     }
     
     button[data-testid="stSidebarCollapseButton"] svg {
         fill: #FFD700 !important;
         stroke: #FFD700 !important;
-        width: 18px !important;
-        height: 18px !important;
+        width: 20px !important;
+        height: 20px !important;
     }
     
     button[data-testid="stSidebarCollapseButton"]:hover svg {
@@ -123,18 +82,18 @@ MAIN_CSS = """
         stroke: #001f3f !important;
     }
 
-    /* عناصر الشريط الجانبي */
+    /* ===== عناصر الشريط الجانبي ===== */
     .sidebar-header {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 12px;
         padding: 18px 15px;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02));
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
         border-radius: 12px;
-        margin-top: 40px;
+        margin-top: 10px;
         margin-bottom: 15px;
-        border: 1px solid rgba(255, 215, 0, 0.15);
+        border: 1px solid rgba(255, 215, 0, 0.2);
     }
     
     .sidebar-icon {
@@ -169,12 +128,12 @@ MAIN_CSS = """
         border-radius: 10px;
         padding: 14px 16px;
         margin-bottom: 12px;
-        border: 1px solid rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.15);
         transition: all 0.3s ease;
     }
     
     .sidebar-report-card:hover {
-        border-color: rgba(255, 215, 0, 0.35);
+        border-color: rgba(255, 215, 0, 0.4);
         transform: translateX(-4px);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
@@ -202,9 +161,9 @@ MAIN_CSS = """
     .sidebar-empty {
         text-align: center;
         padding: 35px 15px;
-        background: rgba(0, 0, 0, 0.15);
+        background: rgba(0, 0, 0, 0.2);
         border-radius: 12px;
-        border: 1px dashed rgba(255, 215, 0, 0.15);
+        border: 1px dashed rgba(255, 215, 0, 0.2);
         margin-top: 10px;
     }
     
@@ -225,15 +184,14 @@ MAIN_CSS = """
         font-size: 0.78rem;
     }
     
-    /* أزرار الشريط الجانبي */
+    /* ===== أزرار الشريط الجانبي ===== */
     section[data-testid="stSidebar"] .stButton > button {
         background: linear-gradient(135deg, rgba(26, 45, 74, 0.9), rgba(13, 31, 60, 0.95)) !important;
         color: #FFD700 !important;
-        border: 1px solid rgba(255, 215, 0, 0.25) !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
         font-size: 0.82rem !important;
         padding: 10px 14px !important;
         font-weight: 600 !important;
-        animation: none !important;
         border-radius: 8px !important;
         transition: all 0.3s ease !important;
     }
@@ -242,7 +200,7 @@ MAIN_CSS = """
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
         border-color: #FFD700 !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.15) !important;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2) !important;
     }
     
     section[data-testid="stSidebar"] .stDownloadButton > button {
@@ -260,7 +218,7 @@ MAIN_CSS = """
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
     }
 
-    /* إخفاء عناصر Streamlit الافتراضية */
+    /* ===== إخفاء عناصر Streamlit الافتراضية ===== */
     header[data-testid="stHeader"] { 
         background: transparent !important;
         visibility: hidden !important;
@@ -332,28 +290,6 @@ MAIN_CSS = """
         letter-spacing: 2px;
         font-weight: 500;
         opacity: 0.9;
-    }
-    
-    /* ===== زر فتح سجل التقارير ===== */
-    /* تخصيص الزر ليبدو مختلفاً عن زر المعالجة */
-    div[data-testid="column"]:has(button[key="open_sidebar_btn"]) .stButton > button,
-    button[kind="secondary"] {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9)) !important;
-        color: white !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-        padding: 12px 25px !important;
-        border-radius: 25px !important;
-        border: 1px solid rgba(139, 92, 246, 0.5) !important;
-        animation: none !important;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
-    }
-    
-    div[data-testid="column"]:has(button[key="open_sidebar_btn"]) .stButton > button:hover,
-    button[kind="secondary"]:hover {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(139, 92, 246, 1)) !important;
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
     }
     
     /* ===== بانر المعاينة ===== */
@@ -741,13 +677,6 @@ MAIN_CSS = """
         .sub-title { font-size: 14px; }
         .hero-section { padding: 30px 20px; margin: 10px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
-        
-        [data-testid="collapsedControl"] {
-            top: 10px !important;
-            right: 10px !important;
-            width: 40px !important;
-            height: 40px !important;
-        }
     }
 </style>
 """
