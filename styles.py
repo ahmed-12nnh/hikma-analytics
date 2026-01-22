@@ -30,60 +30,59 @@ MAIN_CSS = """
     [data-testid="stDecoration"] { display: none; }
 
     /* ========================================================= */
-    /* ===== 🔥 إصلاح نهائي لزر الهامبرغر - يظهر دائماً 🔥 ===== */
+    /* ===== 🔥 زر الهامبرغر الاحترافي (Hamburger Menu) 🔥 ===== */
     /* ========================================================= */
     
-    /* زر فتح القائمة - إجبار الظهور في جميع الحالات */
-    [data-testid="collapsedControl"],
-    div[data-testid="collapsedControl"],
-    button[data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"],
-    .stApp [data-testid="collapsedControl"] {
+    /* استهداف الزر الأصلي وتثبيته */
+    [data-testid="collapsedControl"] {
         position: fixed !important;
-        top: 12px !important;
-        right: 12px !important;
+        top: 15px !important;
+        right: 20px !important; /* مكان مثالي للغة العربية */
         left: auto !important;
-        z-index: 9999999 !important;
-        background: linear-gradient(135deg, #001f3f 0%, #0a2647 100%) !important;
+        z-index: 1000000 !important; /* فوق كل العناصر */
+        
+        background: linear-gradient(135deg, #001f3f 0%, #003366 100%) !important;
         border: 2px solid #FFD700 !important;
-        border-radius: 12px !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
+        border-radius: 12px !important; /* حواف ناعمة */
+        
+        width: 50px !important;
+        height: 50px !important;
+        
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3) !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        transform: none !important;
+        
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
-    
+
+    /* تأثير عند المرور بالماوس */
     [data-testid="collapsedControl"]:hover {
         background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
-        border-color: #FFD700 !important;
         transform: scale(1.1) !important;
-        box-shadow: 0 6px 30px rgba(255, 215, 0, 0.6) !important;
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4) !important;
+        border-color: #fff !important;
     }
-    
-    [data-testid="collapsedControl"] svg,
-    [data-testid="collapsedControl"] * svg {
-        fill: #FFD700 !important;
-        stroke: #FFD700 !important;
-        width: 26px !important;
-        height: 26px !important;
-        transition: all 0.3s ease !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+
+    /* 1. إخفاء أيقونة السهم الافتراضية */
+    [data-testid="collapsedControl"] svg {
+        display: none !important;
     }
-    
-    [data-testid="collapsedControl"]:hover svg {
-        fill: #001f3f !important;
-        stroke: #001f3f !important;
+
+    /* 2. إضافة أيقونة القائمة (☰) بدلاً منها */
+    [data-testid="collapsedControl"]::after {
+        content: "☰" !important;
+        font-size: 28px !important;
+        color: #FFD700 !important; /* لون ذهبي */
+        font-weight: bold !important;
+        line-height: 1 !important;
+        margin-top: -2px !important; /* ضبط دقيق للمحاذاة */
+        transition: color 0.3s ease !important;
+    }
+
+    /* تغيير لون الأيقونة عند المرور */
+    [data-testid="collapsedControl"]:hover::after {
+        color: #001f3f !important; /* يصبح كحلي عند التحويم */
     }
 
     /* ========================================================= */
