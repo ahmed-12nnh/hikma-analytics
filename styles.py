@@ -7,7 +7,9 @@ MAIN_CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     
-    /* إعدادات عامة */
+    /* ========================================================= */
+    /* 1. إعدادات الصفحة الأساسية والخلفية */
+    /* ========================================================= */
     * { box-sizing: border-box; }
     
     .stApp {
@@ -17,39 +19,40 @@ MAIN_CSS = """
     }
 
     /* ========================================================= */
-    /* ===== 🔧 إصلاح الهيدر والزر (The Critical Fix) 🔧 ===== */
+    /* 2. 🔥 إصلاح زر القائمة (الهامبرغر) - الحل الجذري 🔥 */
     /* ========================================================= */
 
-    /* 1. جعل الهيدر شفافاً ولكن لا يحجب النقرات (يسمح بالضغط تحته) */
+    /* أولاً: التعامل مع الهيدر العلوي */
     header[data-testid="stHeader"] {
         background: transparent !important;
-        border: none !important;
-        pointer-events: none !important;
-        z-index: 99999 !important;
+        border-bottom: none !important;
+        /* نجعل الهيدر لا يعترض النقرات، ليسمح بالضغط على ما تحته، لكن نستثني الزر لاحقاً */
+        pointer-events: none !important; 
+        z-index: 100 !important;
     }
 
-    /* 2. إخفاء العناصر غير المرغوبة في الهيدر */
+    /* إخفاء عناصر الشريط العلوي غير المرغوبة (القائمة الثلاثية الأصلية، الخط الملون) */
     [data-testid="stToolbar"], 
-    [data-testid="stDecoration"],
-    [data-testid="stHeader"] > div:first-child { 
-        display: none !important; 
+    [data-testid="stDecoration"] {
+        display: none !important;
         visibility: hidden !important;
     }
 
-    /* 3. استهداف زر القائمة (الزر الذي يفتح الشريط) بدقة متناهية وإجباره على الظهور */
-    /* نستخدم عدة معرفات لضمان العمل على كل نسخ Streamlit */
+    /* ثانياً: إظهار وتنسيق زر القائمة المخصص */
+    /* نستهدف الزر بجميع معرفاته المحتملة لضمان ظهوره في كل النسخ */
     button[data-testid="baseButton-headerNoPadding"],
-    [data-testid="collapsedControl"],
+    div[data-testid="collapsedControl"],
+    button[data-testid="collapsedControl"],
     [data-testid="stSidebarCollapsedControl"] {
         display: flex !important;
         visibility: visible !important;
-        pointer-events: auto !important; /* تفعيل النقر للزر فقط */
+        pointer-events: auto !important; /* إعادة تفعيل النقر للزر */
         
         position: fixed !important;
         top: 20px !important;
-        right: 25px !important; /* مكان الزر في أقصى اليمين */
+        right: 25px !important; /* تثبيته في اليمين */
         left: auto !important;
-        z-index: 1000000 !important; /* طبقة عليا جداً فوق كل شيء */
+        z-index: 9999999 !important; /* أعلى طبقة ممكنة */
         
         background: linear-gradient(135deg, #001f3f 0%, #003366 100%) !important;
         border: 2px solid #FFD700 !important;
@@ -58,7 +61,6 @@ MAIN_CSS = """
         width: 50px !important;
         height: 50px !important;
         min-width: 50px !important;
-        min-height: 50px !important;
         
         align-items: center !important;
         justify-content: center !important;
@@ -69,9 +71,10 @@ MAIN_CSS = """
         transform: none !important;
     }
 
-    /* تأثير التحويم (Hover) */
+    /* تأثير التحويم (Hover) على الزر */
     button[data-testid="baseButton-headerNoPadding"]:hover,
-    [data-testid="collapsedControl"]:hover,
+    div[data-testid="collapsedControl"]:hover,
+    button[data-testid="collapsedControl"]:hover,
     [data-testid="stSidebarCollapsedControl"]:hover {
         background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
         transform: scale(1.1) !important;
@@ -79,15 +82,15 @@ MAIN_CSS = """
         box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
     }
 
-    /* 4. إجبار أيقونة القائمة (☰) وإخفاء السهم */
-    /* نخفي الأيقونة الأصلية (السهم) */
+    /* ثالثاً: استبدال الأيقونة (السهم) برمز القائمة (☰) */
+    /* إخفاء SVG الأصلي */
     [data-testid="collapsedControl"] svg,
     [data-testid="stSidebarCollapsedControl"] svg,
     button[data-testid="baseButton-headerNoPadding"] svg {
         display: none !important;
     }
 
-    /* نضع الأيقونة الجديدة (☰) */
+    /* إضافة الرمز الجديد */
     [data-testid="collapsedControl"]::after,
     [data-testid="stSidebarCollapsedControl"]::after,
     button[data-testid="baseButton-headerNoPadding"]::after {
@@ -99,27 +102,20 @@ MAIN_CSS = """
         margin-top: -3px !important;
     }
 
-    /* تغيير لون الأيقونة عند التحويم */
+    /* تغيير لون الرمز عند التحويم */
     [data-testid="stSidebarCollapsedControl"]:hover::after,
-    button[data-testid="baseButton-headerNoPadding"]:hover::after {
+    div[data-testid="collapsedControl"]:hover::after,
+    button[data-testid="collapsedControl"]:hover::after {
         color: #001f3f !important;
     }
 
     /* ========================================================= */
-    /* ===== الشريط الجانبي (Sidebar) ===== */
+    /* 3. تنسيق الشريط الجانبي (Sidebar) */
     /* ========================================================= */
     
     [data-testid="stSidebar"] {
-        position: fixed !important;
-        top: 0 !important;
-        right: 0 !important;
-        left: auto !important;
-        height: 100vh !important;
-        width: 320px !important;
-        min-width: 320px !important;
         background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
         border-left: 2px solid rgba(255, 215, 0, 0.4) !important;
-        z-index: 999999 !important;
         box-shadow: -10px 0 40px rgba(0,0,0,0.7) !important;
     }
     
@@ -151,36 +147,18 @@ MAIN_CSS = """
         transform: rotate(90deg);
         border-color: #FFD700 !important;
     }
-
-    button[data-testid="stSidebarCollapseButton"] svg {
-        fill: #FFD700 !important;
-        color: #FFD700 !important;
-    }
-    
-    button[data-testid="stSidebarCollapseButton"]:hover svg {
-        fill: #001f3f !important;
-        color: #001f3f !important;
-    }
     
     /* المحتوى */
     [data-testid="stSidebar"] > div:first-child {
         padding-top: 80px !important;
     }
 
-    /* عناصر الشريط الجانبي */
+    /* عناصر الشريط الجانبي الداخلية */
     .sidebar-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 18px 15px;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
-        border-radius: 12px;
-        margin-top: 10px;
-        margin-bottom: 15px;
-        border: 1px solid rgba(255, 215, 0, 0.2);
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        padding: 18px 15px; background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
+        border-radius: 12px; margin: 10px 0 15px 0; border: 1px solid rgba(255, 215, 0, 0.2);
     }
-    
     .sidebar-title { color: #FFD700; font-weight: 700; }
     .sidebar-badge { background: linear-gradient(135deg, #FFD700, #B8860B); color: #001f3f; padding: 4px 10px; border-radius: 15px; font-weight: 800; }
     .sidebar-report-card { background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9)); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; border: 1px solid rgba(255, 215, 0, 0.15); transition: all 0.3s ease; }
@@ -195,14 +173,16 @@ MAIN_CSS = """
     [data-testid="stSidebar"] .stButton > button:hover { background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important; border-color: #FFD700 !important; transform: translateY(-2px) !important; }
     [data-testid="stSidebar"] .stDownloadButton > button { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: white !important; border-radius: 8px !important; border: none !important; }
 
-    /* ===== الهيدر الرئيسي (Hero Section) ===== */
+    /* ========================================================= */
+    /* 4. الهيدر الرئيسي (Hero Section) */
+    /* ========================================================= */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
         padding: 50px 30px;
         text-align: center;
         margin: 20px;
-        margin-top: 85px; /* زيادة المسافة العلوية لضمان عدم تغطية الزر */
+        margin-top: 85px; /* مسافة كافية لعدم تداخل الزر */
         border: 2px solid rgba(255, 215, 0, 0.4);
         box-shadow: 0 0 40px rgba(0, 31, 63, 0.8);
         position: relative;
@@ -224,11 +204,15 @@ MAIN_CSS = """
     @keyframes titleGlow { from { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); } to { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.6)); } }
     .sub-title { color: #e0e0e0; font-size: 18px; letter-spacing: 2px; font-weight: 500; opacity: 0.9; }
 
-    /* ===== بانر المعاينة ===== */
+    /* ========================================================= */
+    /* 5. باقي عناصر الواجهة (Input, Buttons, Cards) */
+    /* ========================================================= */
+
+    /* بانر المعاينة */
     .preview-banner { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 14px 22px; border-radius: 12px; margin: 20px; font-weight: 600; text-align: center; }
     .success-hint { background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 10px; padding: 12px 20px; margin: 10px 20px; color: rgba(34, 197, 94, 0.85); text-align: center; }
 
-    /* ===== أزرار الاختيار (Radio) ===== */
+    /* أزرار الاختيار (Radio) */
     div[role="radiogroup"] {
         display: flex !important; flex-direction: row-reverse !important; justify-content: center !important; gap: 15px !important; flex-wrap: wrap !important;
         background: rgba(0, 0, 0, 0.3) !important; padding: 20px !important; border-radius: 15px !important; margin: 30px 20px !important; border: 1px solid rgba(255, 215, 0, 0.15) !important;
@@ -244,11 +228,9 @@ MAIN_CSS = """
     div[role="radiogroup"] label[data-checked="true"] {
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.15)) !important; border-color: #FFD700 !important; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
     }
-    
-    /* إخفاء التسميات */
-    .stTextArea label, .stFileUploader label, .stRadio label { display: none !important; }
+    .stRadio label { display: none !important; }
 
-    /* ===== بطاقات الإدخال ===== */
+    /* بطاقات الإدخال */
     .input-card { background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 15, 30, 0.95)); border-radius: 20px; padding: 30px; margin: 10px; border: 1px solid rgba(255, 215, 0, 0.2); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); transition: all 0.4s ease; }
     .input-card:hover { border-color: rgba(255, 215, 0, 0.4); transform: translateY(-5px); }
     .input-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255, 215, 0, 0.2); }
@@ -259,12 +241,14 @@ MAIN_CSS = """
     /* حقول الإدخال */
     .stTextArea textarea { background-color: rgba(0, 0, 0, 0.4) !important; border: 1px solid rgba(255, 215, 0, 0.3) !important; border-radius: 15px !important; color: white !important; font-family: 'Tajawal', sans-serif !important; padding: 20px !important; text-align: right !important; }
     .stTextArea textarea:focus { border-color: #FFD700 !important; box-shadow: 0 0 20px rgba(255, 215, 0, 0.2) !important; outline: none !important; }
+    .stTextArea label { display: none !important; }
     
     /* رفع الملفات */
     [data-testid="stFileUploader"] { background: rgba(0, 0, 0, 0.3) !important; border: 2px dashed rgba(255, 215, 0, 0.3) !important; border-radius: 15px !important; padding: 25px !important; }
     [data-testid="stFileUploader"]:hover { border-color: #FFD700 !important; background: rgba(255, 215, 0, 0.05) !important; }
     [data-testid="stFileUploader"] section { color: rgba(255, 255, 255, 0.7) !important; }
     [data-testid="stFileUploader"] button { background: linear-gradient(135deg, #FFD700, #B8860B) !important; color: #001f3f !important; border: none !important; border-radius: 10px !important; font-weight: 700 !important; }
+    .stFileUploader label { display: none !important; }
 
     /* زر المعالجة */
     .stButton > button {
@@ -307,7 +291,7 @@ MAIN_CSS = """
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
         [data-testid="stSidebar"] { width: 85vw !important; min-width: 85vw !important; }
         /* تصحيح مكان الزر للموبايل */
-        button[data-testid="baseButton-headerNoPadding"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { top: 10px !important; right: 10px !important; width: 45px !important; height: 45px !important; }
+        button[data-testid="baseButton-headerNoPadding"], div[data-testid="collapsedControl"], button[data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { top: 10px !important; right: 10px !important; width: 45px !important; height: 45px !important; }
     }
 </style>
 """
