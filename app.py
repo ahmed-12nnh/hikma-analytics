@@ -110,33 +110,39 @@ def clean_html_response(text):
     
     return text.strip()
 
-# 🔥 دالة ذكية لاختيار الموديل الموجود فعلياً وتجنب المشاكل 🔥
-def find_best_model():
+# 🔥 الحل الجذري: دالة لاكتشاف الموديل الصالح تلقائياً وتجنب الأخطاء 🔥
+def get_best_available_model():
     try:
-        # جلب قائمة الموديلات المتاحة لهذا المفتاح
+        # جلب قائمة الموديلات المتاحة فعلياً للمفتاح
         available_models = []
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
                 available_models.append(m.name)
         
-        # 1. البحث عن gemini-1.5-flash (أفضل خيار) وتجنب 2.5
-        for model in available_models:
-            if "gemini-1.5-flash" in model and "001" in model: # النسخة المستقرة 001
-                return model
+        # 1. البحث عن Flash 1.5 المستقر (الأولوية القصوى)
+        # نتجنب النسخ التجريبية (exp) والنسخ الحديثة جداً (2.0)
+        for m in available_models:
+            if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
+                return m # سيعيد مثلاً models/gemini-1.5-flash-001
         
-        # 2. البحث عن أي فلاش آخر (ما عدا 2.5)
-        for model in available_models:
-            if "flash" in model and "2.5" not in model:
-                return model
+        # 2. البحث عن Pro 1.5 (خيار ممتاز وثقيل)
+        for m in available_models:
+            if 'gemini-1.5-pro' in m and 'exp' not in m:
+                return m
                 
-        # 3. العودة إلى gemini-pro (الخيار الآمن دائماً)
-        for model in available_models:
-            if "gemini-pro" in model:
-                return model
+        # 3. البحث عن أي موديل Pro قديم (آمن جداً)
+        for m in available_models:
+            if 'gemini-pro' in m and '1.0' in m:
+                return m
+        
+        # 4. الملاذ الأخير: أي شيء ليس تجريبياً
+        for m in available_models:
+            if 'exp' not in m and '2.0' not in m:
+                return m
                 
-        return "gemini-pro" # احتياطي أخير
+        return "models/gemini-1.5-flash" # محاولة أخيرة يدوية
     except:
-        return "gemini-pro"
+        return "models/gemini-pro"
 
 # ---------------------------------------------------------
 # 📚 دوال التخزين المؤقت
@@ -356,8 +362,11 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # 🔥 التعديل الجوهري: البحث عن الموديل المناسب تلقائياً 🔥
-            selected_model = find_best_model()
+            # 🔥 استخدام الدالة الجديدة لاختيار الموديل الآمن 🔥
+            safe_model_name = get_best_available_model()
+            
+            # عرض رسالة صغيرة (debugging) لمعرفة الموديل الذي تم اختياره (يمكنك إزالتها لاحقاً)
+            # st.caption(f"🤖 يتم استخدام الموديل: {safe_model_name}")
             
             generation_config = genai.types.GenerationConfig(
                 temperature=0.0,
@@ -366,7 +375,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 max_output_tokens=8192,
             )
             
-            model = genai.GenerativeModel(selected_model)
+            model = genai.GenerativeModel(safe_model_name)
 
             target_css = ""
             design_rules = ""
@@ -485,7 +494,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري معالجة البيانات باستخدام ({selected_model})... {i}%</div>
+                    <div class="progress-text">جاري معالجة البيانات وتصحيح النصوص... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
                 time.sleep(0.1)
