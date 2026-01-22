@@ -17,8 +17,6 @@ MAIN_CSS = """
     }
 
     /* ===== إصلاح الهيدر - إظهار زر القائمة ===== */
-    
-    /* الهيدر يبقى مرئياً لكن شفاف */
     header[data-testid="stHeader"] {
         background: transparent !important;
         visibility: visible !important;
@@ -31,44 +29,66 @@ MAIN_CSS = """
     [data-testid="stToolbar"] { display: none; }
     [data-testid="stDecoration"] { display: none; }
 
-    /* ===== الشريط الجانبي - تصميم فخم ===== */
+    /* ========================================================= */
+    /* ===== إصلاح جذري للشريط الجانبي - انزلاق سلس ===== */
+    /* ========================================================= */
     
-    /* تأكد من أن الشريط يعمل بشكل طبيعي */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
-        border-left: 2px solid rgba(255, 215, 0, 0.4) !important;
+    /* الحاوية الرئيسية للشريط */
+    [data-testid="stSidebar"] {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+        height: 100vh !important;
         width: 300px !important;
         min-width: 300px !important;
+        max-width: 300px !important;
+        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
+        border-left: 2px solid rgba(255, 215, 0, 0.4) !important;
+        border-right: none !important;
+        z-index: 999990 !important;
+        transition: transform 0.3s ease-in-out !important;
+        transform: translateX(0) !important;
     }
     
-    section[data-testid="stSidebar"] > div:first-child {
+    /* عند الإغلاق - انزلاق لليمين */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(100%) !important;
+        visibility: visible !important;
+    }
+    
+    /* المحتوى الداخلي */
+    [data-testid="stSidebar"] > div:first-child {
         background: transparent !important;
         padding: 20px 15px !important;
+        padding-top: 60px !important;
+        height: 100% !important;
+        overflow-y: auto !important;
     }
     
-    /* إخفاء تنقل الصفحات الافتراضي إذا وجد */
+    /* إخفاء تنقل الصفحات الافتراضي */
     [data-testid="stSidebarNav"] { 
         display: none !important; 
     }
     
-    /* ===== زر الهامبرغر (فتح الشريط) - مهم جداً! ===== */
+    /* ===== زر الهامبرغر (☰) - فتح الشريط ===== */
     [data-testid="collapsedControl"] {
         position: fixed !important;
-        top: 10px !important;
-        right: 10px !important;
+        top: 12px !important;
+        right: 12px !important;
         left: auto !important;
         z-index: 999999 !important;
         background: linear-gradient(135deg, #001f3f 0%, #0a2647 100%) !important;
         border: 2px solid #FFD700 !important;
         border-radius: 10px !important;
-        width: 45px !important;
-        height: 45px !important;
+        width: 46px !important;
+        height: 46px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 215, 0, 0.2) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.2) !important;
         visibility: visible !important;
         opacity: 1 !important;
     }
@@ -76,7 +96,7 @@ MAIN_CSS = """
     [data-testid="collapsedControl"]:hover {
         background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
         border-color: #FFD700 !important;
-        transform: scale(1.1) !important;
+        transform: scale(1.08) !important;
         box-shadow: 0 6px 25px rgba(255, 215, 0, 0.5) !important;
     }
     
@@ -93,16 +113,23 @@ MAIN_CSS = """
         stroke: #001f3f !important;
     }
     
-    /* ===== زر إغلاق الشريط (X) داخل الشريط ===== */
+    /* ===== زر إغلاق الشريط (X أو «) ===== */
     button[data-testid="stSidebarCollapseButton"] {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
-        border: 1px solid rgba(255, 215, 0, 0.5) !important;
-        border-radius: 8px !important;
-        transition: all 0.3s ease !important;
         position: absolute !important;
-        top: 10px !important;
-        left: 10px !important;
-        z-index: 9999 !important;
+        top: 12px !important;
+        left: 12px !important;
+        right: auto !important;
+        z-index: 999999 !important;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
+        border: 2px solid rgba(255, 215, 0, 0.5) !important;
+        border-radius: 8px !important;
+        width: 40px !important;
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
     }
     
     button[data-testid="stSidebarCollapseButton"]:hover {
@@ -116,11 +143,17 @@ MAIN_CSS = """
         stroke: #FFD700 !important;
         width: 20px !important;
         height: 20px !important;
+        transition: all 0.3s ease !important;
     }
     
     button[data-testid="stSidebarCollapseButton"]:hover svg {
         fill: #001f3f !important;
         stroke: #001f3f !important;
+    }
+
+    /* ===== تعديل المحتوى الرئيسي عند فتح الشريط ===== */
+    .main .block-container {
+        transition: padding 0.3s ease-in-out !important;
     }
 
     /* ===== عناصر الشريط الجانبي ===== */
@@ -132,7 +165,7 @@ MAIN_CSS = """
         padding: 18px 15px;
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
         border-radius: 12px;
-        margin-top: 50px;
+        margin-top: 10px;
         margin-bottom: 15px;
         border: 1px solid rgba(255, 215, 0, 0.2);
     }
@@ -226,7 +259,7 @@ MAIN_CSS = """
     }
     
     /* ===== أزرار الشريط الجانبي ===== */
-    section[data-testid="stSidebar"] .stButton > button {
+    [data-testid="stSidebar"] .stButton > button {
         background: linear-gradient(135deg, rgba(26, 45, 74, 0.9), rgba(13, 31, 60, 0.95)) !important;
         color: #FFD700 !important;
         border: 1px solid rgba(255, 215, 0, 0.3) !important;
@@ -238,14 +271,14 @@ MAIN_CSS = """
         animation: none !important;
     }
     
-    section[data-testid="stSidebar"] .stButton > button:hover {
+    [data-testid="stSidebar"] .stButton > button:hover {
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
         border-color: #FFD700 !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2) !important;
     }
     
-    section[data-testid="stSidebar"] .stDownloadButton > button {
+    [data-testid="stSidebar"] .stDownloadButton > button {
         background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
         color: white !important;
         font-size: 0.82rem !important;
@@ -255,7 +288,7 @@ MAIN_CSS = """
         animation: none !important;
     }
     
-    section[data-testid="stSidebar"] .stDownloadButton > button:hover {
+    [data-testid="stSidebar"] .stDownloadButton > button:hover {
         background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
@@ -268,7 +301,7 @@ MAIN_CSS = """
         padding: 50px 30px;
         text-align: center;
         margin: 20px;
-        margin-top: 60px;
+        margin-top: 70px;
         border: 2px solid rgba(255, 215, 0, 0.4);
         box-shadow: 
             0 0 40px rgba(0, 31, 63, 0.8),
@@ -710,14 +743,20 @@ MAIN_CSS = """
     @media (max-width: 768px) {
         .main-title { font-size: 36px; }
         .sub-title { font-size: 14px; }
-        .hero-section { padding: 30px 20px; margin: 10px; margin-top: 60px; }
+        .hero-section { padding: 30px 20px; margin: 10px; margin-top: 70px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
         
         [data-testid="collapsedControl"] {
-            top: 8px !important;
-            right: 8px !important;
-            width: 40px !important;
-            height: 40px !important;
+            top: 10px !important;
+            right: 10px !important;
+            width: 42px !important;
+            height: 42px !important;
+        }
+        
+        [data-testid="stSidebar"] {
+            width: 280px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
         }
     }
 </style>
