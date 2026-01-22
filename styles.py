@@ -7,7 +7,9 @@ MAIN_CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     
-    /* إعدادات عامة */
+    /* ========================================================= */
+    /* 1. إعدادات الصفحة والهيكلية العامة */
+    /* ========================================================= */
     * { box-sizing: border-box; }
     
     .stApp {
@@ -16,774 +18,279 @@ MAIN_CSS = """
         direction: rtl;
     }
 
-    /* ===== 1. تهيئة الهيدر لعدم حجب الزر ===== */
+    /* ========================================================= */
+    /* 2. 🔥 الزر العائم (Gemini Style Trigger) 🔥 */
+    /* ========================================================= */
+    
+    /* الخطوة 1: التعامل مع الهيدر ليكون شفافاً ويسمح بالمرور */
     header[data-testid="stHeader"] {
         background: transparent !important;
-        pointer-events: none !important; /* يسمح بالنقر "خلال" الهيدر */
-        z-index: 100 !important;
+        border-bottom: none !important;
+        pointer-events: none !important; /* يسمح بالضغط على العناصر خلف الهيدر */
+        height: 0 !important; /* تقليص ارتفاعه لمنع حجز مساحة */
     }
-    
-    /* إخفاء العناصر غير المرغوبة فقط */
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    [data-testid="stToolbar"] { display: none; }
-    [data-testid="stDecoration"] { display: none; }
 
-    /* ========================================================= */
-    /* ===== 🔥 2. إصلاح وإظهار زر القائمة الجانبية (الهامبرغر) 🔥 ===== */
-    /* ========================================================= */
-    
-    /* استهداف الزر بكل المعرفات المحتملة لضمان ظهوره */
-    button[data-testid="baseButton-headerNoPadding"],
-    div[data-testid="collapsedControl"],
-    button[data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"] {
+    /* الخطوة 2: إجبار الزر على الظهور وتغيير مكانه وشكله */
+    /* نستهدف جميع الاحتمالات لزر القائمة في نسخ Streamlit المختلفة */
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"],
+    button[kind="header"] {
         display: flex !important;
         visibility: visible !important;
-        pointer-events: auto !important; /* إعادة تفعيل النقر للزر تحديداً */
+        opacity: 1 !important;
+        pointer-events: auto !important; /* إعادة تفعيل النقر للزر */
         
+        /* التثبيت في الموقع (مثل Gemini) */
         position: fixed !important;
         top: 20px !important;
         right: 20px !important;
-        left: auto !important;
-        z-index: 9999999 !important; /* طبقة عليا جداً */
+        z-index: 99999999 !important; /* طبقة عليا جداً */
         
-        background: linear-gradient(135deg, #001f3f 0%, #0a2647 100%) !important;
-        border: 2px solid #FFD700 !important;
-        border-radius: 12px !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
+        /* التصميم الجمالي (دائري ونظيف) */
+        background: rgba(0, 31, 63, 0.6) !important;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        border-radius: 50% !important; /* دائري مثل تطبيقات جوجل */
+        width: 45px !important;
+        height: 45px !important;
         
         align-items: center !important;
         justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
-        opacity: 1 !important;
-        transform: none !important;
+        
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
     }
-    
-    /* تأثير عند المرور */
-    button[data-testid="baseButton-headerNoPadding"]:hover,
+
+    /* تأثير التحويم (Hover) */
     [data-testid="collapsedControl"]:hover,
-    [data-testid="stSidebarCollapsedControl"]:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+    [data-testid="stSidebarCollapsedControl"]:hover,
+    button[kind="header"]:hover {
+        background: #FFD700 !important; /* ذهبي عند التحويم */
+        color: #001f3f !important;
+        transform: scale(1.1);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5) !important;
         border-color: #FFD700 !important;
-        transform: scale(1.1) !important;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4) !important;
     }
-    
-    /* إجبار ظهور أيقونة (SVG) داخل الزر وتلوينها */
+
+    /* الخطوة 3: أيقونة القائمة (Hamburger Icon) */
+    /* نخفي SVG الافتراضي للسهم */
     [data-testid="collapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] svg,
-    button[data-testid="baseButton-headerNoPadding"] svg {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        fill: #FFD700 !important;
-        stroke: #FFD700 !important;
-        width: 24px !important;
-        height: 24px !important;
-    }
-    
-    /* تغيير لون الأيقونة عند المرور */
-    button[data-testid="baseButton-headerNoPadding"]:hover svg,
-    [data-testid="collapsedControl"]:hover svg,
-    [data-testid="stSidebarCollapsedControl"]:hover svg {
-        fill: #001f3f !important;
-        stroke: #001f3f !important;
-    }
-
-    /* ========================================================= */
-    /* ===== الشريط الجانبي - انزلاق سلس من اليمين ===== */
-    /* ========================================================= */
-    
-    [data-testid="stSidebar"] {
-        position: fixed !important;
-        top: 0 !important;
-        right: 0 !important;
-        left: auto !important;
-        height: 100vh !important;
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
-        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
-        border-left: 2px solid rgba(255, 215, 0, 0.4) !important;
-        border-right: none !important;
-        z-index: 999999 !important;
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        transform: translateX(0) !important;
-        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    /* عند الإغلاق - انزلاق لليمين خارج الشاشة */
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(100%) !important;
-        box-shadow: none !important;
-    }
-    
-    /* المحتوى الداخلي للشريط */
-    [data-testid="stSidebar"] > div:first-child {
-        background: transparent !important;
-        padding: 20px 15px !important;
-        padding-top: 80px !important; /* مسافة كافية لزر الإغلاق */
-        height: 100% !important;
-        overflow-y: auto !important;
-    }
-    
-    /* إخفاء تنقل الصفحات الافتراضي */
-    [data-testid="stSidebarNav"] { 
-        display: none !important; 
-    }
-    
-    /* ===== زر إغلاق الشريط (X أو «) داخل الشريط ===== */
-    button[data-testid="stSidebarCollapseButton"] {
-        position: absolute !important;
-        top: 20px !important;
-        left: 20px !important;
-        right: auto !important;
-        z-index: 9999999 !important;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
-        border: 2px solid rgba(255, 215, 0, 0.6) !important;
-        border-radius: 50% !important;
-        width: 40px !important;
-        height: 40px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    button[data-testid="stSidebarCollapseButton"]:hover {
-        background: linear-gradient(135deg, #FFD700, #B8860B) !important;
-        border-color: #FFD700 !important;
-        transform: rotate(90deg);
-    }
-    
-    button[data-testid="stSidebarCollapseButton"] svg {
-        fill: #FFD700 !important;
-        stroke: #FFD700 !important;
-        width: 20px !important;
-        height: 20px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    button[data-testid="stSidebarCollapseButton"]:hover svg {
-        fill: #001f3f !important;
-        stroke: #001f3f !important;
-    }
-
-    /* ===== عناصر الشريط الجانبي ===== */
-    .sidebar-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 18px 15px;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
-        border-radius: 12px;
-        margin-top: 10px;
-        margin-bottom: 15px;
-        border: 1px solid rgba(255, 215, 0, 0.2);
-    }
-    
-    .sidebar-icon {
-        font-size: 1.8rem;
-    }
-    
-    .sidebar-title {
-        color: #FFD700;
-        font-size: 1.15rem;
-        font-weight: 700;
-    }
-    
-    .sidebar-badge {
-        background: linear-gradient(135deg, #FFD700, #B8860B);
-        color: #001f3f;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        font-weight: 800;
-    }
-    
-    .sidebar-hint {
-        color: rgba(255, 255, 255, 0.45) !important;
-        font-size: 0.78rem !important;
-        text-align: center !important;
-        margin-bottom: 15px !important;
-        display: block !important;
-    }
-    
-    .sidebar-report-card {
-        background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 215, 0, 0.15);
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar-report-card:hover {
-        border-color: rgba(255, 215, 0, 0.4);
-        transform: translateX(-4px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .report-card-title {
-        color: #FFD700;
-        font-size: 0.92rem;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
-    
-    .report-card-meta {
-        display: flex;
-        gap: 8px;
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 0.72rem;
-        margin-bottom: 5px;
-    }
-    
-    .report-card-time {
-        color: rgba(255, 255, 255, 0.45);
-        font-size: 0.7rem;
-    }
-    
-    .sidebar-empty {
-        text-align: center;
-        padding: 35px 15px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        border: 1px dashed rgba(255, 215, 0, 0.2);
-        margin-top: 10px;
-    }
-    
-    .sidebar-empty .empty-icon {
-        font-size: 2.8rem;
-        margin-bottom: 12px;
-        opacity: 0.5;
-    }
-    
-    .sidebar-empty .empty-text {
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 0.92rem;
-        margin-bottom: 6px;
-    }
-    
-    .sidebar-empty .empty-hint {
-        color: rgba(255, 255, 255, 0.35);
-        font-size: 0.78rem;
-    }
-    
-    /* ===== أزرار الشريط الجانبي ===== */
-    [data-testid="stSidebar"] .stButton > button {
-        background: linear-gradient(135deg, rgba(26, 45, 74, 0.9), rgba(13, 31, 60, 0.95)) !important;
-        color: #FFD700 !important;
-        border: 1px solid rgba(255, 215, 0, 0.3) !important;
-        font-size: 0.82rem !important;
-        padding: 10px 14px !important;
-        font-weight: 600 !important;
-        border-radius: 8px !important;
-        transition: all 0.3s ease !important;
-        animation: none !important;
-    }
-    
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
-        border-color: #FFD700 !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2) !important;
-    }
-    
-    [data-testid="stSidebar"] .stDownloadButton > button {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        color: white !important;
-        font-size: 0.82rem !important;
-        padding: 10px 14px !important;
-        border: none !important;
-        border-radius: 8px !important;
-        animation: none !important;
-    }
-    
-    [data-testid="stSidebar"] .stDownloadButton > button:hover {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
-    }
-
-    /* ===== الهيدر الرئيسي (Hero Section) ===== */
-    .hero-section {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
-        border-radius: 20px;
-        padding: 50px 30px;
-        text-align: center;
-        margin: 20px;
-        margin-top: 85px; /* زيادة الهامش العلوي قليلاً لعدم تغطية الزر */
-        border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 
-            0 0 40px rgba(0, 31, 63, 0.8),
-            inset 0 0 30px rgba(0, 0, 0, 0.5),
-            0 0 15px rgba(255, 215, 0, 0.1);
-        position: relative;
-        overflow: hidden;
-        animation: fadeIn 1s ease-in-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, transparent, #FFD700, transparent);
-        box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700;
-        animation: shimmer 3s infinite;
-    }
-    
-    @keyframes shimmer {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-    }
-
-    .main-title {
-        font-size: 52px;
-        font-weight: 900;
-        background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 15px;
-        text-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-        animation: titleGlow 3s ease-in-out infinite alternate;
-    }
-    
-    @keyframes titleGlow {
-        from { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); }
-        to { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.6)); }
-    }
-
-    .sub-title {
-        color: #e0e0e0;
-        font-size: 18px;
-        letter-spacing: 2px;
-        font-weight: 500;
-        opacity: 0.9;
-    }
-    
-    /* ===== بانر المعاينة ===== */
-    .preview-banner {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        color: white;
-        padding: 14px 22px;
-        border-radius: 12px;
-        margin: 20px;
-        font-weight: 600;
-        font-size: 1rem;
-        text-align: center;
-        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
-    }
-    
-    /* ===== تلميح النجاح ===== */
-    .success-hint {
-        background: rgba(34, 197, 94, 0.08);
-        border: 1px solid rgba(34, 197, 94, 0.25);
-        border-radius: 10px;
-        padding: 12px 20px;
-        margin: 10px 20px;
-        color: rgba(34, 197, 94, 0.85);
-        font-size: 0.88rem;
-        text-align: center;
-    }
-
-    /* ===== عنوان القسم ===== */
-    .section-header {
-        text-align: center;
-        margin: 30px 20px;
-        color: #FFD700;
-        font-size: 1.4rem;
-        font-weight: bold;
-        text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
-    }
-
-    /* ===== أزرار الاختيار ===== */
-    div[role="radiogroup"] {
-        display: flex !important;
-        flex-direction: row-reverse !important;
-        justify-content: center !important;
-        gap: 15px !important;
-        flex-wrap: wrap !important;
-        background: rgba(0, 0, 0, 0.3) !important;
-        padding: 20px !important;
-        border-radius: 15px !important;
-        margin: 0 20px 30px 20px !important;
-        border: 1px solid rgba(255, 215, 0, 0.15) !important;
-    }
-
-    div[role="radiogroup"] label {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95)) !important;
-        border: 2px solid rgba(255, 215, 0, 0.2) !important;
-        padding: 15px 25px !important;
-        border-radius: 12px !important;
-        cursor: pointer !important;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-        text-align: center !important;
-        flex: 1 !important;
-        min-width: 160px !important;
-        max-width: 220px !important;
-        color: white !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        position: relative !important;
-        overflow: hidden !important;
-    }
-    
-    div[role="radiogroup"] label::before {
-        content: '' !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: -100% !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent) !important;
-        transition: left 0.5s ease !important;
-    }
-    
-    div[role="radiogroup"] label:hover::before {
-        left: 100% !important;
-    }
-
-    div[role="radiogroup"] label:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 31, 63, 0.95)) !important;
-        border-color: #FFD700 !important;
-        transform: translateY(-5px) scale(1.02) !important;
-        box-shadow: 
-            0 10px 30px rgba(0, 0, 0, 0.3),
-            0 0 20px rgba(255, 215, 0, 0.2) !important;
-    }
-    
-    div[role="radiogroup"] label[data-checked="true"],
-    div[role="radiogroup"] label:has(input:checked) {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.15)) !important;
-        border-color: #FFD700 !important;
-        box-shadow: 
-            0 0 25px rgba(255, 215, 0, 0.3),
-            inset 0 0 20px rgba(255, 215, 0, 0.1) !important;
-    }
-
-    /* ===== بطاقات الإدخال ===== */
-    .input-card {
-        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 15, 30, 0.95));
-        border-radius: 20px;
-        padding: 30px;
-        margin: 10px;
-        border: 1px solid rgba(255, 215, 0, 0.2);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        transition: all 0.4s ease;
-    }
-    
-    .input-card:hover {
-        border-color: rgba(255, 215, 0, 0.4);
-        transform: translateY(-5px);
-        box-shadow: 
-            0 15px 50px rgba(0, 0, 0, 0.4),
-            0 0 20px rgba(255, 215, 0, 0.1);
-    }
-
-    .input-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-    }
-
-    .input-icon {
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #FFD700, #B8860B);
-        border-radius: 12px;
-        font-size: 1.5rem;
-        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-    }
-
-    .input-title {
-        color: #FFD700;
-        font-size: 1.2rem;
-        font-weight: 700;
-    }
-
-    .input-subtitle {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.9rem;
-        margin-top: 5px;
-    }
-
-    /* ===== حقل النص ===== */
-    .stTextArea textarea {
-        background-color: rgba(0, 0, 0, 0.4) !important;
-        border: 2px solid rgba(255, 215, 0, 0.2) !important;
-        border-radius: 15px !important;
-        color: white !important;
-        font-family: 'Tajawal', sans-serif !important;
-        font-size: 1rem !important;
-        padding: 20px !important;
-        text-align: right !important;
-        direction: rtl !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .stTextArea textarea:focus {
-        border-color: #FFD700 !important;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.2) !important;
-        outline: none !important;
-    }
-    
-    .stTextArea textarea::placeholder {
-        color: rgba(255, 255, 255, 0.4) !important;
-    }
-
-    /* ===== رفع الملفات ===== */
-    [data-testid="stFileUploader"] {
-        background: rgba(0, 0, 0, 0.3) !important;
-        border: 2px dashed rgba(255, 215, 0, 0.3) !important;
-        border-radius: 15px !important;
-        padding: 25px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    [data-testid="stFileUploader"]:hover {
-        border-color: #FFD700 !important;
-        background: rgba(255, 215, 0, 0.05) !important;
-    }
-    
-    [data-testid="stFileUploader"] section {
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    [data-testid="stFileUploader"] button {
-        background: linear-gradient(135deg, #FFD700, #B8860B) !important;
-        color: #001f3f !important;
-        border: none !important;
-        border-radius: 10px !important;
-        font-weight: 700 !important;
-        padding: 10px 20px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    [data-testid="stFileUploader"] button:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4) !important;
-    }
-
-    /* ===== زر المعالجة الرئيسي ===== */
-    .stButton > button {
-        background: linear-gradient(135deg, #FFD700 0%, #DAA520 50%, #FFD700 100%) !important;
-        background-size: 200% auto !important;
-        color: #001f3f !important;
-        font-family: 'Tajawal', sans-serif !important;
-        font-weight: 900 !important;
-        font-size: 1.3rem !important;
-        border-radius: 15px !important;
-        width: 100% !important;
-        padding: 18px 40px !important;
-        border: none !important;
-        box-shadow: 
-            0 8px 30px rgba(218, 165, 32, 0.4),
-            0 0 0 0 rgba(255, 215, 0, 0.5) !important;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-        cursor: pointer !important;
-        position: relative !important;
-        overflow: hidden !important;
-        animation: buttonPulse 2s infinite !important;
-    }
-    
-    @keyframes buttonPulse {
-        0%, 100% { box-shadow: 0 8px 30px rgba(218, 165, 32, 0.4), 0 0 0 0 rgba(255, 215, 0, 0.4); }
-        50% { box-shadow: 0 8px 30px rgba(218, 165, 32, 0.6), 0 0 0 10px rgba(255, 215, 0, 0); }
-    }
-    
-    .stButton > button::before {
-        content: '' !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: -100% !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
-        transition: left 0.6s ease !important;
-    }
-    
-    .stButton > button:hover::before {
-        left: 100% !important;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 
-            0 15px 40px rgba(218, 165, 32, 0.5),
-            0 0 30px rgba(255, 215, 0, 0.3) !important;
-        background-position: right center !important;
-    }
-    
-    .stButton > button:active {
-        transform: translateY(-1px) scale(0.98) !important;
-    }
-
-    /* ===== التنبيهات ===== */
-    .stAlert {
-        background: rgba(0, 31, 63, 0.9) !important;
-        border: 1px solid rgba(255, 215, 0, 0.3) !important;
-        border-radius: 12px !important;
-        color: white !important;
-    }
-    
-    .stSuccess {
-        background: rgba(34, 197, 94, 0.15) !important;
-        border: 1px solid rgba(34, 197, 94, 0.5) !important;
-    }
-    
-    .stWarning {
-        background: rgba(255, 193, 7, 0.15) !important;
-        border: 1px solid rgba(255, 193, 7, 0.5) !important;
-    }
-    
-    .stError {
-        background: rgba(220, 53, 69, 0.15) !important;
-        border: 1px solid rgba(220, 53, 69, 0.5) !important;
-    }
-
-    /* ===== زر التحميل ===== */
-    .stDownloadButton > button {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-        color: white !important;
-        font-size: 1.1rem !important;
-        font-weight: 700 !important;
-        padding: 15px 40px !important;
-        border-radius: 12px !important;
-        border: none !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
-        animation: none !important;
-    }
-    
-    .stDownloadButton > button:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.5) !important;
-    }
-
-    /* ===== شريط النجاح ===== */
-    .success-banner {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
-        border: 2px solid #22c55e;
-        border-radius: 15px;
-        padding: 20px 30px;
-        text-align: center;
-        margin: 20px;
-        animation: successPop 0.5s ease;
-    }
-    
-    @keyframes successPop {
-        0% { transform: scale(0.9); opacity: 0; }
-        50% { transform: scale(1.02); }
-        100% { transform: scale(1); opacity: 1; }
-    }
-    
-    .success-banner span {
-        color: #22c55e;
-        font-size: 1.2rem;
-        font-weight: 700;
-    }
-
-    /* ===== إخفاء التسميات ===== */
-    .stTextArea > label,
-    .stFileUploader > label,
-    .stRadio > label {
+    [data-testid="stSidebarCollapsedControl"] svg {
         display: none !important;
     }
 
-    /* ===== المعاينة ===== */
-    iframe {
-        border-radius: 15px !important;
-        border: 2px solid rgba(255, 215, 0, 0.3) !important;
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4) !important;
+    /* نضع خطوط القائمة الثلاثية */
+    [data-testid="collapsedControl"]::after,
+    [data-testid="stSidebarCollapsedControl"]::after {
+        content: "☰" !important;
+        font-size: 24px !important;
+        font-weight: bold !important;
+        color: inherit !important; /* يأخذ لون العنصر الأب */
+        line-height: 1 !important;
+        margin-top: -2px !important;
+    }
+    
+    /* لون الأيقونة الافتراضي */
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"] {
+        color: #FFD700 !important;
     }
 
-    /* ===== شريط التقدم ===== */
-    .progress-box {
-        background: rgba(0, 31, 63, 0.9);
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        border-radius: 15px;
-        padding: 30px;
-        margin: 20px;
+    /* ========================================================= */
+    /* 3. الشريط الجانبي السلس (Smooth Sidebar Overlay) */
+    /* ========================================================= */
+    
+    [data-testid="stSidebar"] {
+        /* جعله يطفو فوق المحتوى بدلاً من دفعه */
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        height: 100vh !important;
+        width: 320px !important; /* عرض ثابت وأنيق */
+        min-width: 320px !important;
+        
+        /* الخلفية والتصميم */
+        background: linear-gradient(180deg, #001f3f 0%, #0a1628 100%) !important;
+        border-left: 1px solid rgba(255, 215, 0, 0.2) !important;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7) !important;
+        z-index: 999999 !important;
+        
+        /* تحسين الحركة لتكون ناعمة مثل Gemini */
+        transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+    
+    /* إخفاء القوائم الافتراضية داخل الشريط */
+    [data-testid="stSidebarNav"] { display: none !important; }
+    
+    /* زر إغلاق الشريط (X) */
+    button[data-testid="stSidebarCollapseButton"] {
+        position: absolute !important;
+        top: 20px !important;
+        left: 20px !important; /* في الجهة اليسرى للشريط */
+        background: transparent !important;
+        border: none !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        transition: 0.3s !important;
+    }
+    
+    button[data-testid="stSidebarCollapseButton"]:hover {
+        color: #FFD700 !important;
+        transform: rotate(90deg);
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 50%;
+    }
+
+    /* محتوى الشريط */
+    [data-testid="stSidebar"] > div:first-child {
+        padding-top: 70px !important;
+    }
+
+    /* إخفاء الزخارف العلوية المزعجة */
+    [data-testid="stToolbar"] { display: none !important; }
+    [data-testid="stDecoration"] { display: none !important; }
+
+    /* ========================================================= */
+    /* 4. تنسيقات العناصر الداخلية (بطاقات، نصوص) */
+    /* ========================================================= */
+
+    /* الهيدر الرئيسي (Hero) */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(10, 46, 92, 0.85));
+        border-radius: 20px;
+        padding: 60px 30px;
         text-align: center;
-    }
-    
-    .progress-bar-bg {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        height: 12px;
+        margin: 20px auto;
+        margin-top: 80px; /* مسافة لعدم تداخل الزر */
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        box-shadow: 0 0 50px rgba(0, 10, 30, 0.5);
+        position: relative;
         overflow: hidden;
-        margin: 20px 0;
+        animation: slideDown 0.8s ease-out;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+
+    .main-title {
+        font-size: 48px; font-weight: 800;
+        background: linear-gradient(180deg, #FFD700 0%, #F0E68C 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 15px; text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .sub-title { color: #ccc; font-size: 1.1rem; letter-spacing: 1px; }
+
+    /* البطاقات (Inputs & Selection) */
+    .input-card {
+        background: rgba(0, 31, 63, 0.7);
+        border: 1px solid rgba(255, 215, 0, 0.15);
+        border-radius: 16px;
+        padding: 25px;
+        margin: 10px 0;
+        transition: transform 0.3s ease, border-color 0.3s;
+    }
+    .input-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 215, 0, 0.4);
     }
     
-    .progress-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-        background-size: 200% 100%;
+    /* تنسيق أزرار الراديو لتكون بطاقات */
+    div[role="radiogroup"] {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        border-radius: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        direction: rtl;
+    }
+    div[role="radiogroup"] label {
+        background: rgba(0, 31, 63, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 10px;
-        animation: progressShine 1.5s infinite linear;
-        transition: width 0.3s ease;
+        padding: 15px 20px;
+        flex: 1;
+        min-width: 150px;
+        text-align: center;
+        transition: 0.3s;
+        cursor: pointer;
     }
-    
-    @keyframes progressShine {
-        0% { background-position: 200% center; }
-        100% { background-position: -200% center; }
+    div[role="radiogroup"] label:hover {
+        background: rgba(255, 215, 0, 0.1);
+        border-color: #FFD700;
     }
+    div[role="radiogroup"] label[data-checked="true"] {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(0, 0, 0, 0));
+        border-color: #FFD700;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+    .stRadio label { display: none !important; }
+
+    /* حقول الإدخال */
+    .stTextArea textarea {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        color: #fff !important;
+        padding: 15px !important;
+        direction: rtl;
+    }
+    .stTextArea textarea:focus { border-color: #FFD700 !important; }
     
-    .progress-text {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1rem;
-        margin-top: 10px;
+    /* أزرار الرفع والتحميل */
+    button { font-family: 'Tajawal', sans-serif !important; }
+    
+    /* زر المعالجة الكبير */
+    .stButton > button {
+        background: linear-gradient(90deg, #FFD700, #DAA520) !important;
+        color: #001f3f !important;
+        font-weight: 800 !important;
+        font-size: 1.2rem !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 15px 30px !important;
+        box-shadow: 0 5px 20px rgba(218, 165, 32, 0.3) !important;
+        transition: all 0.3s !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(218, 165, 32, 0.5) !important;
     }
 
-    /* ===== الاستجابة للشاشات الصغيرة ===== */
+    /* عناصر الشريط الجانبي */
+    .sidebar-header {
+        text-align: center; padding: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 20px;
+    }
+    .sidebar-title { color: #FFD700; font-size: 1.2rem; font-weight: bold; }
+    .sidebar-report-card {
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid transparent;
+        transition: 0.2s;
+    }
+    .sidebar-report-card:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,215,0,0.3);
+    }
+    .report-card-title { color: #fff; font-weight: 600; font-size: 0.9rem; }
+    .report-card-time { color: #aaa; font-size: 0.75rem; margin-top: 5px; }
+
+    /* إخفاء أي Labels زائدة */
+    .stFileUploader label, .stTextArea label { display: none !important; }
+
+    /* الاستجابة للجوال */
     @media (max-width: 768px) {
-        .main-title { font-size: 36px; }
-        .sub-title { font-size: 14px; }
-        .hero-section { padding: 30px 20px; margin: 10px; margin-top: 75px; }
-        div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
-        
-        [data-testid="collapsedControl"] {
-            top: 10px !important;
-            right: 10px !important;
-            width: 44px !important;
-            height: 44px !important;
-        }
-        
-        [data-testid="stSidebar"] {
-            width: 85vw !important;
-            min-width: 85vw !important;
-            max-width: 85vw !important;
-        }
+        [data-testid="stSidebar"] { width: 100% !important; min-width: 100% !important; }
+        .hero-section { padding: 40px 20px; margin-top: 70px; }
+        .main-title { font-size: 32px; }
     }
 </style>
 """
 
 # ---------------------------------------------------------
-# 🎨 القوالب (Templates)
+# 🎨 القوالب (Templates) - لم يتم تغييرها للحفاظ على الهيكلية
 # ---------------------------------------------------------
 
 STYLE_OFFICIAL = """
@@ -791,50 +298,20 @@ STYLE_OFFICIAL = """
     :root { --navy-blue: #001f3f; --gold: #c5a059; --light-gold: #f0e6d2; --white: #ffffff; --gray: #f9f9f9; --text: #333; }
     body { font-family: 'Tajawal', sans-serif; background-color: var(--gray); color: var(--text); line-height: 1.8; direction: rtl; text-align: right; margin: 0; padding: 0; }
     .container { max-width: 1200px; margin: 30px auto; padding: 40px; background: white; box-shadow: 0 0 50px rgba(0,0,0,0.05); }
-    
     header { border-bottom: 4px solid var(--navy-blue); padding-bottom: 20px; margin-bottom: 40px; text-align: center; }
     header h1 { color: var(--navy-blue); font-size: 2.2em; margin: 0; font-weight: 800; }
     header h2 { color: var(--gold); font-size: 1.4em; margin-top: 10px; font-weight: 600; }
-    
     .card { background-color: #fff; margin-bottom: 30px; padding: 10px; }
-    .card h3 { 
-        color: var(--navy-blue); 
-        font-size: 1.6em; 
-        border-right: 5px solid var(--gold); 
-        padding-right: 15px; 
-        margin-bottom: 20px; 
-        background: linear-gradient(90deg, var(--light-gold) 0%, transparent 100%);
-        padding: 10px 15px;
-        border-radius: 4px;
-    }
-    
+    .card h3 { color: var(--navy-blue); font-size: 1.6em; border-right: 5px solid var(--gold); padding-right: 15px; margin-bottom: 20px; background: linear-gradient(90deg, var(--light-gold) 0%, transparent 100%); padding: 10px 15px; border-radius: 4px; }
     table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em; border: 1px solid #eee; }
     table th { background-color: var(--navy-blue); color: white; padding: 15px; font-weight: bold; border: 1px solid #001f3f; }
     table td { border: 1px solid #ddd; padding: 12px 15px; color: #444; }
     table tr:nth-child(even) { background-color: #f8f9fa; }
-    
     ul { list-style: none; padding: 0; margin: 0; }
-    ul li { 
-        padding: 12px 15px; 
-        border-bottom: 1px solid #eee; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        transition: background 0.2s;
-    }
+    ul li { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
     ul li:hover { background-color: #fcfcfc; }
-    
     ul li span { font-weight: 600; color: #555; font-size: 1rem; }
-    
-    ul li span.value { 
-        color: var(--navy-blue); 
-        font-weight: 800; 
-        font-size: 1.1rem; 
-        background: transparent;
-        padding: 0; 
-        border: none;
-    }
-    
+    ul li span.value { color: var(--navy-blue); font-weight: 800; font-size: 1.1rem; background: transparent; padding: 0; border: none; }
     footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; color: #888; font-size: 0.85rem; }
 </style>
 """
@@ -846,18 +323,13 @@ STYLE_DIGITAL = """
     header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 3px solid #0056b3; }
     h1 { color: #0056b3; font-size: 2.4em; font-weight: 700; }
     h2 { color: #007bff; font-size: 2em; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px; }
-    
     .card { background-color: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
-    
     ul li { position: relative; padding-right: 35px; margin-bottom: 12px; }
     ul li::before { content: '•'; position: absolute; right: 0; color: #007bff; font-size: 1.8em; line-height: 1; }
-    
     .goal { background-color: #e6f7ff; border: 1px solid #b3e0ff; padding: 18px; border-radius: 8px; text-align: center; margin-top: 20px; font-weight: bold; color: #0056b3; }
-    
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; display: block; overflow-x: auto; white-space: nowrap; }
     thead th { background-color: #007bff; color: white; padding: 14px; }
     td { padding: 14px; border: 1px solid #e0e0e0; text-align: center; }
-    
     footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-style: italic; color: #777; }
 </style>
 """
@@ -869,42 +341,25 @@ STYLE_ANALYTICAL = """
     header { background-color: #004a99; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 74, 153, 0.2); }
     .report-section { background-color: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.07); margin-bottom: 25px; padding: 25px; }
     .report-section h2 { color: #004a99; border-bottom: 3px solid #0056b3; padding-bottom: 10px; }
-    
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
     .stat-card { background-color: #eef5ff; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #d0e3ff; }
     .stat-card .value { font-size: 2.2rem; font-weight: 700; color: #004a99; word-break: break-all; }
-    
     .pyramid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
     .tier-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; background-color: #fcfcfc; border-top: 6px solid; }
-    .tier-upper { border-top-color: #d90429; } 
-    .tier-middle { border-top-color: #f7b801; } 
-    
+    .tier-upper { border-top-color: #d90429; } .tier-middle { border-top-color: #f7b801; } 
     .bar-container { background-color: #e0e0e0; border-radius: 5px; height: 12px; margin-top: 12px; width: 100%; overflow: hidden; }
-    .bar { height: 100%; border-radius: 5px; }
-    .tier-upper .bar { background-color: #d90429; } 
-    .tier-middle .bar { background-color: #f7b801; }
-    
+    .bar { height: 100%; border-radius: 5px; } .tier-upper .bar { background-color: #d90429; } .tier-middle .bar { background-color: #f7b801; }
     footer { text-align: center; margin-top: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #ccc; padding-top: 20px;}
 </style>
 """
 
 STYLE_PRESENTATION = """
 <style>
-    :root {
-        --primary-navy: #002b49; --primary-blue: #004e89;
-        --gold-main: #c5a059; --gold-light: #e6c885;
-        --white: #ffffff; --grey-light: #f8f9fa; --text-dark: #333333;
-    }
+    :root { --primary-navy: #002b49; --primary-blue: #004e89; --gold-main: #c5a059; --gold-light: #e6c885; --white: #ffffff; --grey-light: #f8f9fa; --text-dark: #333333; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Cairo', sans-serif; background-color: var(--primary-navy); overflow: hidden; height: 100vh; width: 100vw; direction: rtl; margin:0;}
     .presentation-container { width: 100%; height: 100%; position: relative; background: radial-gradient(circle at center, #003865 0%, #002035 100%); }
-    .slide {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        opacity: 0; visibility: hidden; transform: scale(0.95);
-        transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-        display: flex; flex-direction: column; padding: 40px 60px;
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
-    }
+    .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transform: scale(0.95); transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); display: flex; flex-direction: column; padding: 40px 60px; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBvcGFjaXR5PSIwLjAzIj48cGF0aCBkPSJNMjAgMjBMMCAwSDQwTDgwIDgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg=='); }
     .slide.active { opacity: 1; visibility: visible; transform: scale(1); z-index: 10; }
     .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 15px; margin-bottom: 25px; flex-shrink: 0; }
     .header-title h2 { color: var(--gold-main); font-size: 2rem; font-weight: 800; }
@@ -967,17 +422,9 @@ SCRIPT_PRESENTATION = """
         const pageNum = document.getElementById('page-num');
         if(pageNum) pageNum.innerText = `${currentSlideIndex} / ${totalSlides}`;
     }
-    function nextSlide() { 
-        const totalSlides = document.querySelectorAll('.slide').length;
-        if (currentSlideIndex < totalSlides) { currentSlideIndex++; updateSlide(); } 
-    }
-    function prevSlide() { 
-        if (currentSlideIndex > 1) { currentSlideIndex--; updateSlide(); } 
-    }
-    document.addEventListener('keydown', function(event) {
-        if (event.key === "ArrowLeft" || event.key === "Space") nextSlide();
-        else if (event.key === "ArrowRight") prevSlide();
-    });
+    function nextSlide() { const totalSlides = document.querySelectorAll('.slide').length; if (currentSlideIndex < totalSlides) { currentSlideIndex++; updateSlide(); } }
+    function prevSlide() { if (currentSlideIndex > 1) { currentSlideIndex--; updateSlide(); } }
+    document.addEventListener('keydown', function(event) { if (event.key === "ArrowLeft" || event.key === "Space") nextSlide(); else if (event.key === "ArrowRight") prevSlide(); });
     setTimeout(updateSlide, 100);
 </script>
 """
