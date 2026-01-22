@@ -39,9 +39,6 @@ if 'preview_report' not in st.session_state:
 if 'preview_title' not in st.session_state:
     st.session_state.preview_title = ""
 
-if 'sidebar_state' not in st.session_state:
-    st.session_state.sidebar_state = "collapsed"
-
 # ---------------------------------------------------------
 # 🎨 إعدادات الصفحة
 # ---------------------------------------------------------
@@ -49,7 +46,7 @@ st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
     page_icon="🦅",
     layout="wide",
-    initial_sidebar_state=st.session_state.sidebar_state
+    initial_sidebar_state="collapsed" # البداية دائماً مغلق
 )
 
 # تطبيق التصميم الرئيسي
@@ -110,37 +107,31 @@ def clean_html_response(text):
     
     return text.strip()
 
-# 🔥 الحل الجذري: دالة لاكتشاف الموديل الصالح تلقائياً وتجنب الأخطاء 🔥
+# 🔥 دالة ذكية لاختيار الموديل الموجود فعلياً وتجنب الأخطاء 🔥
 def get_best_available_model():
     try:
-        # جلب قائمة الموديلات المتاحة فعلياً للمفتاح
         available_models = []
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
                 available_models.append(m.name)
         
-        # 1. البحث عن Flash 1.5 المستقر (الأولوية القصوى)
-        # نتجنب النسخ التجريبية (exp) والنسخ الحديثة جداً (2.0)
         for m in available_models:
             if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
-                return m # سيعيد مثلاً models/gemini-1.5-flash-001
+                return m 
         
-        # 2. البحث عن Pro 1.5 (خيار ممتاز وثقيل)
         for m in available_models:
             if 'gemini-1.5-pro' in m and 'exp' not in m:
                 return m
                 
-        # 3. البحث عن أي موديل Pro قديم (آمن جداً)
         for m in available_models:
             if 'gemini-pro' in m and '1.0' in m:
                 return m
         
-        # 4. الملاذ الأخير: أي شيء ليس تجريبياً
         for m in available_models:
             if 'exp' not in m and '2.0' not in m:
                 return m
                 
-        return "models/gemini-1.5-flash" # محاولة أخيرة يدوية
+        return "models/gemini-1.5-flash"
     except:
         return "models/gemini-pro"
 
@@ -148,7 +139,6 @@ def get_best_available_model():
 # 📚 دوال التخزين المؤقت
 # ---------------------------------------------------------
 def save_report_to_history(title, report_type, html_content, source_name=""):
-    """حفظ التقرير في سجل الجلسة"""
     report_entry = {
         'id': int(time.time() * 1000),
         'title': title,
@@ -164,13 +154,11 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 def delete_report(report_id):
-    """حذف تقرير من السجل"""
     st.session_state.reports_history = [
         r for r in st.session_state.reports_history if r['id'] != report_id
     ]
 
 def clear_all_reports():
-    """مسح جميع التقارير"""
     st.session_state.reports_history = []
     st.session_state.preview_report = None
 
@@ -178,6 +166,23 @@ def clear_all_reports():
 # 📚 الشريط الجانبي - سجل التقارير
 # ---------------------------------------------------------
 with st.sidebar:
+    # إضافة زر إغلاق صريح للشريط الجانبي (اختياري لتحسين التجربة)
+    if st.button("✖️ إغلاق السجل", key="close_sidebar_internal"):
+         st.markdown(
+            """
+            <script>
+                var sidebar = window.parent.document.querySelector('section[data-testid="stSidebar"]');
+                if (sidebar) {
+                    sidebar.setAttribute('aria-expanded', 'false');
+                    // محاولة لإجبار Streamlit على تحديث الحالة
+                    const collapseBtn = window.parent.document.querySelector('button[data-testid="baseButton-header"]');
+                    if(collapseBtn){ collapseBtn.click(); }
+                }
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
+
     reports_count = len(st.session_state.reports_history)
     
     st.markdown(f'''
@@ -193,14 +198,12 @@ with st.sidebar:
     st.markdown("<hr style='border: 1px solid rgba(255,215,0,0.2); margin: 15px 0;'>", unsafe_allow_html=True)
     
     if reports_count > 0:
-        # زر مسح الكل
         if st.button("🗑️ مسح جميع التقارير", key="clear_all", use_container_width=True):
             clear_all_reports()
             st.rerun()
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # عرض التقارير
         for report in st.session_state.reports_history:
             st.markdown(f'''
             <div class="sidebar-report-card">
@@ -232,7 +235,6 @@ with st.sidebar:
                     use_container_width=True
                 )
             
-            # زر الحذف
             if st.button("🗑️ حذف", key=f"del_{report['id']}", use_container_width=True):
                 delete_report(report['id'])
                 if st.session_state.preview_title == report['title']:
@@ -262,13 +264,34 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# زر فتح سجل التقارير
+# 🔥🔥 التعديل السحري هنا: زر فتح السجل باستخدام CSS Hack 🔥🔥
 reports_count = len(st.session_state.reports_history)
 col_spacer1, col_btn, col_spacer2 = st.columns([1.5, 2, 1.5])
+
 with col_btn:
+    # هذا الزر الآن سيقوم بحقن كود JavaScript يفتح القائمة الجانبية قسراً
     if st.button(f"📚 فتح سجل التقارير ({reports_count})", key="open_sidebar_btn", use_container_width=True):
-        st.session_state.sidebar_state = "expanded"
-        st.rerun()
+        st.markdown(
+            """
+            <script>
+                var sidebar = window.parent.document.querySelector('section[data-testid="stSidebar"]');
+                if (sidebar) {
+                    sidebar.setAttribute('aria-expanded', 'true');
+                    // محاولة أخرى لضمان الفتح في المتصفحات المختلفة
+                    sidebar.style.width = '300px'; 
+                }
+                // طريقة بديلة تحاكي الضغط على زر القائمة
+                var buttons = window.parent.document.getElementsByTagName('button');
+                for (var i = 0; i < buttons.length; i++) {
+                    if (buttons[i].getAttribute("data-testid") === "baseButton-header") {
+                        buttons[i].click();
+                        break;
+                    }
+                }
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
 
 # عرض معاينة التقرير إذا كانت مفعّلة
 if st.session_state.preview_report:
@@ -362,11 +385,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # 🔥 استخدام الدالة الجديدة لاختيار الموديل الآمن 🔥
-            safe_model_name = get_best_available_model()
-            
-            # عرض رسالة صغيرة (debugging) لمعرفة الموديل الذي تم اختياره (يمكنك إزالتها لاحقاً)
-            # st.caption(f"🤖 يتم استخدام الموديل: {safe_model_name}")
+            # البحث الذكي عن الموديل
+            selected_model = get_best_available_model()
             
             generation_config = genai.types.GenerationConfig(
                 temperature=0.0,
@@ -375,7 +395,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 max_output_tokens=8192,
             )
             
-            model = genai.GenerativeModel(safe_model_name)
+            model = genai.GenerativeModel(selected_model)
 
             target_css = ""
             design_rules = ""
@@ -494,7 +514,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: {i}%;"></div>
                     </div>
-                    <div class="progress-text">جاري معالجة البيانات وتصحيح النصوص... {i}%</div>
+                    <div class="progress-text">جاري معالجة البيانات باستخدام ({selected_model})... {i}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
                 time.sleep(0.1)
