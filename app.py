@@ -46,7 +46,7 @@ st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
     page_icon="🦅",
     layout="wide",
-    initial_sidebar_state="collapsed" # البداية دائماً مغلق
+    initial_sidebar_state="collapsed"
 )
 
 # تطبيق التصميم الرئيسي
@@ -166,23 +166,6 @@ def clear_all_reports():
 # 📚 الشريط الجانبي - سجل التقارير
 # ---------------------------------------------------------
 with st.sidebar:
-    # إضافة زر إغلاق صريح للشريط الجانبي (اختياري لتحسين التجربة)
-    if st.button("✖️ إغلاق السجل", key="close_sidebar_internal"):
-         st.markdown(
-            """
-            <script>
-                var sidebar = window.parent.document.querySelector('section[data-testid="stSidebar"]');
-                if (sidebar) {
-                    sidebar.setAttribute('aria-expanded', 'false');
-                    // محاولة لإجبار Streamlit على تحديث الحالة
-                    const collapseBtn = window.parent.document.querySelector('button[data-testid="baseButton-header"]');
-                    if(collapseBtn){ collapseBtn.click(); }
-                }
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
-
     reports_count = len(st.session_state.reports_history)
     
     st.markdown(f'''
@@ -263,35 +246,6 @@ st.markdown('''
     <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
 </div>
 ''', unsafe_allow_html=True)
-
-# 🔥🔥 التعديل السحري هنا: زر فتح السجل باستخدام CSS Hack 🔥🔥
-reports_count = len(st.session_state.reports_history)
-col_spacer1, col_btn, col_spacer2 = st.columns([1.5, 2, 1.5])
-
-with col_btn:
-    # هذا الزر الآن سيقوم بحقن كود JavaScript يفتح القائمة الجانبية قسراً
-    if st.button(f"📚 فتح سجل التقارير ({reports_count})", key="open_sidebar_btn", use_container_width=True):
-        st.markdown(
-            """
-            <script>
-                var sidebar = window.parent.document.querySelector('section[data-testid="stSidebar"]');
-                if (sidebar) {
-                    sidebar.setAttribute('aria-expanded', 'true');
-                    // محاولة أخرى لضمان الفتح في المتصفحات المختلفة
-                    sidebar.style.width = '300px'; 
-                }
-                // طريقة بديلة تحاكي الضغط على زر القائمة
-                var buttons = window.parent.document.getElementsByTagName('button');
-                for (var i = 0; i < buttons.length; i++) {
-                    if (buttons[i].getAttribute("data-testid") === "baseButton-header") {
-                        buttons[i].click();
-                        break;
-                    }
-                }
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
 
 # عرض معاينة التقرير إذا كانت مفعّلة
 if st.session_state.preview_report:
@@ -567,7 +521,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 st.markdown('''
                 <div class="success-hint">
-                    💡 يمكنك الوصول للتقارير المحفوظة من زر "فتح سجل التقارير" أعلاه
+                    💡 يمكنك الوصول للتقارير المحفوظة من القائمة الجانبية ☰
                 </div>
                 ''', unsafe_allow_html=True)
                 
