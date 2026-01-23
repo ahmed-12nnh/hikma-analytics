@@ -154,82 +154,81 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري
+# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري والنهائي
 # ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
     
     # بناء HTML للتقارير
-    # ملاحظة: النصوص هنا تبدأ من بداية السطر لتجنب مشكلة التفسير الخاطئ
+    # ملاحظة استراتيجية: تم إلغاء المسافات البادئة هنا عمداً لمنع ظهور الكود كنص
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
             title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
             reports_html += f"""
 <div class="sidebar-report-card">
-    <div class="report-title">📄 {title_short}</div>
-    <div class="report-meta">
-        <span>{report['type']}</span>
-        <span>•</span>
-        <span>{report['size']}</span>
-    </div>
-    <div class="report-time">🕐 {report['timestamp']}</div>
+<div class="report-title">📄 {title_short}</div>
+<div class="report-meta">
+<span>{report['type']}</span>
+<span>•</span>
+<span>{report['size']}</span>
+</div>
+<div class="report-time">🕐 {report['timestamp']}</div>
 </div>
 """
     else:
         reports_html = """
 <div class="sidebar-empty">
-    <div class="empty-icon">📭</div>
-    <div class="empty-text">لا توجد تقارير بعد</div>
-    <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
+<div class="empty-icon">📭</div>
+<div class="empty-text">لا توجد تقارير بعد</div>
+<div class="empty-hint">ستظهر هنا بعد إنشائها</div>
 </div>
 """
     
     # الشريط الجانبي المخصص بالكامل
-    # هام جداً: تم إزالة المسافات البادئة (Indentation) هنا عمداً
-    # هذا يحل مشكلة ظهور الكود كنص في المتصفح ويضمن تنفيذه كـ HTML
-    # تم تحديث الجافا سكربت ليعمل بفعالية
+    # ملاحظة: تم إلغاء المسافات البادئة (Zero Indentation) لحل مشكلة ظهور النصوص
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
-    <div class="sidebar-strip">
-        <div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
-            <div class="hamburger" id="hamburgerIcon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-        
-        <div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
-            <span class="strip-icon">📚</span>
-            <span class="strip-badge">{reports_count}</span>
-        </div>
-        
-        <div class="strip-divider"></div>
-        
-        <div class="strip-btn" title="الإعدادات">
-            <span class="strip-icon">⚙️</span>
-        </div>
-    </div>
-    
-    <div class="sidebar-panel">
-        <div class="sidebar-header">
-            <h3>📚 سجل التقارير</h3>
-            <p>التقارير المُنشأة خلال الجلسة الحالية</p>
-        </div>
-        
-        <div class="sidebar-content">
-            {reports_html}
-        </div>
-        
-        <div class="sidebar-footer">
-            <span>تيار الحكمة الوطني</span>
-        </div>
-    </div>
+<div class="sidebar-strip">
+<div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
+<div class="hamburger" id="hamburgerIcon">
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
+
+<div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
+<span class="strip-icon">📚</span>
+<span class="strip-badge">{reports_count}</span>
+</div>
+
+<div class="strip-divider"></div>
+
+<div class="strip-btn" title="الإعدادات">
+<span class="strip-icon">⚙️</span>
+</div>
+</div>
+
+<div class="sidebar-panel">
+<div class="sidebar-header">
+<h3>📚 سجل التقارير</h3>
+<p>التقارير المُنشأة خلال الجلسة الحالية</p>
+</div>
+
+<div class="sidebar-content">
+{reports_html}
+</div>
+
+<div class="sidebar-footer">
+<span>تيار الحكمة الوطني</span>
+</div>
+</div>
 </div>
 
 <script>
-    // ربط الدالة بالنافذة مباشرة لضمان الوصول إليها
+    // الوظيفة الأساسية لفتح وإغلاق القائمة
+    // تم ربطها بالنافذة (window) لضمان عملها دائماً
     window.toggleSidebar = function() {{
         var sidebar = document.getElementById('customSidebar');
         var hamburger = document.getElementById('hamburgerIcon');
@@ -243,14 +242,14 @@ def render_custom_sidebar():
         }}
     }};
 
-    // إغلاق عند النقر خارج الشريط
+    // إغلاق القائمة عند النقر خارجها
     document.addEventListener('click', function(e) {{
         var sidebar = document.getElementById('customSidebar');
         var hamburger = document.getElementById('hamburgerIcon');
         
-        // التحقق من أن النقر لم يكن على الشريط نفسه أو زر الفتح
+        // إذا كانت القائمة مفتوحة والنقر تم خارجها
         if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
-            // التأكد من عدم النقر على زر الفتح
+            // التأكد أن النقر لم يتم على زر الفتح نفسه
             let clickedOnButton = false;
             if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
                 clickedOnButton = true;
