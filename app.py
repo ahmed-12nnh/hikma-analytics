@@ -164,7 +164,7 @@ def render_custom_sidebar():
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
             title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
-            reports_html += f'''
+            reports_html += f"""
             <div class="sidebar-report-card">
                 <div class="report-title">📄 {title_short}</div>
                 <div class="report-meta">
@@ -174,14 +174,96 @@ def render_custom_sidebar():
                 </div>
                 <div class="report-time">🕐 {report['timestamp']}</div>
             </div>
-            '''
+            """
     else:
-        reports_html = '''
+        reports_html = """
         <div class="sidebar-empty">
             <div class="empty-icon">📭</div>
             <div class="empty-text">لا توجد تقارير بعد</div>
             <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
         </div>
+        """
+    
+    # الحل الجذري: إزالة المسافات البادئة في بداية السطر لضمان قراءة HTML بشكل صحيح
+    # وتحديث الجافا سكربت ليعمل بشكل مستقل
+    sidebar_html = f"""
+<div class="custom-sidebar" id="customSidebar">
+    <div class="sidebar-strip">
+        <div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
+            <div class="hamburger" id="hamburgerIcon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
+            <span class="strip-icon">📚</span>
+            <span class="strip-badge">{reports_count}</span>
+        </div>
+        
+        <div class="strip-divider"></div>
+        
+        <div class="strip-btn" title="الإعدادات">
+            <span class="strip-icon">⚙️</span>
+        </div>
+    </div>
+    
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>📚 سجل التقارير</h3>
+            <p>التقارير المُنشأة خلال الجلسة الحالية</p>
+        </div>
+        
+        <div class="sidebar-content">
+            {reports_html}
+        </div>
+        
+        <div class="sidebar-footer">
+            <span>تيار الحكمة الوطني</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // تعريف الدالة على مستوى النافذة لضمان الوصول إليها دائماً
+    window.toggleSidebar = function() {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
+        
+        if (sidebar) {{
+            sidebar.classList.toggle('expanded');
+        }}
+        
+        if (hamburger) {{
+            hamburger.classList.toggle('active');
+        }}
+    }};
+
+    // إغلاق عند النقر خارج الشريط
+    document.addEventListener('click', function(e) {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
+        var toggleBtns = document.getElementsByClassName('menu-toggle');
+        
+        // التحقق من أن النقر لم يكن على الشريط نفسه أو زر الفتح
+        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
+            // تأكد أننا لم نضغط على زر الفتح نفسه (لأن ذلك سيسبب تعارضاً)
+            let clickedOnButton = false;
+            if (e.target.closest('.strip-btn')) {{
+                clickedOnButton = true;
+            }}
+            
+            if (!clickedOnButton) {{
+                sidebar.classList.remove('expanded');
+                if (hamburger) hamburger.classList.remove('active');
+            }}
+        }}
+    }});
+</script>
+"""
+    
+    return sidebar_html
         '''
     
     # الشريط الجانبي المخصص بالكامل
@@ -629,3 +711,4 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
+
