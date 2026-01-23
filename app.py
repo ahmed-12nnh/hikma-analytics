@@ -154,13 +154,12 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري والنهائي
+# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري
 # ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
     
-    # بناء HTML للتقارير
-    # ملاحظة استراتيجية: تم إلغاء المسافات البادئة هنا عمداً لمنع ظهور الكود كنص
+    # بناء HTML للتقارير (بدون مسافات بادئة لضمان العمل)
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
@@ -186,11 +185,11 @@ def render_custom_sidebar():
 """
     
     # الشريط الجانبي المخصص بالكامل
-    # ملاحظة: تم إلغاء المسافات البادئة (Zero Indentation) لحل مشكلة ظهور النصوص
+    # تنبيه: الكود هنا يلامس الحافة اليسرى عمداً لمنع ظهوره كنص في المتصفح
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
 <div class="sidebar-strip">
-<div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
+<div class="strip-btn menu-toggle" onclick="window.toggleSidebar()" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
 <div class="hamburger" id="hamburgerIcon">
 <span></span>
 <span></span>
@@ -198,7 +197,7 @@ def render_custom_sidebar():
 </div>
 </div>
 
-<div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
+<div class="strip-btn" onclick="window.toggleSidebar()" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
 <span class="strip-icon">📚</span>
 <span class="strip-badge">{reports_count}</span>
 </div>
@@ -227,8 +226,7 @@ def render_custom_sidebar():
 </div>
 
 <script>
-    // الوظيفة الأساسية لفتح وإغلاق القائمة
-    // تم ربطها بالنافذة (window) لضمان عملها دائماً
+    // التأكد من تعريف الدالة في النطاق العام (Global Scope)
     window.toggleSidebar = function() {{
         var sidebar = document.getElementById('customSidebar');
         var hamburger = document.getElementById('hamburgerIcon');
@@ -242,14 +240,18 @@ def render_custom_sidebar():
         }}
     }};
 
+    // إعادة ربط الأحداث في حالة إعادة التحميل
+    document.addEventListener('DOMContentLoaded', function() {{
+        console.log("Sidebar Script Loaded");
+    }});
+    
     // إغلاق القائمة عند النقر خارجها
     document.addEventListener('click', function(e) {{
         var sidebar = document.getElementById('customSidebar');
         var hamburger = document.getElementById('hamburgerIcon');
         
-        // إذا كانت القائمة مفتوحة والنقر تم خارجها
         if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
-            // التأكد أن النقر لم يتم على زر الفتح نفسه
+            // التأكد من عدم النقر على زر الفتح نفسه
             let clickedOnButton = false;
             if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
                 clickedOnButton = true;
