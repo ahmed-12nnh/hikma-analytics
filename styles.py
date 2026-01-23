@@ -15,293 +15,26 @@ MAIN_CSS = """
         font-family: 'Tajawal', sans-serif;
         direction: rtl;
     }
+    
+    /* إخفاء الشريط الجانبي الافتراضي تماماً */
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
+    section[data-testid="stSidebar"] { display: none !important; }
+    button[data-testid="stSidebarCollapseButton"] { display: none !important; }
 
-    /* ===== إصلاح الهيدر - إظهار زر القائمة ===== */
+    /* إخفاء عناصر Streamlit غير المرغوبة */
     header[data-testid="stHeader"] {
         background: transparent !important;
-        visibility: visible !important;
-        height: auto !important;
     }
-    
-    /* إخفاء العناصر غير المرغوبة فقط */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     [data-testid="stToolbar"] { display: none; }
     [data-testid="stDecoration"] { display: none; }
 
-    /* ========================================================= */
-    /* ===== 🔥 إصلاح نهائي لزر الهامبرغر - يظهر دائماً 🔥 ===== */
-    /* ========================================================= */
-    
-    /* زر فتح القائمة - إجبار الظهور في جميع الحالات */
-    [data-testid="collapsedControl"],
-    div[data-testid="collapsedControl"],
-    button[data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"],
-    .stApp [data-testid="collapsedControl"] {
-        position: fixed !important;
-        top: 12px !important;
-        right: 12px !important;
-        left: auto !important;
-        z-index: 9999999 !important;
-        background: linear-gradient(135deg, #001f3f 0%, #0a2647 100%) !important;
-        border: 2px solid #FFD700 !important;
-        border-radius: 12px !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3) !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        transform: none !important;
-    }
-    
-    [data-testid="collapsedControl"]:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
-        border-color: #FFD700 !important;
-        transform: scale(1.1) !important;
-        box-shadow: 0 6px 30px rgba(255, 215, 0, 0.6) !important;
-    }
-    
-    [data-testid="collapsedControl"] svg,
-    [data-testid="collapsedControl"] * svg {
-        fill: #FFD700 !important;
-        stroke: #FFD700 !important;
-        width: 26px !important;
-        height: 26px !important;
-        transition: all 0.3s ease !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    [data-testid="collapsedControl"]:hover svg {
-        fill: #001f3f !important;
-        stroke: #001f3f !important;
-    }
-
-    /* ========================================================= */
-    /* ===== الشريط الجانبي - انزلاق سلس من اليمين ===== */
-    /* ========================================================= */
-    
-    [data-testid="stSidebar"] {
-        position: fixed !important;
-        top: 0 !important;
-        right: 0 !important;
-        left: auto !important;
-        height: 100vh !important;
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
-        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
-        border-left: 2px solid rgba(255, 215, 0, 0.4) !important;
-        border-right: none !important;
-        z-index: 999999 !important;
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        transform: translateX(0) !important;
-        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    /* عند الإغلاق - انزلاق لليمين خارج الشاشة */
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(100%) !important;
-        box-shadow: none !important;
-    }
-    
-    /* المحتوى الداخلي للشريط */
-    [data-testid="stSidebar"] > div:first-child {
-        background: transparent !important;
-        padding: 20px 15px !important;
-        padding-top: 70px !important;
-        height: 100% !important;
-        overflow-y: auto !important;
-    }
-    
-    /* إخفاء تنقل الصفحات الافتراضي */
-    [data-testid="stSidebarNav"] { 
-        display: none !important; 
-    }
-    
-    /* ===== زر إغلاق الشريط (X أو «) داخل الشريط ===== */
-    button[data-testid="stSidebarCollapseButton"] {
-        position: absolute !important;
-        top: 15px !important;
-        left: 15px !important;
-        right: auto !important;
-        z-index: 9999999 !important;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
-        border: 2px solid rgba(255, 215, 0, 0.6) !important;
-        border-radius: 10px !important;
-        width: 42px !important;
-        height: 42px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    button[data-testid="stSidebarCollapseButton"]:hover {
-        background: linear-gradient(135deg, #FFD700, #B8860B) !important;
-        border-color: #FFD700 !important;
-        transform: scale(1.1) !important;
-    }
-    
-    button[data-testid="stSidebarCollapseButton"] svg {
-        fill: #FFD700 !important;
-        stroke: #FFD700 !important;
-        width: 22px !important;
-        height: 22px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    button[data-testid="stSidebarCollapseButton"]:hover svg {
-        fill: #001f3f !important;
-        stroke: #001f3f !important;
-    }
-
-    /* ===== عناصر الشريط الجانبي ===== */
-    .sidebar-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 18px 15px;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
-        border-radius: 12px;
-        margin-top: 10px;
-        margin-bottom: 15px;
-        border: 1px solid rgba(255, 215, 0, 0.2);
-    }
-    
-    .sidebar-icon {
-        font-size: 1.8rem;
-    }
-    
-    .sidebar-title {
-        color: #FFD700;
-        font-size: 1.15rem;
-        font-weight: 700;
-    }
-    
-    .sidebar-badge {
-        background: linear-gradient(135deg, #FFD700, #B8860B);
-        color: #001f3f;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        font-weight: 800;
-    }
-    
-    .sidebar-hint {
-        color: rgba(255, 255, 255, 0.45) !important;
-        font-size: 0.78rem !important;
-        text-align: center !important;
-        margin-bottom: 15px !important;
-        display: block !important;
-    }
-    
-    .sidebar-report-card {
-        background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 215, 0, 0.15);
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar-report-card:hover {
-        border-color: rgba(255, 215, 0, 0.4);
-        transform: translateX(-4px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .report-card-title {
-        color: #FFD700;
-        font-size: 0.92rem;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
-    
-    .report-card-meta {
-        display: flex;
-        gap: 8px;
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 0.72rem;
-        margin-bottom: 5px;
-    }
-    
-    .report-card-time {
-        color: rgba(255, 255, 255, 0.45);
-        font-size: 0.7rem;
-    }
-    
-    .sidebar-empty {
-        text-align: center;
-        padding: 35px 15px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        border: 1px dashed rgba(255, 215, 0, 0.2);
-        margin-top: 10px;
-    }
-    
-    .sidebar-empty .empty-icon {
-        font-size: 2.8rem;
-        margin-bottom: 12px;
-        opacity: 0.5;
-    }
-    
-    .sidebar-empty .empty-text {
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 0.92rem;
-        margin-bottom: 6px;
-    }
-    
-    .sidebar-empty .empty-hint {
-        color: rgba(255, 255, 255, 0.35);
-        font-size: 0.78rem;
-    }
-    
-    /* ===== أزرار الشريط الجانبي ===== */
-    [data-testid="stSidebar"] .stButton > button {
-        background: linear-gradient(135deg, rgba(26, 45, 74, 0.9), rgba(13, 31, 60, 0.95)) !important;
-        color: #FFD700 !important;
-        border: 1px solid rgba(255, 215, 0, 0.3) !important;
-        font-size: 0.82rem !important;
-        padding: 10px 14px !important;
-        font-weight: 600 !important;
-        border-radius: 8px !important;
-        transition: all 0.3s ease !important;
-        animation: none !important;
-    }
-    
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
-        border-color: #FFD700 !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2) !important;
-    }
-    
-    [data-testid="stSidebar"] .stDownloadButton > button {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        color: white !important;
-        font-size: 0.82rem !important;
-        padding: 10px 14px !important;
-        border: none !important;
-        border-radius: 8px !important;
-        animation: none !important;
-    }
-    
-    [data-testid="stSidebar"] .stDownloadButton > button:hover {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+    /* ===== تعديل المحتوى الرئيسي لإفساح مكان للشريط ===== */
+    .main .block-container {
+        padding-right: 100px !important;
+        max-width: 100% !important;
     }
 
     /* ===== الهيدر الرئيسي (Hero Section) ===== */
@@ -311,7 +44,7 @@ MAIN_CSS = """
         padding: 50px 30px;
         text-align: center;
         margin: 20px;
-        margin-top: 75px;
+        margin-right: 20px;
         border: 2px solid rgba(255, 215, 0, 0.4);
         box-shadow: 
             0 0 40px rgba(0, 31, 63, 0.8),
@@ -753,21 +486,9 @@ MAIN_CSS = """
     @media (max-width: 768px) {
         .main-title { font-size: 36px; }
         .sub-title { font-size: 14px; }
-        .hero-section { padding: 30px 20px; margin: 10px; margin-top: 75px; }
+        .hero-section { padding: 30px 20px; margin: 10px; }
         div[role="radiogroup"] label { min-width: 130px !important; padding: 12px 15px !important; }
-        
-        [data-testid="collapsedControl"] {
-            top: 10px !important;
-            right: 10px !important;
-            width: 44px !important;
-            height: 44px !important;
-        }
-        
-        [data-testid="stSidebar"] {
-            width: 85vw !important;
-            min-width: 85vw !important;
-            max-width: 85vw !important;
-        }
+        .main .block-container { padding-right: 90px !important; }
     }
 </style>
 """
