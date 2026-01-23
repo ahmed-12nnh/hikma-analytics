@@ -185,7 +185,6 @@ def render_custom_sidebar():
 """
     
     # الشريط الجانبي المخصص بالكامل
-    # تنبيه: الكود هنا يلامس الحافة اليسرى عمداً لمنع ظهوره كنص في المتصفح
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
 <div class="sidebar-strip">
@@ -410,7 +409,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Official_Report"
                 report_type_short = "📄 رسمي"
                 design_rules = """
-                Style: Official Corporate Report with MODERN design.
+                Style: Official Corporate Report with MODERN design (Blue/Teal/Clean).
                 Structure:
                 - Use <header> for title with gradient background
                 - Use <div class="card"> for each major section with shadow and border
@@ -427,7 +426,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Digital_Dashboard"
                 report_type_short = "📱 رقمي"
                 design_rules = """
-                Style: Modern Digital Dashboard with cards and metrics.
+                Style: Modern Digital Dashboard with cards and metrics (Purple Gradient Theme).
                 Structure:
                 - Use <div class="dashboard-header"> for title area
                 - Use <div class="metrics-grid"> with <div class="metric-card"> for KPIs
@@ -533,8 +532,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 📊 البيانات المُدخلة (يجب تضمينها كاملة):
 {full_text}
 
-🎯 التوقيع (أضفه في منتصف التقرير قبل نهاية المحتوى):
-{unified_signature}
+🚫 هام جداً:
+   - **لا تقم بإنشاء التوقيع أو الخاتمة (صادر عن...) بنفسك.** سيتم إضافته تلقائياً من قبل النظام. فقط ركز على محتوى التقرير.
 
 اللغة: العربية الفصحى المهنية
 """
@@ -577,6 +576,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 progress_placeholder.empty()
                 
+                # تجميع الملف النهائي مع التوقيع الموحد (لمنع التكرار)
                 final_html = f"""
                 <!DOCTYPE html>
                 <html lang="ar" dir="rtl">
