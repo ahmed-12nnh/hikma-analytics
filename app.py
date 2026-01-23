@@ -154,12 +154,12 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري
+# 🎨 الشريط الجانبي المخصص (الحل النهائي والدقيق)
 # ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
     
-    # بناء HTML للتقارير (بدون مسافات بادئة لضمان العمل)
+    # بناء HTML للتقارير
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
@@ -184,88 +184,97 @@ def render_custom_sidebar():
 </div>
 """
     
-    # الشريط الجانبي المخصص بالكامل
-    # تنبيه: الكود هنا يلامس الحافة اليسرى عمداً لمنع ظهوره كنص في المتصفح
+    # الشريط الجانبي المخصص
+    # ملاحظة استراتيجية: تم الحفاظ على الـ DIVs والكلاسات كما هي تماماً
+    # التغيير الوحيد: حذف onclick وإضافة IDs (sidebarToggleBtn, historyBtn)
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
-<div class="sidebar-strip">
-<div class="strip-btn menu-toggle" onclick="window.toggleSidebar()" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
-<div class="hamburger" id="hamburgerIcon">
-<span></span>
-<span></span>
-<span></span>
-</div>
-</div>
+    <div class="sidebar-strip">
+        
+        <div class="strip-btn menu-toggle" id="sidebarToggleBtn" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
+            <div class="hamburger" id="hamburgerIcon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
 
-<div class="strip-btn" onclick="window.toggleSidebar()" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
-<span class="strip-icon">📚</span>
-<span class="strip-badge">{reports_count}</span>
-</div>
+        <div class="strip-btn" id="historyBtn" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
+            <span class="strip-icon">📚</span>
+            <span class="strip-badge">{reports_count}</span>
+        </div>
 
-<div class="strip-divider"></div>
+        <div class="strip-divider"></div>
 
-<div class="strip-btn" title="الإعدادات">
-<span class="strip-icon">⚙️</span>
-</div>
-</div>
+        <div class="strip-btn" title="الإعدادات">
+            <span class="strip-icon">⚙️</span>
+        </div>
+    </div>
 
-<div class="sidebar-panel">
-<div class="sidebar-header">
-<h3>📚 سجل التقارير</h3>
-<p>التقارير المُنشأة خلال الجلسة الحالية</p>
-</div>
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>📚 سجل التقارير</h3>
+            <p>التقارير المُنشأة خلال الجلسة الحالية</p>
+        </div>
 
-<div class="sidebar-content">
-{reports_html}
-</div>
+        <div class="sidebar-content">
+            {reports_html}
+        </div>
 
-<div class="sidebar-footer">
-<span>تيار الحكمة الوطني</span>
-</div>
-</div>
+        <div class="sidebar-footer">
+            <span>تيار الحكمة الوطني</span>
+        </div>
+    </div>
 </div>
 
 <script>
-    // التأكد من تعريف الدالة في النطاق العام (Global Scope)
-    window.toggleSidebar = function() {{
-        var sidebar = document.getElementById('customSidebar');
-        var hamburger = document.getElementById('hamburgerIcon');
+    // الحل البرمجي: استخدام دالة ذاتية التنفيذ لربط الأحداث بعد تحميل العناصر
+    (function() {{
+        // تعريف العناصر بالـ IDs التي أضفناها
+        const sidebar = document.getElementById('customSidebar');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        const historyBtn = document.getElementById('historyBtn');
+        const hamburger = document.getElementById('hamburgerIcon');
         
-        if (sidebar) {{
-            sidebar.classList.toggle('expanded');
-        }}
-        
-        if (hamburger) {{
-            hamburger.classList.toggle('active');
-        }}
-    }};
-
-    // إعادة ربط الأحداث في حالة إعادة التحميل
-    document.addEventListener('DOMContentLoaded', function() {{
-        console.log("Sidebar Script Loaded");
-    }});
-    
-    // إغلاق القائمة عند النقر خارجها
-    document.addEventListener('click', function(e) {{
-        var sidebar = document.getElementById('customSidebar');
-        var hamburger = document.getElementById('hamburgerIcon');
-        
-        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
-            // التأكد من عدم النقر على زر الفتح نفسه
-            let clickedOnButton = false;
-            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
-                clickedOnButton = true;
-            }}
+        // دالة التبديل (المنطق)
+        function toggleMenu(e) {{
+            // إيقاف انتشار الحدث لمنع التداخل مع مستمع النقر الخارجي
+            if (e) e.stopPropagation();
             
-            if (!clickedOnButton) {{
-                sidebar.classList.remove('expanded');
-                if (hamburger) hamburger.classList.remove('active');
-            }}
+            if (sidebar) sidebar.classList.toggle('expanded');
+            if (hamburger) hamburger.classList.toggle('active');
         }}
-    }});
+
+        // ربط الأحداث مباشرة (Event Binding)
+        // هذا يضمن العمل حتى لو قام Streamlit بإعادة تحميل الصفحة
+        if (toggleBtn) {{
+            toggleBtn.onclick = toggleMenu;
+        }}
+        
+        if (historyBtn) {{
+            historyBtn.onclick = toggleMenu;
+        }}
+
+        // منطق إغلاق القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {{
+            if (sidebar && sidebar.classList.contains('expanded')) {{
+                // هل النقر تم داخل الشريط؟
+                const isClickInside = sidebar.contains(e.target);
+                // هل النقر تم على زر الفتح؟ (يجب استثناؤه)
+                const isToggleBtn = toggleBtn && (toggleBtn.contains(e.target) || toggleBtn === e.target);
+                const isHistoryBtn = historyBtn && (historyBtn.contains(e.target) || historyBtn === e.target);
+                
+                if (!isClickInside && !isToggleBtn && !isHistoryBtn) {{
+                    sidebar.classList.remove('expanded');
+                    if (hamburger) hamburger.classList.remove('active');
+                }}
+            }}
+        }});
+        
+        console.log("Strategic Analytics Sidebar Logic Loaded ✅");
+    }})();
 </script>
 """
-    
     return sidebar_html
 
 # تطبيق CSS الشريط الجانبي
