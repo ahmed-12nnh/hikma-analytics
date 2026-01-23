@@ -17,7 +17,8 @@ from styles import (
     STYLE_ANALYTICAL,
     STYLE_PRESENTATION,
     STYLE_EXECUTIVE,
-    SCRIPT_PRESENTATION
+    SCRIPT_PRESENTATION,
+    FONT_AWESOME_LINK  # ✅ إضافة جديدة
 )
 
 # ---------------------------------------------------------
@@ -153,6 +154,14 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
     if len(st.session_state.reports_history) > 10:
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
+# ✅ [إصلاح #2] دالة جديدة لمعاينة التقرير من الشريط الجانبي
+def preview_report_by_index(index):
+    """تفعيل معاينة تقرير من السجل بناءً على الفهرس"""
+    if 0 <= index < len(st.session_state.reports_history):
+        report = st.session_state.reports_history[index]
+        st.session_state.preview_report = report['html']
+        st.session_state.preview_title = report['title']
+
 # ---------------------------------------------------------
 # 🎨 الشريط الجانبي المخصص
 # ---------------------------------------------------------
@@ -163,8 +172,9 @@ def render_custom_sidebar():
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
             title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
+            # ✅ [إصلاح #2] إضافة data-index لكل بطاقة للنقر عليها
             reports_html += f"""
-<div class="sidebar-report-card">
+<div class="sidebar-report-card" data-index="{i}" onclick="window.previewReport({i})">
 <div class="report-title">📄 {title_short}</div>
 <div class="report-meta">
 <span>{report['type']}</span>
@@ -236,6 +246,14 @@ def render_custom_sidebar():
         }}
     }};
 
+    // ✅ [إصلاح #2] دالة معاينة التقرير عبر Streamlit
+    window.previewReport = function(index) {{
+        // إرسال الفهرس إلى Streamlit عبر query params
+        const url = new URL(window.location.href);
+        url.searchParams.set('preview_index', index);
+        window.location.href = url.toString();
+    }};
+
     document.addEventListener('DOMContentLoaded', function() {{
         console.log("Sidebar Script Loaded");
     }});
@@ -266,6 +284,17 @@ st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
 
 # عرض الشريط الجانبي
 st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
+
+# ✅ [إصلاح #2] معالجة النقر على التقارير من الشريط الجانبي
+query_params = st.query_params
+if 'preview_index' in query_params:
+    try:
+        preview_idx = int(query_params['preview_index'])
+        preview_report_by_index(preview_idx)
+        # مسح البارامتر بعد الاستخدام
+        del st.query_params['preview_index']
+    except (ValueError, IndexError):
+        pass
 
 # ---------------------------------------------------------
 # 🏗️ بناء الواجهة الرئيسية
@@ -373,6 +402,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             
             selected_model = get_best_available_model()
             
+            # ✅ [إصلاح #6] إضافة timeout للطلبات
             generation_config = genai.types.GenerationConfig(
                 temperature=0.1,
                 top_p=0.95,
@@ -386,6 +416,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             design_rules = ""
             file_label = "Report"
             report_type_short = ""
+            is_presentation = False
             
             # ===== التوقيع الموحد (يضاف برمجياً فقط) =====
             unified_signature = """
@@ -455,24 +486,32 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 target_css = STYLE_PRESENTATION
                 file_label = "Presentation_Slides"
                 report_type_short = "📽️ عرض"
+                is_presentation = True
+                # ✅ [إصلاح #3] تحديث Prompt العرض التقديمي مع IDs للشرائح
                 design_rules = """
                 Style: Presentation Slides (White Background).
-                Structure:
-                - Use <div class="slide"> for each slide
-                - Use <div class="slide cover"> for first slide
-                - **SLIDE BACKGROUND MUST BE WHITE**
-                """
-                # توقيع خاص للعرض التقديمي
-                unified_signature = """
-                <div class="nav-controls">
-                    <button class="nav-btn" onclick="prevSlide()"><i class="fas fa-chevron-right"></i></button>
-                    <button class="nav-btn" onclick="nextSlide()"><i class="fas fa-chevron-left"></i></button>
+                
+                ⚠️ CRITICAL RULES FOR SLIDES:
+                1. Each slide MUST have a unique id: id="slide-1", id="slide-2", id="slide-3", etc.
+                2. First slide MUST have: <div class="slide cover active" id="slide-1">
+                3. Other slides: <div class="slide" id="slide-2">, <div class="slide" id="slide-3">, etc.
+                4. Use <div class="slide-header"> with <div class="header-title"><h2>Title</h2></div>
+                5. Use <div class="slide-content"> for the main content
+                6. Create 5-8 slides maximum
+                7. **SLIDE BACKGROUND MUST BE WHITE**
+                
+                Example structure:
+                <div class="slide cover active" id="slide-1">
+                    <h1 class="main-title">العنوان الرئيسي</h1>
+                    <p class="sub-title">العنوان الفرعي</p>
                 </div>
-                <div class="page-number" id="page-num">1 / 1</div>
-                <div class="signature-box">صادر من الجهاز المركزي للجودة الشاملة</div>
+                <div class="slide" id="slide-2">
+                    <div class="slide-header"><div class="header-title"><h2>عنوان الشريحة</h2></div></div>
+                    <div class="slide-content">المحتوى هنا</div>
+                </div>
                 """
 
-            # ===== الـ PROMPT (تم تعديله لمنع تكرار التوقيع) =====
+            # ===== الـ PROMPT =====
             prompt = f"""
 أنت محلل بيانات ومطور محترف. حول البيانات التالية إلى تقرير HTML كامل.
 
@@ -516,7 +555,12 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 time.sleep(0.2)
             
             try:
-                response = model.generate_content(prompt, generation_config=generation_config)
+                # ✅ [إصلاح #6] إضافة معالجة timeout
+                response = model.generate_content(
+                    prompt, 
+                    generation_config=generation_config,
+                    request_options={"timeout": 120}  # 120 ثانية timeout
+                )
                 
                 if response.prompt_feedback.block_reason:
                     st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
@@ -526,28 +570,67 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 progress_placeholder.empty()
                 
-                # تجميع الملف النهائي (إضافة التوقيع برمجياً هنا فقط)
-                final_html = f"""
-                <!DOCTYPE html>
-                <html lang="ar" dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>تقرير {file_label}</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-                    {target_css}
-                </head>
-                <body>
-                    <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
-                        {html_body}
-                        {unified_signature if 'عرض تقديمي' not in report_type else ''}
-                    </div>
-                    
-                    {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
-                    {unified_signature if 'عرض تقديمي' in report_type else ''} 
-                </body>
-                </html>
-                """
+                # ✅ [إصلاح #1 و #4] تجميع الملف النهائي بشكل صحيح
+                if is_presentation:
+                    # للعرض التقديمي: بنية خاصة مع أزرار التنقل داخل الـ container
+                    final_html = f"""
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير {file_label}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    {FONT_AWESOME_LINK}
+    {target_css}
+</head>
+<body>
+    <div class="presentation-container">
+        {html_body}
+        
+        <!-- ✅ أزرار التنقل داخل الـ container -->
+        <div class="nav-controls">
+            <button class="nav-btn" onclick="prevSlide()" title="السابق">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="nav-btn" onclick="nextSlide()" title="التالي">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+        
+        <!-- رقم الصفحة -->
+        <div class="page-number" id="page-num">1 / 1</div>
+        
+        <!-- التوقيع -->
+        <div class="presentation-signature">
+            صادر من الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي
+        </div>
+    </div>
+    
+    {SCRIPT_PRESENTATION}
+</body>
+</html>
+"""
+                else:
+                    # للتقارير العادية
+                    final_html = f"""
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير {file_label}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    {target_css}
+</head>
+<body>
+    <div class="container">
+        {html_body}
+        {unified_signature}
+    </div>
+</body>
+</html>
+"""
 
                 save_report_to_history(
                     title=file_label,
@@ -579,7 +662,12 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             
             except Exception as api_error:
                 progress_placeholder.empty()
-                st.error(f"❌ حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {api_error}")
+                # ✅ [إصلاح #6] رسالة خطأ محسنة للـ timeout
+                error_msg = str(api_error)
+                if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
+                    st.error("⚠️ انتهت مهلة الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى.")
+                else:
+                    st.error(f"❌ حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {api_error}")
 
         except Exception as e:
             st.error(f"❌ حدث خطأ غير متوقع: {e}")
