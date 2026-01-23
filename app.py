@@ -264,7 +264,6 @@ def render_custom_sidebar():
 """
     
     return sidebar_html
-        '''
     
     # الشريط الجانبي المخصص بالكامل
     sidebar_html = f'''
@@ -711,4 +710,5 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
+
 
