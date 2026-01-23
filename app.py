@@ -18,7 +18,7 @@ from styles import (
     STYLE_PRESENTATION,
     STYLE_EXECUTIVE,
     SCRIPT_PRESENTATION,
-    FONT_AWESOME_LINK  # ✅ إضافة جديدة
+    FONT_AWESOME_LINK
 )
 
 # ---------------------------------------------------------
@@ -51,7 +51,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# تطبيق التصميم الرئيسي (الداكن - كما هو) + إخفاء الشريط الافتراضي
+# تطبيق التصميم الرئيسي
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -154,128 +154,80 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
     if len(st.session_state.reports_history) > 10:
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
-# ✅ [إصلاح #2] دالة جديدة لمعاينة التقرير من الشريط الجانبي
-def preview_report_by_index(index):
-    """تفعيل معاينة تقرير من السجل بناءً على الفهرس"""
-    if 0 <= index < len(st.session_state.reports_history):
-        report = st.session_state.reports_history[index]
-        st.session_state.preview_report = report['html']
-        st.session_state.preview_title = report['title']
-
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص
+# 🎨 الشريط الجانبي المخصص (يعمل بـ CSS :hover فقط)
 # ---------------------------------------------------------
-def render_custom_sidebar():
+def render_custom_sidebar_html():
+    """إنشاء HTML للشريط الجانبي - يفتح بالـ hover"""
     reports_count = len(st.session_state.reports_history)
     
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
             title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
-            # ✅ [إصلاح #2] إضافة data-index لكل بطاقة للنقر عليها
             reports_html += f"""
-<div class="sidebar-report-card" data-index="{i}" onclick="window.previewReport({i})">
-<div class="report-title">📄 {title_short}</div>
-<div class="report-meta">
-<span>{report['type']}</span>
-<span>•</span>
-<span>{report['size']}</span>
-</div>
-<div class="report-time">🕐 {report['timestamp']}</div>
-</div>
-"""
+            <div class="sidebar-report-card">
+                <div class="report-title">📄 {title_short}</div>
+                <div class="report-meta">
+                    <span>{report['type']}</span>
+                    <span>•</span>
+                    <span>{report['size']}</span>
+                </div>
+                <div class="report-time">🕐 {report['timestamp']}</div>
+            </div>
+            """
     else:
         reports_html = """
-<div class="sidebar-empty">
-<div class="empty-icon">📭</div>
-<div class="empty-text">لا توجد تقارير بعد</div>
-<div class="empty-hint">ستظهر هنا بعد إنشائها</div>
-</div>
-"""
+        <div class="sidebar-empty">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">لا توجد تقارير بعد</div>
+            <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
+        </div>
+        """
     
     sidebar_html = f"""
-<div class="custom-sidebar" id="customSidebar">
-<div class="sidebar-strip">
-<div class="strip-btn menu-toggle" onclick="window.toggleSidebar()" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
-<div class="hamburger" id="hamburgerIcon">
-<span></span>
-<span></span>
-<span></span>
-</div>
-</div>
+    <div class="custom-sidebar" id="customSidebar">
+        <div class="sidebar-strip">
+            <div class="strip-btn menu-toggle" title="مرر الماوس لفتح القائمة">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
 
-<div class="strip-btn" onclick="window.toggleSidebar()" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
-<span class="strip-icon">📚</span>
-<span class="strip-badge">{reports_count}</span>
-</div>
+            <div class="strip-btn" title="سجل التقارير ({reports_count})">
+                <span class="strip-icon">📚</span>
+                <span class="strip-badge">{reports_count}</span>
+            </div>
 
-<div class="strip-divider"></div>
+            <div class="strip-divider"></div>
 
-<div class="strip-btn" title="الإعدادات">
-<span class="strip-icon">⚙️</span>
-</div>
-</div>
+            <div class="strip-btn" title="الإعدادات">
+                <span class="strip-icon">⚙️</span>
+            </div>
+        </div>
 
-<div class="sidebar-panel">
-<div class="sidebar-header">
-<h3>📚 سجل التقارير</h3>
-<p>التقارير المُنشأة خلال الجلسة الحالية</p>
-</div>
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <h3>📚 سجل التقارير</h3>
+                <p>التقارير المُنشأة خلال الجلسة الحالية</p>
+            </div>
 
-<div class="sidebar-content">
-{reports_html}
-</div>
-
-<div class="sidebar-footer">
-<span>تيار الحكمة الوطني</span>
-</div>
-</div>
-</div>
-
-<script>
-    window.toggleSidebar = function() {{
-        var sidebar = document.getElementById('customSidebar');
-        var hamburger = document.getElementById('hamburgerIcon');
-        
-        if (sidebar) {{
-            sidebar.classList.toggle('expanded');
-        }}
-        
-        if (hamburger) {{
-            hamburger.classList.toggle('active');
-        }}
-    }};
-
-    // ✅ [إصلاح #2] دالة معاينة التقرير عبر Streamlit
-    window.previewReport = function(index) {{
-        // إرسال الفهرس إلى Streamlit عبر query params
-        const url = new URL(window.location.href);
-        url.searchParams.set('preview_index', index);
-        window.location.href = url.toString();
-    }};
-
-    document.addEventListener('DOMContentLoaded', function() {{
-        console.log("Sidebar Script Loaded");
-    }});
-    
-    document.addEventListener('click', function(e) {{
-        var sidebar = document.getElementById('customSidebar');
-        var hamburger = document.getElementById('hamburgerIcon');
-        
-        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
-            let clickedOnButton = false;
-            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
-                clickedOnButton = true;
-            }}
+            <div class="sidebar-content">
+                {reports_html}
+            </div>
             
-            if (!clickedOnButton) {{
-                sidebar.classList.remove('expanded');
-                if (hamburger) hamburger.classList.remove('active');
-            }}
-        }}
-    }});
-</script>
-"""
+            <div class="sidebar-hint-box">
+                <span>💡</span> استخدم أزرار المعاينة في قسم التقارير أدناه
+            </div>
+
+            <div class="sidebar-footer">
+                <span>تيار الحكمة الوطني</span>
+            </div>
+        </div>
+    </div>
+    """
     
     return sidebar_html
 
@@ -283,18 +235,7 @@ def render_custom_sidebar():
 st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
 
 # عرض الشريط الجانبي
-st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
-
-# ✅ [إصلاح #2] معالجة النقر على التقارير من الشريط الجانبي
-query_params = st.query_params
-if 'preview_index' in query_params:
-    try:
-        preview_idx = int(query_params['preview_index'])
-        preview_report_by_index(preview_idx)
-        # مسح البارامتر بعد الاستخدام
-        del st.query_params['preview_index']
-    except (ValueError, IndexError):
-        pass
+st.markdown(render_custom_sidebar_html(), unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 🏗️ بناء الواجهة الرئيسية
@@ -304,9 +245,45 @@ if 'preview_index' in query_params:
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
+    <div class="sub-title"> الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
 </div>
 ''', unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# 📋 عرض التقارير المحفوظة (أزرار Streamlit فعلية للمعاينة)
+# ---------------------------------------------------------
+if st.session_state.reports_history:
+    st.markdown('''
+    <div class="reports-section-header">
+        📚 التقارير المحفوظة ({})
+    </div>
+    '''.format(len(st.session_state.reports_history)), unsafe_allow_html=True)
+    
+    # عرض التقارير في أعمدة
+    num_reports = len(st.session_state.reports_history)
+    cols_count = min(num_reports, 4)
+    cols = st.columns(cols_count)
+    
+    for i, report in enumerate(st.session_state.reports_history[:4]):
+        with cols[i % cols_count]:
+            title_short = report['title'][:15] + "..." if len(report['title']) > 15 else report['title']
+            
+            st.markdown(f'''
+            <div class="report-mini-card">
+                <div class="report-mini-icon">📄</div>
+                <div class="report-mini-title">{title_short}</div>
+                <div class="report-mini-meta">{report['type']} • {report['size']}</div>
+                <div class="report-mini-time">{report['timestamp']}</div>
+            </div>
+            ''', unsafe_allow_html=True)
+            
+            # ✅ زر Streamlit فعلي للمعاينة
+            if st.button(f"👁️ معاينة", key=f"preview_btn_{i}", use_container_width=True):
+                st.session_state.preview_report = report['html']
+                st.session_state.preview_title = report['title']
+                st.rerun()
+    
+    st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
 
 # عرض معاينة التقرير إذا كانت مفعّلة
 if st.session_state.preview_report:
@@ -318,10 +295,12 @@ if st.session_state.preview_report:
     
     components.html(st.session_state.preview_report, height=600, scrolling=True)
     
-    if st.button("❌ إغلاق المعاينة", key="close_preview", use_container_width=True):
-        st.session_state.preview_report = None
-        st.session_state.preview_title = ""
-        st.rerun()
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("❌ إغلاق المعاينة", key="close_preview", use_container_width=True):
+            st.session_state.preview_report = None
+            st.session_state.preview_title = ""
+            st.rerun()
     
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -402,7 +381,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             
             selected_model = get_best_available_model()
             
-            # ✅ [إصلاح #6] إضافة timeout للطلبات
             generation_config = genai.types.GenerationConfig(
                 temperature=0.1,
                 top_p=0.95,
@@ -418,7 +396,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             report_type_short = ""
             is_presentation = False
             
-            # ===== التوقيع الموحد (يضاف برمجياً فقط) =====
+            # ===== التوقيع الموحد =====
             unified_signature = """
             <div class="report-signature">
                 <div class="signature-line"></div>
@@ -486,7 +464,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Presentation_Slides"
                 report_type_short = "📽️ عرض"
                 is_presentation = True
-                # ✅ [إصلاح #3] تحديث Prompt العرض التقديمي مع IDs للشرائح
                 design_rules = """
                 Style: Presentation Slides (White Background).
                 
@@ -554,11 +531,10 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 time.sleep(0.2)
             
             try:
-                # ✅ [إصلاح #6] إضافة معالجة timeout
                 response = model.generate_content(
                     prompt, 
                     generation_config=generation_config,
-                    request_options={"timeout": 120}  # 120 ثانية timeout
+                    request_options={"timeout": 120}
                 )
                 
                 if response.prompt_feedback.block_reason:
@@ -569,9 +545,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 progress_placeholder.empty()
                 
-                # ✅ [إصلاح #1 و #4] تجميع الملف النهائي بشكل صحيح
+                # تجميع الملف النهائي
                 if is_presentation:
-                    # للعرض التقديمي: بنية خاصة مع أزرار التنقل داخل الـ container
                     final_html = f"""
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -587,7 +562,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
     <div class="presentation-container">
         {html_body}
         
-        <!-- ✅ أزرار التنقل داخل الـ container -->
         <div class="nav-controls">
             <button class="nav-btn" onclick="prevSlide()" title="السابق">
                 <i class="fas fa-chevron-right"></i>
@@ -597,10 +571,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             </button>
         </div>
         
-        <!-- رقم الصفحة -->
         <div class="page-number" id="page-num">1 / 1</div>
         
-        <!-- التوقيع -->
         <div class="presentation-signature">
             صادر من الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي
         </div>
@@ -611,7 +583,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 </html>
 """
                 else:
-                    # للتقارير العادية
                     final_html = f"""
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -646,7 +617,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 st.markdown('''
                 <div class="success-hint">
-                    💡 يمكنك الوصول للتقارير المحفوظة من الشريط الجانبي (☰)
+                    💡 يمكنك معاينة التقارير من قسم "التقارير المحفوظة" أعلاه
                 </div>
                 ''', unsafe_allow_html=True)
                 
@@ -661,7 +632,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             
             except Exception as api_error:
                 progress_placeholder.empty()
-                # ✅ [إصلاح #6] رسالة خطأ محسنة للـ timeout
                 error_msg = str(api_error)
                 if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
                     st.error("⚠️ انتهت مهلة الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى.")
@@ -682,4 +652,3 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
-
