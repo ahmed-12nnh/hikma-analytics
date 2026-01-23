@@ -7,6 +7,7 @@ import time
 import streamlit.components.v1 as components
 import re
 from datetime import datetime
+import json
 
 # استيراد التصاميم من ملف styles.py
 from styles import (
@@ -48,6 +49,17 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# إخفاء الشريط الجانبي الافتراضي تماماً
+hide_streamlit_sidebar = """
+<style>
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
+    section[data-testid="stSidebar"] { display: none !important; }
+    button[data-testid="stSidebarCollapseButton"] { display: none !important; }
+</style>
+"""
+st.markdown(hide_streamlit_sidebar, unsafe_allow_html=True)
 
 # تطبيق التصميم الرئيسي
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
@@ -107,7 +119,6 @@ def clean_html_response(text):
     
     return text.strip()
 
-# 🔥 دالة ذكية لاختيار الموديل الموجود فعلياً وتجنب الأخطاء 🔥
 def get_best_available_model():
     try:
         available_models = []
@@ -163,77 +174,388 @@ def clear_all_reports():
     st.session_state.preview_report = None
 
 # ---------------------------------------------------------
-# 📚 الشريط الجانبي - سجل التقارير
+# 🎨 الشريط الجانبي المخصص (مثل Gemini)
 # ---------------------------------------------------------
-with st.sidebar:
+def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
     
-    st.markdown(f'''
-    <div class="sidebar-header">
-        <div class="sidebar-icon">📚</div>
-        <div class="sidebar-title">سجل التقارير</div>
-        <div class="sidebar-badge">{reports_count}</div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    st.markdown('<p class="sidebar-hint">التقارير تُحفظ مؤقتاً خلال الجلسة</p>', unsafe_allow_html=True)
-    
-    st.markdown("<hr style='border: 1px solid rgba(255,215,0,0.2); margin: 15px 0;'>", unsafe_allow_html=True)
-    
+    # بناء HTML للتقارير
+    reports_html = ""
     if reports_count > 0:
-        if st.button("🗑️ مسح جميع التقارير", key="clear_all", use_container_width=True):
-            clear_all_reports()
-            st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        for report in st.session_state.reports_history:
-            st.markdown(f'''
-            <div class="sidebar-report-card">
-                <div class="report-card-title">📄 {report['title']}</div>
-                <div class="report-card-meta">
+        for i, report in enumerate(st.session_state.reports_history):
+            reports_html += f'''
+            <div class="report-card" data-index="{i}">
+                <div class="report-title">📄 {report['title'][:25]}...</div>
+                <div class="report-meta">
                     <span>{report['type']}</span>
                     <span>•</span>
                     <span>{report['size']}</span>
                 </div>
-                <div class="report-card-time">🕐 {report['timestamp']}</div>
+                <div class="report-time">🕐 {report['timestamp']}</div>
             </div>
-            ''', unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                if st.button("👁️ معاينة", key=f"view_{report['id']}", use_container_width=True):
-                    st.session_state.preview_report = report['html']
-                    st.session_state.preview_title = report['title']
-                    st.rerun()
-            
-            with col2:
-                st.download_button(
-                    label="📥 تحميل",
-                    data=report['html'],
-                    file_name=f"{report['title']}_{report['timestamp'].replace(':', '-').replace(' ', '_')}.html",
-                    mime="text/html",
-                    key=f"dl_{report['id']}",
-                    use_container_width=True
-                )
-            
-            if st.button("🗑️ حذف", key=f"del_{report['id']}", use_container_width=True):
-                delete_report(report['id'])
-                if st.session_state.preview_title == report['title']:
-                    st.session_state.preview_report = None
-                st.rerun()
-            
-            st.markdown("<hr style='border: 1px solid rgba(255,215,0,0.1); margin: 15px 0;'>", unsafe_allow_html=True)
-    
+            '''
     else:
-        st.markdown('''
-        <div class="sidebar-empty">
+        reports_html = '''
+        <div class="empty-state">
             <div class="empty-icon">📭</div>
             <div class="empty-text">لا توجد تقارير</div>
             <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
         </div>
-        ''', unsafe_allow_html=True)
+        '''
+    
+    sidebar_html = f'''
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Tajawal', sans-serif;
+            }}
+            
+            body {{
+                background: transparent;
+                overflow: visible;
+            }}
+            
+            /* الشريط الجانبي الرئيسي */
+            .custom-sidebar {{
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100vh;
+                background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%);
+                border-left: 2px solid rgba(255, 215, 0, 0.3);
+                z-index: 999999;
+                transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+                display: flex;
+                box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            }}
+            
+            .custom-sidebar.collapsed {{
+                width: 80px;
+            }}
+            
+            .custom-sidebar.expanded {{
+                width: 320px;
+            }}
+            
+            /* الشريط الضيق (دائماً ظاهر) */
+            .sidebar-strip {{
+                width: 80px;
+                min-width: 80px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 20px;
+                background: linear-gradient(180deg, rgba(0, 31, 63, 0.95) 0%, rgba(10, 22, 40, 0.98) 100%);
+                border-left: 1px solid rgba(255, 215, 0, 0.15);
+            }}
+            
+            /* زر القائمة (الخطوط الثلاث) */
+            .menu-btn {{
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.05));
+                border: 2px solid rgba(255, 215, 0, 0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-bottom: 20px;
+            }}
+            
+            .menu-btn:hover {{
+                background: linear-gradient(135deg, #FFD700, #B8860B);
+                border-color: #FFD700;
+                transform: scale(1.08);
+                box-shadow: 0 5px 25px rgba(255, 215, 0, 0.5);
+            }}
+            
+            .menu-btn:hover .hamburger-icon span {{
+                background: #001f3f;
+            }}
+            
+            /* أيقونة الهامبرغر */
+            .hamburger-icon {{
+                width: 26px;
+                height: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }}
+            
+            .hamburger-icon span {{
+                display: block;
+                width: 100%;
+                height: 3px;
+                background: #FFD700;
+                border-radius: 3px;
+                transition: all 0.35s ease;
+            }}
+            
+            /* تحويل لـ X عند الفتح */
+            .custom-sidebar.expanded .hamburger-icon span:nth-child(1) {{
+                transform: rotate(45deg) translate(6px, 6px);
+            }}
+            
+            .custom-sidebar.expanded .hamburger-icon span:nth-child(2) {{
+                opacity: 0;
+                transform: translateX(20px);
+            }}
+            
+            .custom-sidebar.expanded .hamburger-icon span:nth-child(3) {{
+                transform: rotate(-45deg) translate(6px, -6px);
+            }}
+            
+            /* أيقونة التقارير */
+            .icon-btn {{
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: rgba(255, 215, 0, 0.05);
+                border: 1px solid rgba(255, 215, 0, 0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-bottom: 15px;
+                position: relative;
+            }}
+            
+            .icon-btn:hover {{
+                background: rgba(255, 215, 0, 0.15);
+                border-color: rgba(255, 215, 0, 0.5);
+                transform: scale(1.05);
+            }}
+            
+            .icon-btn .icon {{
+                font-size: 1.6rem;
+            }}
+            
+            /* شارة العدد */
+            .badge {{
+                position: absolute;
+                top: -6px;
+                left: -6px;
+                background: linear-gradient(135deg, #FFD700, #B8860B);
+                color: #001f3f;
+                font-size: 0.75rem;
+                font-weight: 800;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
+            }}
+            
+            /* خط فاصل */
+            .divider {{
+                width: 40px;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+                margin: 15px 0;
+                border-radius: 2px;
+            }}
+            
+            /* محتوى الشريط الموسع */
+            .sidebar-content {{
+                flex: 1;
+                padding: 20px 18px;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease 0.1s;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }}
+            
+            .custom-sidebar.expanded .sidebar-content {{
+                opacity: 1;
+                visibility: visible;
+            }}
+            
+            /* عنوان السجل */
+            .sidebar-header {{
+                text-align: center;
+                padding-bottom: 18px;
+                margin-bottom: 18px;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            }}
+            
+            .sidebar-header h3 {{
+                color: #FFD700;
+                font-size: 1.15rem;
+                font-weight: 700;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }}
+            
+            .sidebar-header p {{
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 0.78rem;
+            }}
+            
+            /* بطاقات التقارير */
+            .report-card {{
+                background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
+                border-radius: 12px;
+                padding: 14px;
+                margin-bottom: 12px;
+                border: 1px solid rgba(255, 215, 0, 0.12);
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }}
+            
+            .report-card:hover {{
+                border-color: rgba(255, 215, 0, 0.5);
+                transform: translateX(-5px);
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                background: linear-gradient(135deg, rgba(36, 55, 84, 0.9), rgba(23, 41, 70, 0.95));
+            }}
+            
+            .report-title {{
+                color: #FFD700;
+                font-size: 0.88rem;
+                font-weight: 600;
+                margin-bottom: 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+            
+            .report-meta {{
+                display: flex;
+                gap: 8px;
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 0.72rem;
+                margin-bottom: 4px;
+            }}
+            
+            .report-time {{
+                color: rgba(255, 255, 255, 0.4);
+                font-size: 0.68rem;
+            }}
+            
+            /* حالة فارغة */
+            .empty-state {{
+                text-align: center;
+                padding: 40px 15px;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 15px;
+                border: 1px dashed rgba(255, 215, 0, 0.2);
+            }}
+            
+            .empty-icon {{
+                font-size: 3rem;
+                margin-bottom: 15px;
+                opacity: 0.6;
+            }}
+            
+            .empty-text {{
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.95rem;
+                margin-bottom: 8px;
+            }}
+            
+            .empty-hint {{
+                color: rgba(255, 255, 255, 0.35);
+                font-size: 0.8rem;
+            }}
+            
+            /* Scrollbar مخصص */
+            .sidebar-content::-webkit-scrollbar {{
+                width: 6px;
+            }}
+            
+            .sidebar-content::-webkit-scrollbar-track {{
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 5px;
+            }}
+            
+            .sidebar-content::-webkit-scrollbar-thumb {{
+                background: rgba(255, 215, 0, 0.3);
+                border-radius: 5px;
+            }}
+            
+            .sidebar-content::-webkit-scrollbar-thumb:hover {{
+                background: rgba(255, 215, 0, 0.5);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="custom-sidebar collapsed" id="customSidebar">
+            <!-- محتوى الشريط الموسع -->
+            <div class="sidebar-content">
+                <div class="sidebar-header">
+                    <h3>📚 سجل التقارير</h3>
+                    <p>التقارير تُحفظ مؤقتاً خلال الجلسة</p>
+                </div>
+                
+                <div class="reports-list">
+                    {reports_html}
+                </div>
+            </div>
+            
+            <!-- الشريط الضيق (دائماً ظاهر) -->
+            <div class="sidebar-strip">
+                <div class="menu-btn" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
+                    <div class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="icon-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
+                    <span class="icon">📚</span>
+                    <span class="badge">{reports_count}</span>
+                </div>
+                
+                <div class="divider"></div>
+            </div>
+        </div>
+        
+        <script>
+            function toggleSidebar() {{
+                const sidebar = document.getElementById('customSidebar');
+                sidebar.classList.toggle('collapsed');
+                sidebar.classList.toggle('expanded');
+            }}
+            
+            // إغلاق عند النقر خارج الشريط
+            document.addEventListener('click', function(event) {{
+                const sidebar = document.getElementById('customSidebar');
+                const isClickInside = sidebar.contains(event.target);
+                
+                if (!isClickInside && sidebar.classList.contains('expanded')) {{
+                    sidebar.classList.remove('expanded');
+                    sidebar.classList.add('collapsed');
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    '''
+    
+    # عرض الشريط الجانبي المخصص
+    components.html(sidebar_html, height=0, scrolling=False)
+
+# عرض الشريط الجانبي المخصص
+render_custom_sidebar()
 
 # ---------------------------------------------------------
 # 🏗️ بناء الواجهة الرئيسية
@@ -339,7 +661,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
         try:
             genai.configure(api_key=API_KEY)
             
-            # البحث الذكي عن الموديل
             selected_model = get_best_available_model()
             
             generation_config = genai.types.GenerationConfig(
@@ -505,7 +826,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 </html>
                 """
 
-                # حفظ التقرير في السجل
                 save_report_to_history(
                     title=file_label,
                     report_type=report_type_short,
@@ -521,7 +841,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 
                 st.markdown('''
                 <div class="success-hint">
-                    💡 يمكنك الوصول للتقارير المحفوظة من القائمة الجانبية ☰
+                    💡 يمكنك الوصول للتقارير المحفوظة من الشريط الجانبي (☰)
                 </div>
                 ''', unsafe_allow_html=True)
                 
@@ -549,6 +869,7 @@ st.markdown('''
     border-radius: 15px;
     padding: 30px 20px;
     margin: 20px;
+    margin-right: 100px;
     border: 1px solid rgba(255, 215, 0, 0.3);
     text-align: center;
     box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
