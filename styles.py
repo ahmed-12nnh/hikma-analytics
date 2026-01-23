@@ -1,13 +1,12 @@
 # styles.py
 
 # ---------------------------------------------------------
-# ✅ [إصلاح #4] Font Awesome Link منفصل
+# ✅ Font Awesome Link منفصل
 # ---------------------------------------------------------
 FONT_AWESOME_LINK = """<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">"""
 
 # ---------------------------------------------------------
 # 🎨 CSS الرئيسي للواجهة (Streamlit Interface)
-# حافظنا عليه كما هو في نسختك الأصلية (النمط الداكن)
 # ---------------------------------------------------------
 MAIN_CSS = """
 <style>
@@ -21,7 +20,7 @@ MAIN_CSS = """
         direction: rtl;
     }
     
-    /* ===== إخفاء عناصر Streamlit الافتراضية المزعجة ===== */
+    /* ===== إخفاء عناصر Streamlit الافتراضية ===== */
     [data-testid="stSidebar"] { display: none !important; }
     [data-testid="collapsedControl"] { display: none !important; }
     section[data-testid="stSidebar"] { display: none !important; }
@@ -97,6 +96,66 @@ MAIN_CSS = """
         font-size: 18px;
         letter-spacing: 2px;
         font-weight: 500;
+    }
+    
+    /* ===== قسم التقارير المحفوظة ===== */
+    .reports-section-header {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(184, 134, 11, 0.1));
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 12px;
+        padding: 15px 25px;
+        margin: 20px;
+        color: #FFD700;
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-align: center;
+    }
+    
+    /* بطاقات التقارير المصغرة */
+    .report-mini-card {
+        background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95));
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .report-mini-card:hover {
+        border-color: rgba(255, 215, 0, 0.5);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .report-mini-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+    
+    .report-mini-title {
+        color: #FFD700;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .report-mini-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        margin-bottom: 3px;
+    }
+    
+    .report-mini-time {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.7rem;
+    }
+    
+    .section-divider {
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+        margin: 20px;
     }
     
     /* ===== العناصر العامة ===== */
@@ -417,11 +476,11 @@ MAIN_CSS = """
 """
 
 # ---------------------------------------------------------
-# 🎨 CSS الشريط الجانبي المخصص (الحل النهائي)
+# 🎨 CSS الشريط الجانبي المخصص (يعمل بـ CSS :hover فقط!)
 # ---------------------------------------------------------
 CUSTOM_SIDEBAR_CSS = """
 <style>
-    /* ===== الشريط الجانبي المخصص ===== */
+    /* ===== الشريط الجانبي - يفتح بالـ HOVER ===== */
     .custom-sidebar {
         position: fixed;
         top: 0;
@@ -437,7 +496,8 @@ CUSTOM_SIDEBAR_CSS = """
         box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
     }
     
-    .custom-sidebar.expanded {
+    /* ✅ فتح الشريط عند hover */
+    .custom-sidebar:hover {
         width: 320px;
     }
     
@@ -504,17 +564,17 @@ CUSTOM_SIDEBAR_CSS = """
         background: #001f3f;
     }
     
-    /* تحويل لـ X */
-    .hamburger.active span:nth-child(1) {
+    /* ✅ تحويل الهامبرغر لـ X عند hover على الشريط */
+    .custom-sidebar:hover .hamburger span:nth-child(1) {
         transform: rotate(45deg) translate(5px, 5px);
     }
     
-    .hamburger.active span:nth-child(2) {
+    .custom-sidebar:hover .hamburger span:nth-child(2) {
         opacity: 0;
         transform: translateX(20px);
     }
     
-    .hamburger.active span:nth-child(3) {
+    .custom-sidebar:hover .hamburger span:nth-child(3) {
         transform: rotate(-45deg) translate(6px, -6px);
     }
     
@@ -562,7 +622,8 @@ CUSTOM_SIDEBAR_CSS = """
         flex-direction: column;
     }
     
-    .custom-sidebar.expanded .sidebar-panel {
+    /* ✅ إظهار اللوحة عند hover */
+    .custom-sidebar:hover .sidebar-panel {
         opacity: 1;
         visibility: visible;
     }
@@ -594,7 +655,7 @@ CUSTOM_SIDEBAR_CSS = """
         overflow-y: auto;
     }
     
-    /* ✅ [إصلاح #2] بطاقات التقارير - قابلة للنقر */
+    /* بطاقات التقارير */
     .sidebar-report-card {
         background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
         border-radius: 12px;
@@ -602,8 +663,6 @@ CUSTOM_SIDEBAR_CSS = """
         margin-bottom: 12px;
         border: 1px solid rgba(255, 215, 0, 0.12);
         transition: all 0.3s ease;
-        cursor: pointer;
-        user-select: none;
     }
     
     .sidebar-report-card:hover {
@@ -611,10 +670,6 @@ CUSTOM_SIDEBAR_CSS = """
         transform: translateX(-5px);
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         background: linear-gradient(135deg, rgba(36, 55, 84, 0.9), rgba(23, 41, 70, 0.95));
-    }
-    
-    .sidebar-report-card:active {
-        transform: translateX(-3px) scale(0.98);
     }
     
     .sidebar-report-card .report-title {
@@ -663,6 +718,22 @@ CUSTOM_SIDEBAR_CSS = """
         font-size: 0.8rem;
     }
     
+    /* صندوق التلميح */
+    .sidebar-hint-box {
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        border-radius: 10px;
+        padding: 12px;
+        margin: 15px 0;
+        text-align: center;
+        color: rgba(255, 215, 0, 0.8);
+        font-size: 0.8rem;
+    }
+    
+    .sidebar-hint-box span {
+        margin-left: 5px;
+    }
+    
     /* فوتر الشريط */
     .sidebar-footer {
         text-align: center;
@@ -693,7 +764,7 @@ CUSTOM_SIDEBAR_CSS = """
 """
 
 # ---------------------------------------------------------
-# 🎨 القوالب العصرية (الجديدة كلياً - خلفية بيضاء)
+# 🎨 القوالب العصرية (خلفية بيضاء)
 # ---------------------------------------------------------
 
 STYLE_OFFICIAL = """
@@ -701,8 +772,8 @@ STYLE_OFFICIAL = """
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap');
     
     :root {
-        --primary: #003366; /* كحلي رسمي */
-        --secondary: #c5a059; /* ذهبي */
+        --primary: #003366;
+        --secondary: #c5a059;
         --bg: #ffffff;
         --text: #333333;
         --light-gray: #f8f9fa;
@@ -711,7 +782,7 @@ STYLE_OFFICIAL = """
     
     body {
         font-family: 'Cairo', sans-serif;
-        background-color: #f9fafb; /* خلفية خارجية رمادية فاتحة جدا */
+        background-color: #f9fafb;
         color: var(--text);
         margin: 0;
         padding: 40px;
@@ -729,7 +800,6 @@ STYLE_OFFICIAL = """
         border-top: 8px solid var(--primary);
     }
     
-    /* Header */
     header {
         text-align: center;
         border-bottom: 2px solid var(--light-gray);
@@ -750,7 +820,6 @@ STYLE_OFFICIAL = """
         margin: 5px 0;
     }
     
-    /* Sections & Cards */
     .card {
         background: #fff;
         border: 1px solid var(--border-color);
@@ -783,7 +852,6 @@ STYLE_OFFICIAL = """
         padding-bottom: 8px;
     }
     
-    /* Stats */
     .stats-row {
         display: flex;
         gap: 20px;
@@ -814,7 +882,6 @@ STYLE_OFFICIAL = """
         color: #777;
     }
     
-    /* Tables */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -839,7 +906,6 @@ STYLE_OFFICIAL = """
     tbody tr:nth-child(even) { background-color: #fcfcfc; }
     tbody tr:hover { background-color: #f0f4f8; }
     
-    /* Highlights */
     .highlight-box {
         background: #f0f7ff;
         border: 1px solid #cce5ff;
@@ -850,7 +916,6 @@ STYLE_OFFICIAL = """
         font-weight: 600;
     }
     
-    /* Lists */
     ul li {
         margin-bottom: 10px;
         position: relative;
@@ -866,7 +931,6 @@ STYLE_OFFICIAL = """
         top: -5px;
     }
 
-    /* Signature Styles */
     .report-signature {
         margin-top: 80px;
         text-align: center;
@@ -887,8 +951,8 @@ STYLE_DIGITAL = """
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
     
     :root {
-        --primary: #2563eb; /* أزرق مشرق */
-        --accent: #7c3aed; /* بنفسجي */
+        --primary: #2563eb;
+        --accent: #7c3aed;
         --bg: #f3f4f6;
         --card-bg: #ffffff;
         --text-main: #1f2937;
@@ -909,7 +973,6 @@ STYLE_DIGITAL = """
         margin: 0 auto;
     }
     
-    /* Header */
     .dashboard-header {
         background: white;
         padding: 30px;
@@ -933,7 +996,6 @@ STYLE_DIGITAL = """
         margin-top: 10px;
     }
     
-    /* Metrics Grid */
     .metrics-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -969,7 +1031,6 @@ STYLE_DIGITAL = """
         font-weight: 600;
     }
     
-    /* Cards */
     .data-card {
         background: white;
         border-radius: 16px;
@@ -986,7 +1047,6 @@ STYLE_DIGITAL = """
         margin-bottom: 25px;
     }
     
-    /* Progress Bars */
     .progress-bar {
         background: #f3f4f6;
         height: 12px;
@@ -1000,7 +1060,6 @@ STYLE_DIGITAL = """
         border-radius: 6px;
     }
     
-    /* Alerts */
     .alert-box {
         padding: 20px;
         border-radius: 12px;
@@ -1011,7 +1070,6 @@ STYLE_DIGITAL = """
         font-weight: 600;
     }
     
-    /* Signature */
     .report-signature {
         background: white;
         border-radius: 20px;
@@ -1048,7 +1106,6 @@ STYLE_ANALYTICAL = """
         border-radius: 8px;
     }
     
-    /* Header */
     header {
         text-align: center;
         background: #f1f3f5;
@@ -1065,7 +1122,6 @@ STYLE_ANALYTICAL = """
         font-weight: 800;
     }
     
-    /* Stats */
     .stats-grid {
         display: flex;
         justify-content: space-between;
@@ -1095,7 +1151,6 @@ STYLE_ANALYTICAL = """
     
     .stat-label { color: #6c757d; font-size: 1.1em; }
     
-    /* Analysis Sections */
     .analysis-section { margin-bottom: 40px; }
     
     h2 {
@@ -1106,7 +1161,6 @@ STYLE_ANALYTICAL = """
         margin-bottom: 25px;
     }
     
-    /* Visual Bars */
     .bar-container {
         background: #e9ecef;
         height: 24px;
@@ -1116,13 +1170,11 @@ STYLE_ANALYTICAL = """
     }
     .bar { height: 100%; background: #0056b3; }
     
-    /* Tables */
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th { background: #0056b3; color: white; padding: 15px; font-weight: 600; }
     td { border: 1px solid #dee2e6; padding: 15px; }
     tr:nth-child(even) { background: #f8f9fa; }
     
-    /* Signature */
     .report-signature {
         text-align: center;
         margin-top: 80px;
@@ -1133,7 +1185,6 @@ STYLE_ANALYTICAL = """
 </style>
 """
 
-# ✅ [إصلاح #4 و #5] تحديث STYLE_PRESENTATION - إزالة link من داخل style وإضافة CSS للعناصر الناقصة
 STYLE_PRESENTATION = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
@@ -1146,7 +1197,7 @@ STYLE_PRESENTATION = """
     
     body {
         font-family: 'Cairo', sans-serif;
-        background: #2c3e50; /* خلفية داكنة خارج الشريحة */
+        background: #2c3e50;
         margin: 0;
         height: 100vh;
         overflow: hidden;
@@ -1188,7 +1239,6 @@ STYLE_PRESENTATION = """
         z-index: 10; 
     }
     
-    /* Slide Content */
     .slide-header {
         border-bottom: 5px solid #c5a059;
         padding-bottom: 20px;
@@ -1233,7 +1283,6 @@ STYLE_PRESENTATION = """
         font-size: 0.8em;
     }
     
-    /* Cover Slide */
     .slide.cover {
         text-align: center;
         justify-content: center;
@@ -1256,7 +1305,6 @@ STYLE_PRESENTATION = """
         color: #c5a059; 
     }
     
-    /* ✅ [إصلاح #5] Navigation Controls - تم تحسين التصميم */
     .nav-controls {
         position: fixed;
         bottom: 30px;
@@ -1293,7 +1341,6 @@ STYLE_PRESENTATION = """
         transform: scale(0.95);
     }
     
-    /* ✅ [إصلاح #5] Page Number - تصميم جديد */
     .page-number {
         position: fixed;
         bottom: 30px;
@@ -1308,7 +1355,6 @@ STYLE_PRESENTATION = """
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     
-    /* ✅ Presentation Signature - التوقيع للعرض التقديمي */
     .presentation-signature {
         position: fixed;
         bottom: 30px;
@@ -1325,7 +1371,6 @@ STYLE_PRESENTATION = """
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     
-    /* Responsive */
     @media (max-width: 768px) {
         .slide {
             padding: 30px;
@@ -1373,7 +1418,6 @@ STYLE_EXECUTIVE = """
 </style>
 """
 
-# ✅ [إصلاح #3] تحديث SCRIPT_PRESENTATION - تحسين التنقل بين الشرائح
 SCRIPT_PRESENTATION = """
 <script>
     let currentSlideIndex = 1;
@@ -1384,7 +1428,6 @@ SCRIPT_PRESENTATION = """
         totalSlides = slides.length;
         
         if (totalSlides > 0) {
-            // التأكد من أن الشريحة الأولى مفعلة
             slides.forEach((slide, index) => {
                 slide.classList.remove('active');
                 if (index === 0) {
@@ -1433,7 +1476,6 @@ SCRIPT_PRESENTATION = """
         } 
     }
     
-    // التنقل بالأسهم
     document.addEventListener('keydown', function(e) { 
         if (e.key === "ArrowLeft" || e.key === " ") {
             e.preventDefault();
@@ -1443,23 +1485,19 @@ SCRIPT_PRESENTATION = """
             e.preventDefault();
             prevSlide();
         }
-        // الانتقال للشريحة الأولى
         if (e.key === "Home") {
             e.preventDefault();
             showSlide(1);
         }
-        // الانتقال للشريحة الأخيرة
         if (e.key === "End") {
             e.preventDefault();
             showSlide(totalSlides);
         }
     });
     
-    // تهيئة العرض عند التحميل
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initPresentation);
     } else {
-        // DOM already loaded
         setTimeout(initPresentation, 100);
     }
 </script>
