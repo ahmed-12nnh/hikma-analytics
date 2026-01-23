@@ -27,7 +27,7 @@ MAIN_CSS = """
     [data-testid="stToolbar"] { display: none; }
     [data-testid="stDecoration"] { display: none; }
     
-    /* إخفاء أيقونة "Manage App" والبريد في الأسفل */
+    /* إخفاء أيقونة "Manage App" والبريد في الأسفل (Fix) */
     .viewerBadge_container__1QSob { display: none !important; }
     .st-emotion-cache-164nlkn { display: none !important; }
     div[class^="viewerBadge"] { display: none !important; }
