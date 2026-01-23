@@ -1,6 +1,11 @@
 # styles.py
 
 # ---------------------------------------------------------
+# ✅ [إصلاح #4] Font Awesome Link منفصل
+# ---------------------------------------------------------
+FONT_AWESOME_LINK = """<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">"""
+
+# ---------------------------------------------------------
 # 🎨 CSS الرئيسي للواجهة (Streamlit Interface)
 # حافظنا عليه كما هو في نسختك الأصلية (النمط الداكن)
 # ---------------------------------------------------------
@@ -589,7 +594,7 @@ CUSTOM_SIDEBAR_CSS = """
         overflow-y: auto;
     }
     
-    /* بطاقات التقارير */
+    /* ✅ [إصلاح #2] بطاقات التقارير - قابلة للنقر */
     .sidebar-report-card {
         background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
         border-radius: 12px;
@@ -598,12 +603,18 @@ CUSTOM_SIDEBAR_CSS = """
         border: 1px solid rgba(255, 215, 0, 0.12);
         transition: all 0.3s ease;
         cursor: pointer;
+        user-select: none;
     }
     
     .sidebar-report-card:hover {
         border-color: rgba(255, 215, 0, 0.5);
         transform: translateX(-5px);
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(135deg, rgba(36, 55, 84, 0.9), rgba(23, 41, 70, 0.95));
+    }
+    
+    .sidebar-report-card:active {
+        transform: translateX(-3px) scale(0.98);
     }
     
     .sidebar-report-card .report-title {
@@ -1122,9 +1133,16 @@ STYLE_ANALYTICAL = """
 </style>
 """
 
+# ✅ [إصلاح #4 و #5] تحديث STYLE_PRESENTATION - إزالة link من داخل style وإضافة CSS للعناصر الناقصة
 STYLE_PRESENTATION = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
     
     body {
         font-family: 'Cairo', sans-serif;
@@ -1144,24 +1162,31 @@ STYLE_PRESENTATION = """
         display: flex;
         justify-content: center;
         align-items: center;
+        position: relative;
     }
     
     .slide {
         background: white;
         width: 90%;
-        height: 90%;
+        height: 85%;
         position: absolute;
         opacity: 0;
-        transition: opacity 0.6s ease;
+        visibility: hidden;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
         border-radius: 20px;
         padding: 60px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         display: flex;
         flex-direction: column;
         border: 1px solid #ccc;
+        overflow-y: auto;
     }
     
-    .slide.active { opacity: 1; z-index: 10; }
+    .slide.active { 
+        opacity: 1; 
+        visibility: visible;
+        z-index: 10; 
+    }
     
     /* Slide Content */
     .slide-header {
@@ -1175,95 +1200,267 @@ STYLE_PRESENTATION = """
     
     .header-title h2 {
         color: #003366;
-        font-size: 3em;
+        font-size: 2.5em;
         margin: 0;
         font-weight: 800;
     }
     
     .slide-content {
         flex: 1;
-        font-size: 1.8em;
+        font-size: 1.6em;
         color: #333;
-        line-height: 1.6;
+        line-height: 1.8;
         overflow-y: auto;
     }
     
+    .slide-content ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .slide-content ul li {
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+        padding-right: 30px;
+        position: relative;
+    }
+    
+    .slide-content ul li::before {
+        content: "◆";
+        color: #c5a059;
+        position: absolute;
+        right: 0;
+        font-size: 0.8em;
+    }
+    
+    /* Cover Slide */
     .slide.cover {
         text-align: center;
         justify-content: center;
+        align-items: center;
         background: linear-gradient(135deg, #fdfbf7 0%, #fff 100%);
         border: 15px solid #003366;
     }
     
-    .main-title { font-size: 5em; color: #003366; margin-bottom: 30px; font-weight: 900; }
-    .sub-title { font-size: 2.5em; color: #c5a059; }
+    .slide.cover .main-title,
+    .main-title { 
+        font-size: 4em; 
+        color: #003366; 
+        margin-bottom: 30px; 
+        font-weight: 900; 
+    }
     
-    /* Navigation */
+    .slide.cover .sub-title,
+    .sub-title { 
+        font-size: 2em; 
+        color: #c5a059; 
+    }
+    
+    /* ✅ [إصلاح #5] Navigation Controls - تم تحسين التصميم */
     .nav-controls {
-        position: absolute;
+        position: fixed;
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
         gap: 20px;
-        z-index: 100;
+        z-index: 1000;
     }
+    
     .nav-btn {
-        background: #003366;
+        background: linear-gradient(135deg, #003366, #004080);
         color: white;
         border: none;
-        padding: 15px 30px;
-        border-radius: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
         cursor: pointer;
-        font-size: 1.2em;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        font-size: 1.4em;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    .nav-btn:hover { background: #004080; }
     
-    /* Signature Slide */
-    .signature-box {
-        margin-top: auto;
+    .nav-btn:hover { 
+        background: linear-gradient(135deg, #004080, #0056b3);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    
+    .nav-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* ✅ [إصلاح #5] Page Number - تصميم جديد */
+    .page-number {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: rgba(0, 51, 102, 0.9);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 1.1em;
+        font-weight: 700;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    /* ✅ Presentation Signature - التوقيع للعرض التقديمي */
+    .presentation-signature {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        background: rgba(0, 51, 102, 0.9);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 0.9em;
+        font-weight: 600;
+        z-index: 1000;
+        max-width: 300px;
         text-align: center;
-        color: #003366;
-        font-weight: bold;
-        font-size: 1.5em;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .slide {
+            padding: 30px;
+            width: 95%;
+            height: 90%;
+        }
+        
+        .main-title { font-size: 2.5em; }
+        .sub-title { font-size: 1.5em; }
+        .header-title h2 { font-size: 1.8em; }
+        .slide-content { font-size: 1.2em; }
+        
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2em;
+        }
+        
+        .page-number {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+        
+        .presentation-signature {
+            display: none;
+        }
     }
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 """
 
 STYLE_EXECUTIVE = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
     body { font-family: 'Tajawal', sans-serif; background: white; padding: 60px; direction: rtl; color: #333; line-height: 2; }
+    .container { max-width: 900px; margin: 0 auto; }
     h1 { color: #000; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 40px; font-size: 2.5em; }
-    .exec-summary { font-size: 1.4em; background: #f8f9fa; padding: 30px; border-radius: 10px; border-right: 8px solid #003366; }
+    h2 { color: #003366; font-size: 1.8em; margin-top: 40px; margin-bottom: 20px; }
+    .exec-summary { font-size: 1.4em; background: #f8f9fa; padding: 30px; border-radius: 10px; border-right: 8px solid #003366; margin-bottom: 30px; }
+    .key-metrics { display: flex; gap: 20px; flex-wrap: wrap; margin: 30px 0; }
+    .key-metric { flex: 1; min-width: 200px; background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center; }
+    .key-metric .value { font-size: 2.5em; font-weight: bold; color: #003366; display: block; }
+    .key-metric .label { color: #666; font-size: 1.1em; }
     .report-signature { margin-top: 80px; text-align: center; font-weight: bold; border-top: 2px solid #ccc; padding-top: 30px; font-size: 1.2em; }
+    .signature-org { color: #003366; }
 </style>
 """
 
+# ✅ [إصلاح #3] تحديث SCRIPT_PRESENTATION - تحسين التنقل بين الشرائح
 SCRIPT_PRESENTATION = """
 <script>
     let currentSlideIndex = 1;
-    function updateSlide() {
+    let totalSlides = 0;
+    
+    function initPresentation() {
         const slides = document.querySelectorAll('.slide');
-        slides.forEach(s => s.classList.remove('active'));
-        const active = document.getElementById('slide-' + currentSlideIndex);
-        if(active) active.classList.add('active');
+        totalSlides = slides.length;
+        
+        if (totalSlides > 0) {
+            // التأكد من أن الشريحة الأولى مفعلة
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === 0) {
+                    slide.classList.add('active');
+                }
+            });
+            currentSlideIndex = 1;
+            updatePageNumber();
+        }
+    }
+    
+    function updatePageNumber() {
         const pageNum = document.getElementById('page-num');
-        if(pageNum) pageNum.innerText = currentSlideIndex + ' / ' + slides.length;
+        if (pageNum) {
+            pageNum.innerText = currentSlideIndex + ' / ' + totalSlides;
+        }
     }
+    
+    function showSlide(index) {
+        const slides = document.querySelectorAll('.slide');
+        
+        if (index < 1) index = 1;
+        if (index > totalSlides) index = totalSlides;
+        
+        currentSlideIndex = index;
+        
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active');
+            if (i === currentSlideIndex - 1) {
+                slide.classList.add('active');
+            }
+        });
+        
+        updatePageNumber();
+    }
+    
     function nextSlide() { 
-        if(currentSlideIndex < document.querySelectorAll('.slide').length) { currentSlideIndex++; updateSlide(); } 
+        if (currentSlideIndex < totalSlides) { 
+            showSlide(currentSlideIndex + 1);
+        } 
     }
+    
     function prevSlide() { 
-        if(currentSlideIndex > 1) { currentSlideIndex--; updateSlide(); } 
+        if (currentSlideIndex > 1) { 
+            showSlide(currentSlideIndex - 1);
+        } 
     }
-    document.addEventListener('keydown', (e) => { 
-        if(e.key === "ArrowLeft") nextSlide(); 
-        if(e.key === "ArrowRight") prevSlide(); 
+    
+    // التنقل بالأسهم
+    document.addEventListener('keydown', function(e) { 
+        if (e.key === "ArrowLeft" || e.key === " ") {
+            e.preventDefault();
+            nextSlide();
+        }
+        if (e.key === "ArrowRight") {
+            e.preventDefault();
+            prevSlide();
+        }
+        // الانتقال للشريحة الأولى
+        if (e.key === "Home") {
+            e.preventDefault();
+            showSlide(1);
+        }
+        // الانتقال للشريحة الأخيرة
+        if (e.key === "End") {
+            e.preventDefault();
+            showSlide(totalSlides);
+        }
     });
-    // Initialize
-    setTimeout(updateSlide, 100);
+    
+    // تهيئة العرض عند التحميل
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPresentation);
+    } else {
+        // DOM already loaded
+        setTimeout(initPresentation, 100);
+    }
 </script>
 """
