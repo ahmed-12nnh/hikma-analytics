@@ -11,6 +11,7 @@ from datetime import datetime
 # استيراد التصاميم من ملف styles.py
 from styles import (
     MAIN_CSS,
+    CUSTOM_SIDEBAR_CSS,
     STYLE_OFFICIAL,
     STYLE_DIGITAL,
     STYLE_ANALYTICAL,
@@ -49,147 +50,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# تطبيق التصميم الرئيسي
+# تطبيق التصميم الرئيسي + إخفاء الشريط الافتراضي
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# 🎯 زر التحكم بالشريط الجانبي (JavaScript)
-# ---------------------------------------------------------
-sidebar_toggle_js = """
-<div id="sidebar-toggle-container">
-    <button id="sidebar-toggle-btn" onclick="toggleSidebar()">
-        <div class="hamburger-lines">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </button>
-    <button id="reports-btn" onclick="toggleSidebar()" title="سجل التقارير">
-        📚
-        <span class="badge">""" + str(len(st.session_state.reports_history)) + """</span>
-    </button>
-</div>
-
-<style>
-    #sidebar-toggle-container {
-        position: fixed;
-        top: 15px;
-        right: 15px;
-        z-index: 999999;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    #sidebar-toggle-btn {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #001f3f 0%, #0a2647 100%);
-        border: 2px solid #FFD700;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.2);
-    }
-    
-    #sidebar-toggle-btn:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
-        transform: scale(1.08);
-        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.5);
-    }
-    
-    .hamburger-lines {
-        width: 22px;
-        height: 16px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-    
-    .hamburger-lines span {
-        display: block;
-        width: 100%;
-        height: 3px;
-        background: #FFD700;
-        border-radius: 3px;
-        transition: all 0.3s ease;
-    }
-    
-    #sidebar-toggle-btn:hover .hamburger-lines span {
-        background: #001f3f;
-    }
-    
-    #reports-btn {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
-        border: 2px solid rgba(255, 215, 0, 0.4);
-        cursor: pointer;
-        font-size: 1.4rem;
-        position: relative;
-        transition: all 0.3s ease;
-    }
-    
-    #reports-btn:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
-        border-color: #FFD700;
-        transform: scale(1.05);
-    }
-    
-    #reports-btn .badge {
-        position: absolute;
-        top: -5px;
-        left: -5px;
-        background: linear-gradient(135deg, #FFD700, #B8860B);
-        color: #001f3f;
-        font-size: 0.7rem;
-        font-weight: 800;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-</style>
-
-<script>
-    function toggleSidebar() {
-        try {
-            // الوصول إلى الصفحة الأم
-            const parentDoc = window.parent.document;
-            
-            // البحث عن زر التحكم الأصلي في Streamlit
-            const expandBtn = parentDoc.querySelector('[data-testid="collapsedControl"]');
-            const collapseBtn = parentDoc.querySelector('[data-testid="stSidebarCollapseButton"]');
-            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]');
-            
-            if (expandBtn) {
-                expandBtn.click();
-            } else if (collapseBtn) {
-                collapseBtn.click();
-            } else if (sidebar) {
-                // تبديل حالة الشريط يدوياً
-                const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
-                if (isExpanded) {
-                    sidebar.setAttribute('aria-expanded', 'false');
-                } else {
-                    sidebar.setAttribute('aria-expanded', 'true');
-                }
-            }
-        } catch (e) {
-            console.log('Toggle error:', e);
-        }
-    }
-</script>
-"""
-
-# عرض زر التحكم
-components.html(sidebar_toggle_js, height=130)
 
 # ---------------------------------------------------------
 # 🛠️ دوال المساعدة
@@ -292,54 +154,124 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 📚 الشريط الجانبي (Streamlit الأصلي مع تخصيص)
+# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري
 # ---------------------------------------------------------
-with st.sidebar:
-    st.markdown("""
-    <div class="sidebar-header">
-        <span class="sidebar-icon">📚</span>
-        <span class="sidebar-title">سجل التقارير</span>
-    </div>
-    <p class="sidebar-hint">التقارير المُنشأة خلال الجلسة الحالية</p>
-    """, unsafe_allow_html=True)
+def render_custom_sidebar():
+    reports_count = len(st.session_state.reports_history)
     
-    if st.session_state.reports_history:
+    # بناء HTML للتقارير
+    # ملاحظة: النصوص هنا تبدأ من بداية السطر لتجنب مشكلة التفسير الخاطئ
+    reports_html = ""
+    if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
-            with st.container():
-                st.markdown(f"""
-                <div class="sidebar-report-card">
-                    <div class="report-title">📄 {report['title']}</div>
-                    <div class="report-meta">
-                        <span>{report['type']}</span> • <span>{report['size']}</span>
-                    </div>
-                    <div class="report-time">🕐 {report['timestamp']}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # زر التحميل لكل تقرير
-                st.download_button(
-                    label=f"📥 تحميل",
-                    data=report['html'],
-                    file_name=f"{report['title']}.html",
-                    mime="text/html",
-                    key=f"download_{report['id']}",
-                    use_container_width=True
-                )
-                st.markdown("<hr style='border-color: rgba(255,215,0,0.2); margin: 10px 0;'>", unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="sidebar-empty">
-            <div class="empty-icon">📭</div>
-            <div class="empty-text">لا توجد تقارير بعد</div>
-            <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="sidebar-footer">
-        <span>تيار الحكمة الوطني</span>
+            title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
+            reports_html += f"""
+<div class="sidebar-report-card">
+    <div class="report-title">📄 {title_short}</div>
+    <div class="report-meta">
+        <span>{report['type']}</span>
+        <span>•</span>
+        <span>{report['size']}</span>
     </div>
-    """, unsafe_allow_html=True)
+    <div class="report-time">🕐 {report['timestamp']}</div>
+</div>
+"""
+    else:
+        reports_html = """
+<div class="sidebar-empty">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">لا توجد تقارير بعد</div>
+    <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
+</div>
+"""
+    
+    # الشريط الجانبي المخصص بالكامل
+    # هام جداً: تم إزالة المسافات البادئة (Indentation) هنا عمداً
+    # هذا يحل مشكلة ظهور الكود كنص في المتصفح ويضمن تنفيذه كـ HTML
+    # تم تحديث الجافا سكربت ليعمل بفعالية
+    sidebar_html = f"""
+<div class="custom-sidebar" id="customSidebar">
+    <div class="sidebar-strip">
+        <div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
+            <div class="hamburger" id="hamburgerIcon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
+            <span class="strip-icon">📚</span>
+            <span class="strip-badge">{reports_count}</span>
+        </div>
+        
+        <div class="strip-divider"></div>
+        
+        <div class="strip-btn" title="الإعدادات">
+            <span class="strip-icon">⚙️</span>
+        </div>
+    </div>
+    
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>📚 سجل التقارير</h3>
+            <p>التقارير المُنشأة خلال الجلسة الحالية</p>
+        </div>
+        
+        <div class="sidebar-content">
+            {reports_html}
+        </div>
+        
+        <div class="sidebar-footer">
+            <span>تيار الحكمة الوطني</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ربط الدالة بالنافذة مباشرة لضمان الوصول إليها
+    window.toggleSidebar = function() {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
+        
+        if (sidebar) {{
+            sidebar.classList.toggle('expanded');
+        }}
+        
+        if (hamburger) {{
+            hamburger.classList.toggle('active');
+        }}
+    }};
+
+    // إغلاق عند النقر خارج الشريط
+    document.addEventListener('click', function(e) {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
+        
+        // التحقق من أن النقر لم يكن على الشريط نفسه أو زر الفتح
+        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
+            // التأكد من عدم النقر على زر الفتح
+            let clickedOnButton = false;
+            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
+                clickedOnButton = true;
+            }}
+            
+            if (!clickedOnButton) {{
+                sidebar.classList.remove('expanded');
+                if (hamburger) hamburger.classList.remove('active');
+            }}
+        }}
+    }});
+</script>
+"""
+    
+    return sidebar_html
+
+# تطبيق CSS الشريط الجانبي
+st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
+
+# عرض الشريط الجانبي
+st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 🏗️ بناء الواجهة الرئيسية
@@ -451,7 +383,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 temperature=0.1,
                 top_p=0.95,
                 top_k=40,
-                max_output_tokens=16384,
+                max_output_tokens=16384,  # زيادة الحد الأقصى للإخراج
             )
             
             model = genai.GenerativeModel(selected_model)
@@ -461,7 +393,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             file_label = "Report"
             report_type_short = ""
             
-            # التوقيع في المنتصف
+            # ===== التوقيع في المنتصف =====
             unified_signature = """
             <div class="report-signature">
                 <div class="signature-line"></div>
@@ -503,6 +435,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 - Use <div class="data-card"> for detailed sections
                 - Use <div class="progress-indicator"> for percentages
                 - Use <div class="alert-box success/warning/info"> for notifications
+                - Add sparkline effects with CSS gradients
                 """
             
             elif "التحليل" in report_type:
@@ -516,6 +449,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 - Use <div class="stats-grid"> for top-level statistics
                 - Use <div class="stat-card"> with <span class="stat-value"> and <span class="stat-label">
                 - Use <div class="analysis-section"> for each analysis area
+                - Use <div class="comparison-table"> for comparisons
                 - Use <div class="bar-chart"> with <div class="bar" style="width: X%"> for visual bars
                 - Use <div class="insight-box"> for key insights
                 - Use <div class="recommendation-card"> for recommendations
@@ -534,6 +468,8 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 - Use <div class="section"> with <h2 class="section-title"> for each part
                 - Use <div class="bullet-list"> for key points
                 - Use <div class="action-items"> for recommendations
+                - Use <blockquote class="quote"> for important quotes
+                - Keep design clean and professional
                 """
 
             elif "عرض تقديمي" in report_type:
@@ -561,28 +497,42 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
-            # الـ PROMPT المُحسّن
+            # ===== الـ PROMPT المُحسّن لإنتاج تقارير كاملة =====
             prompt = f"""
 أنت محلل بيانات ومطور محترف. مهمتك تحويل النص المُعطى إلى تقرير HTML احترافي كامل.
 
-⚠️ قواعد صارمة يجب الالتزام بها:
+⚠️ قواعد صارمة يجب الالتزام بها (عدم الالتزام = فشل):
 
-1️⃣ المحتوى الكامل:
-   - يجب تضمين كل المعلومات والبيانات من النص الأصلي بدون أي اختصار
-   - لا تختصر أي جملة أو فقرة
-   - انقل كل الأرقام والإحصائيات كما هي
+1️⃣ المحتوى الكامل (مهم جداً):
+   - يجب تضمين كل المعلومات والبيانات من النص الأصلي بدون أي اختصار أو حذف
+   - لا تختصر أي جملة أو فقرة أو نقطة
+   - انقل كل الأرقام والإحصائيات والنسب كما هي
+   - حافظ على جميع الأسماء والتواريخ والتفاصيل
+   - إذا كان النص طويلاً، اجعل التقرير طويلاً أيضاً
 
 2️⃣ صيغة الإخراج:
    - غلّف الكود داخل ```html و ```
    - لا تكتب أي نص قبل أو بعد كود HTML
+   - استخدم UTF-8 للعربية
 
-3️⃣ التصميم المطلوب:
+3️⃣ الأسماء والنصوص:
+   - انسخ أسماء الأشخاص كما هي بالضبط
+   - لا تعكس أي حرف أو كلمة عربية
+   - حافظ على ترتيب الكلمات الأصلي
+
+4️⃣ التصميم المطلوب:
 {design_rules}
 
-📊 البيانات المُدخلة:
+5️⃣ الهيكل العام:
+   - ابدأ بـ <!DOCTYPE html>
+   - استخدم <html lang="ar" dir="rtl">
+   - أضف جميع الأقسام المطلوبة
+   - اجعل التصميم عصرياً وجذاباً
+
+📊 البيانات المُدخلة (يجب تضمينها كاملة):
 {full_text}
 
-🎯 التوقيع (أضفه في منتصف التقرير):
+🎯 التوقيع (أضفه في منتصف التقرير قبل نهاية المحتوى):
 {unified_signature}
 
 اللغة: العربية الفصحى المهنية
@@ -590,7 +540,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 
             progress_placeholder = st.empty()
             
-            # شريط التحميل المُحسّن
+            # ===== شريط التحميل المُحسّن (بدون اسم الموديل) =====
             progress_messages = [
                 "🔍 جاري تحليل البيانات...",
                 "📊 استخراج المعلومات الرئيسية...",
@@ -619,7 +569,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 response = model.generate_content(prompt, generation_config=generation_config)
                 
                 if response.prompt_feedback.block_reason:
-                    st.error("⚠️ تم حظر المحتوى من قبل Google AI.")
+                    st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
                     st.stop()
                     
                 html_body = clean_html_response(response.text)
