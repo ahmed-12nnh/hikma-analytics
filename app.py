@@ -159,33 +159,34 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
     
-    # بناء HTML للتقارير
+    # بناء HTML للتقارير (بدون مسافات بادئة لضمان العرض الصحيح)
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
             title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
             reports_html += f"""
-            <div class="sidebar-report-card">
-                <div class="report-title">📄 {title_short}</div>
-                <div class="report-meta">
-                    <span>{report['type']}</span>
-                    <span>•</span>
-                    <span>{report['size']}</span>
-                </div>
-                <div class="report-time">🕐 {report['timestamp']}</div>
-            </div>
-            """
+<div class="sidebar-report-card">
+    <div class="report-title">📄 {title_short}</div>
+    <div class="report-meta">
+        <span>{report['type']}</span>
+        <span>•</span>
+        <span>{report['size']}</span>
+    </div>
+    <div class="report-time">🕐 {report['timestamp']}</div>
+</div>
+"""
     else:
         reports_html = """
-        <div class="sidebar-empty">
-            <div class="empty-icon">📭</div>
-            <div class="empty-text">لا توجد تقارير بعد</div>
-            <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
-        </div>
-        """
+<div class="sidebar-empty">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">لا توجد تقارير بعد</div>
+    <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
+</div>
+"""
     
-    # الحل الجذري: إزالة المسافات البادئة في بداية السطر لضمان قراءة HTML بشكل صحيح
-    # وتحديث الجافا سكربت ليعمل بشكل مستقل
+    # الشريط الجانبي المخصص بالكامل
+    # ملاحظة هامة: تم إزالة المسافات البادئة (Indentation) هنا عمداً
+    # هذا يحل مشكلة ظهور الكود كنص في المتصفح ويضمن تنفيذه كـ HTML
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
     <div class="sidebar-strip">
@@ -227,6 +228,7 @@ def render_custom_sidebar():
 
 <script>
     // تعريف الدالة على مستوى النافذة لضمان الوصول إليها دائماً
+    // هذا يحل مشكلة عدم استجابة الزر
     window.toggleSidebar = function() {{
         var sidebar = document.getElementById('customSidebar');
         var hamburger = document.getElementById('hamburgerIcon');
@@ -244,13 +246,12 @@ def render_custom_sidebar():
     document.addEventListener('click', function(e) {{
         var sidebar = document.getElementById('customSidebar');
         var hamburger = document.getElementById('hamburgerIcon');
-        var toggleBtns = document.getElementsByClassName('menu-toggle');
         
         // التحقق من أن النقر لم يكن على الشريط نفسه أو زر الفتح
         if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
             // تأكد أننا لم نضغط على زر الفتح نفسه (لأن ذلك سيسبب تعارضاً)
             let clickedOnButton = false;
-            if (e.target.closest('.strip-btn')) {{
+            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
                 clickedOnButton = true;
             }}
             
@@ -262,75 +263,6 @@ def render_custom_sidebar():
     }});
 </script>
 """
-    
-    return sidebar_html
-    
-    # الشريط الجانبي المخصص بالكامل
-    sidebar_html = f'''
-    <div class="custom-sidebar" id="customSidebar">
-        <!-- الشريط الضيق (دائماً ظاهر - 70px) -->
-        <div class="sidebar-strip">
-            <div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
-                <div class="hamburger" id="hamburgerIcon">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-            
-            <div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
-                <span class="strip-icon">📚</span>
-                <span class="strip-badge">{reports_count}</span>
-            </div>
-            
-            <div class="strip-divider"></div>
-            
-            <div class="strip-btn" title="الإعدادات">
-                <span class="strip-icon">⚙️</span>
-            </div>
-        </div>
-        
-        <!-- محتوى الشريط الموسع -->
-        <div class="sidebar-panel">
-            <div class="sidebar-header">
-                <h3>📚 سجل التقارير</h3>
-                <p>التقارير المُنشأة خلال الجلسة الحالية</p>
-            </div>
-            
-            <div class="sidebar-content">
-                {reports_html}
-            </div>
-            
-            <div class="sidebar-footer">
-                <span>تيار الحكمة الوطني</span>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        function toggleSidebar() {{
-            const sidebar = document.getElementById('customSidebar');
-            const hamburger = document.getElementById('hamburgerIcon');
-            
-            if (sidebar.classList.contains('expanded')) {{
-                sidebar.classList.remove('expanded');
-                hamburger.classList.remove('active');
-            }} else {{
-                sidebar.classList.add('expanded');
-                hamburger.classList.add('active');
-            }}
-        }}
-        
-        // إغلاق عند النقر خارج الشريط
-        document.addEventListener('click', function(e) {{
-            const sidebar = document.getElementById('customSidebar');
-            if (sidebar && !sidebar.contains(e.target) && sidebar.classList.contains('expanded')) {{
-                sidebar.classList.remove('expanded');
-                document.getElementById('hamburgerIcon').classList.remove('active');
-            }}
-        }});
-    </script>
-    '''
     
     return sidebar_html
 
@@ -710,5 +642,3 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
-
-
