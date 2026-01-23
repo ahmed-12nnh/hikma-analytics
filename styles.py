@@ -15,17 +15,23 @@ MAIN_CSS = """
         direction: rtl;
     }
     
-    /* إخفاء الشريط الجانبي الافتراضي */
+    /* ===== إخفاء عناصر Streamlit الافتراضية المزعجة ===== */
+    /* إخفاء الشريط العلوي والفوتر */
     [data-testid="stSidebar"] { display: none !important; }
     [data-testid="collapsedControl"] { display: none !important; }
     section[data-testid="stSidebar"] { display: none !important; }
     button[data-testid="stSidebarCollapseButton"] { display: none !important; }
-    
     header[data-testid="stHeader"] { background: transparent !important; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     [data-testid="stToolbar"] { display: none; }
     [data-testid="stDecoration"] { display: none; }
+    
+    /* إخفاء أيقونة "Manage App" والبريد في الأسفل */
+    .viewerBadge_container__1QSob { display: none !important; }
+    .st-emotion-cache-164nlkn { display: none !important; }
+    div[class^="viewerBadge"] { display: none !important; }
+    .stDeployButton { display: none !important; }
 
     /* تعديل المحتوى للشريط الجانبي */
     .main .block-container {
