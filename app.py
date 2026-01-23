@@ -168,8 +168,7 @@ def render_sidebar():
     with st.container():
         st.markdown("""
         <div class="sidebar-container">
-            <div class="sidebar-logo">🦅</div>
-            <div class="sidebar-title">تيار الحكمة</div>
+            <div class="sidebar-title"> تيار الحكمة الوطني</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -744,4 +743,5 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
+
 
