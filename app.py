@@ -7,11 +7,11 @@ import time
 import streamlit.components.v1 as components
 import re
 from datetime import datetime
-import json
 
 # استيراد التصاميم من ملف styles.py
 from styles import (
     MAIN_CSS,
+    CUSTOM_SIDEBAR_CSS,
     STYLE_OFFICIAL,
     STYLE_DIGITAL,
     STYLE_ANALYTICAL,
@@ -50,18 +50,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# إخفاء الشريط الجانبي الافتراضي تماماً
-hide_streamlit_sidebar = """
-<style>
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="collapsedControl"] { display: none !important; }
-    section[data-testid="stSidebar"] { display: none !important; }
-    button[data-testid="stSidebarCollapseButton"] { display: none !important; }
-</style>
-"""
-st.markdown(hide_streamlit_sidebar, unsafe_allow_html=True)
-
-# تطبيق التصميم الرئيسي
+# تطبيق التصميم الرئيسي + إخفاء الشريط الافتراضي
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -164,17 +153,8 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
     if len(st.session_state.reports_history) > 10:
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
-def delete_report(report_id):
-    st.session_state.reports_history = [
-        r for r in st.session_state.reports_history if r['id'] != report_id
-    ]
-
-def clear_all_reports():
-    st.session_state.reports_history = []
-    st.session_state.preview_report = None
-
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (مثل Gemini)
+# 🎨 الشريط الجانبي المخصص (مثل Gemini) - حل نهائي
 # ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
@@ -183,9 +163,10 @@ def render_custom_sidebar():
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
+            title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
             reports_html += f'''
-            <div class="report-card" data-index="{i}">
-                <div class="report-title">📄 {report['title'][:25]}...</div>
+            <div class="sidebar-report-card">
+                <div class="report-title">📄 {title_short}</div>
                 <div class="report-meta">
                     <span>{report['type']}</span>
                     <span>•</span>
@@ -196,366 +177,87 @@ def render_custom_sidebar():
             '''
     else:
         reports_html = '''
-        <div class="empty-state">
+        <div class="sidebar-empty">
             <div class="empty-icon">📭</div>
-            <div class="empty-text">لا توجد تقارير</div>
+            <div class="empty-text">لا توجد تقارير بعد</div>
             <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
         </div>
         '''
     
+    # الشريط الجانبي المخصص بالكامل
     sidebar_html = f'''
-    <!DOCTYPE html>
-    <html lang="ar" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-        <style>
-            * {{
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: 'Tajawal', sans-serif;
-            }}
-            
-            body {{
-                background: transparent;
-                overflow: visible;
-            }}
-            
-            /* الشريط الجانبي الرئيسي */
-            .custom-sidebar {{
-                position: fixed;
-                top: 0;
-                right: 0;
-                height: 100vh;
-                background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%);
-                border-left: 2px solid rgba(255, 215, 0, 0.3);
-                z-index: 999999;
-                transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-                overflow: hidden;
-                display: flex;
-                box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
-            }}
-            
-            .custom-sidebar.collapsed {{
-                width: 80px;
-            }}
-            
-            .custom-sidebar.expanded {{
-                width: 320px;
-            }}
-            
-            /* الشريط الضيق (دائماً ظاهر) */
-            .sidebar-strip {{
-                width: 80px;
-                min-width: 80px;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding-top: 20px;
-                background: linear-gradient(180deg, rgba(0, 31, 63, 0.95) 0%, rgba(10, 22, 40, 0.98) 100%);
-                border-left: 1px solid rgba(255, 215, 0, 0.15);
-            }}
-            
-            /* زر القائمة (الخطوط الثلاث) */
-            .menu-btn {{
-                width: 52px;
-                height: 52px;
-                border-radius: 14px;
-                background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.05));
-                border: 2px solid rgba(255, 215, 0, 0.4);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                margin-bottom: 20px;
-            }}
-            
-            .menu-btn:hover {{
-                background: linear-gradient(135deg, #FFD700, #B8860B);
-                border-color: #FFD700;
-                transform: scale(1.08);
-                box-shadow: 0 5px 25px rgba(255, 215, 0, 0.5);
-            }}
-            
-            .menu-btn:hover .hamburger-icon span {{
-                background: #001f3f;
-            }}
-            
-            /* أيقونة الهامبرغر */
-            .hamburger-icon {{
-                width: 26px;
-                height: 20px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }}
-            
-            .hamburger-icon span {{
-                display: block;
-                width: 100%;
-                height: 3px;
-                background: #FFD700;
-                border-radius: 3px;
-                transition: all 0.35s ease;
-            }}
-            
-            /* تحويل لـ X عند الفتح */
-            .custom-sidebar.expanded .hamburger-icon span:nth-child(1) {{
-                transform: rotate(45deg) translate(6px, 6px);
-            }}
-            
-            .custom-sidebar.expanded .hamburger-icon span:nth-child(2) {{
-                opacity: 0;
-                transform: translateX(20px);
-            }}
-            
-            .custom-sidebar.expanded .hamburger-icon span:nth-child(3) {{
-                transform: rotate(-45deg) translate(6px, -6px);
-            }}
-            
-            /* أيقونة التقارير */
-            .icon-btn {{
-                width: 52px;
-                height: 52px;
-                border-radius: 14px;
-                background: rgba(255, 215, 0, 0.05);
-                border: 1px solid rgba(255, 215, 0, 0.2);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                margin-bottom: 15px;
-                position: relative;
-            }}
-            
-            .icon-btn:hover {{
-                background: rgba(255, 215, 0, 0.15);
-                border-color: rgba(255, 215, 0, 0.5);
-                transform: scale(1.05);
-            }}
-            
-            .icon-btn .icon {{
-                font-size: 1.6rem;
-            }}
-            
-            /* شارة العدد */
-            .badge {{
-                position: absolute;
-                top: -6px;
-                left: -6px;
-                background: linear-gradient(135deg, #FFD700, #B8860B);
-                color: #001f3f;
-                font-size: 0.75rem;
-                font-weight: 800;
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
-            }}
-            
-            /* خط فاصل */
-            .divider {{
-                width: 40px;
-                height: 2px;
-                background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
-                margin: 15px 0;
-                border-radius: 2px;
-            }}
-            
-            /* محتوى الشريط الموسع */
-            .sidebar-content {{
-                flex: 1;
-                padding: 20px 18px;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease 0.1s;
-                overflow-y: auto;
-                overflow-x: hidden;
-            }}
-            
-            .custom-sidebar.expanded .sidebar-content {{
-                opacity: 1;
-                visibility: visible;
-            }}
-            
-            /* عنوان السجل */
-            .sidebar-header {{
-                text-align: center;
-                padding-bottom: 18px;
-                margin-bottom: 18px;
-                border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-            }}
-            
-            .sidebar-header h3 {{
-                color: #FFD700;
-                font-size: 1.15rem;
-                font-weight: 700;
-                margin-bottom: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            }}
-            
-            .sidebar-header p {{
-                color: rgba(255, 255, 255, 0.5);
-                font-size: 0.78rem;
-            }}
-            
-            /* بطاقات التقارير */
-            .report-card {{
-                background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
-                border-radius: 12px;
-                padding: 14px;
-                margin-bottom: 12px;
-                border: 1px solid rgba(255, 215, 0, 0.12);
-                transition: all 0.3s ease;
-                cursor: pointer;
-            }}
-            
-            .report-card:hover {{
-                border-color: rgba(255, 215, 0, 0.5);
-                transform: translateX(-5px);
-                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-                background: linear-gradient(135deg, rgba(36, 55, 84, 0.9), rgba(23, 41, 70, 0.95));
-            }}
-            
-            .report-title {{
-                color: #FFD700;
-                font-size: 0.88rem;
-                font-weight: 600;
-                margin-bottom: 6px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }}
-            
-            .report-meta {{
-                display: flex;
-                gap: 8px;
-                color: rgba(255, 255, 255, 0.55);
-                font-size: 0.72rem;
-                margin-bottom: 4px;
-            }}
-            
-            .report-time {{
-                color: rgba(255, 255, 255, 0.4);
-                font-size: 0.68rem;
-            }}
-            
-            /* حالة فارغة */
-            .empty-state {{
-                text-align: center;
-                padding: 40px 15px;
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 15px;
-                border: 1px dashed rgba(255, 215, 0, 0.2);
-            }}
-            
-            .empty-icon {{
-                font-size: 3rem;
-                margin-bottom: 15px;
-                opacity: 0.6;
-            }}
-            
-            .empty-text {{
-                color: rgba(255, 255, 255, 0.6);
-                font-size: 0.95rem;
-                margin-bottom: 8px;
-            }}
-            
-            .empty-hint {{
-                color: rgba(255, 255, 255, 0.35);
-                font-size: 0.8rem;
-            }}
-            
-            /* Scrollbar مخصص */
-            .sidebar-content::-webkit-scrollbar {{
-                width: 6px;
-            }}
-            
-            .sidebar-content::-webkit-scrollbar-track {{
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 5px;
-            }}
-            
-            .sidebar-content::-webkit-scrollbar-thumb {{
-                background: rgba(255, 215, 0, 0.3);
-                border-radius: 5px;
-            }}
-            
-            .sidebar-content::-webkit-scrollbar-thumb:hover {{
-                background: rgba(255, 215, 0, 0.5);
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="custom-sidebar collapsed" id="customSidebar">
-            <!-- محتوى الشريط الموسع -->
-            <div class="sidebar-content">
-                <div class="sidebar-header">
-                    <h3>📚 سجل التقارير</h3>
-                    <p>التقارير تُحفظ مؤقتاً خلال الجلسة</p>
-                </div>
-                
-                <div class="reports-list">
-                    {reports_html}
+    <div class="custom-sidebar" id="customSidebar">
+        <!-- الشريط الضيق (دائماً ظاهر - 70px) -->
+        <div class="sidebar-strip">
+            <div class="strip-btn menu-toggle" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
+                <div class="hamburger" id="hamburgerIcon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
             </div>
             
-            <!-- الشريط الضيق (دائماً ظاهر) -->
-            <div class="sidebar-strip">
-                <div class="menu-btn" onclick="toggleSidebar()" title="فتح/إغلاق القائمة">
-                    <div class="hamburger-icon">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </div>
-                
-                <div class="icon-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
-                    <span class="icon">📚</span>
-                    <span class="badge">{reports_count}</span>
-                </div>
-                
-                <div class="divider"></div>
+            <div class="strip-btn" onclick="toggleSidebar()" title="سجل التقارير ({reports_count})">
+                <span class="strip-icon">📚</span>
+                <span class="strip-badge">{reports_count}</span>
+            </div>
+            
+            <div class="strip-divider"></div>
+            
+            <div class="strip-btn" title="الإعدادات">
+                <span class="strip-icon">⚙️</span>
             </div>
         </div>
         
-        <script>
-            function toggleSidebar() {{
-                const sidebar = document.getElementById('customSidebar');
-                sidebar.classList.toggle('collapsed');
-                sidebar.classList.toggle('expanded');
-            }}
+        <!-- محتوى الشريط الموسع -->
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <h3>📚 سجل التقارير</h3>
+                <p>التقارير المُنشأة خلال الجلسة الحالية</p>
+            </div>
             
-            // إغلاق عند النقر خارج الشريط
-            document.addEventListener('click', function(event) {{
-                const sidebar = document.getElementById('customSidebar');
-                const isClickInside = sidebar.contains(event.target);
-                
-                if (!isClickInside && sidebar.classList.contains('expanded')) {{
-                    sidebar.classList.remove('expanded');
-                    sidebar.classList.add('collapsed');
-                }}
-            }});
-        </script>
-    </body>
-    </html>
+            <div class="sidebar-content">
+                {reports_html}
+            </div>
+            
+            <div class="sidebar-footer">
+                <span>تيار الحكمة الوطني</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleSidebar() {{
+            const sidebar = document.getElementById('customSidebar');
+            const hamburger = document.getElementById('hamburgerIcon');
+            
+            if (sidebar.classList.contains('expanded')) {{
+                sidebar.classList.remove('expanded');
+                hamburger.classList.remove('active');
+            }} else {{
+                sidebar.classList.add('expanded');
+                hamburger.classList.add('active');
+            }}
+        }}
+        
+        // إغلاق عند النقر خارج الشريط
+        document.addEventListener('click', function(e) {{
+            const sidebar = document.getElementById('customSidebar');
+            if (sidebar && !sidebar.contains(e.target) && sidebar.classList.contains('expanded')) {{
+                sidebar.classList.remove('expanded');
+                document.getElementById('hamburgerIcon').classList.remove('active');
+            }}
+        }});
+    </script>
     '''
     
-    # عرض الشريط الجانبي المخصص
-    components.html(sidebar_html, height=0, scrolling=False)
+    return sidebar_html
 
-# عرض الشريط الجانبي المخصص
-render_custom_sidebar()
+# تطبيق CSS الشريط الجانبي
+st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
+
+# عرض الشريط الجانبي
+st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 🏗️ بناء الواجهة الرئيسية
@@ -664,10 +366,10 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             selected_model = get_best_available_model()
             
             generation_config = genai.types.GenerationConfig(
-                temperature=0.0,
+                temperature=0.1,
                 top_p=0.95,
                 top_k=40,
-                max_output_tokens=8192,
+                max_output_tokens=16384,  # زيادة الحد الأقصى للإخراج
             )
             
             model = genai.GenerativeModel(selected_model)
@@ -677,10 +379,14 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             file_label = "Report"
             report_type_short = ""
             
+            # ===== التوقيع في المنتصف =====
             unified_signature = """
-            <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 2px solid #ccc; font-family: 'Tajawal'; color: #555;">
-                <p style="margin-bottom: 5px;"><strong>صادر من الجهاز المركزي للجودة الشاملة</strong></p>
-                <p style="font-size: 1.1em; color: #001f3f;"><strong>وحدة التخطيط الاستراتيجي والتطوير</strong></p>
+            <div class="report-signature">
+                <div class="signature-line"></div>
+                <div class="signature-icon">🦅</div>
+                <p class="signature-org">صادر من الجهاز المركزي للجودة الشاملة</p>
+                <p class="signature-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
+                <div class="signature-line"></div>
             </div>
             """
 
@@ -689,10 +395,16 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Official_Report"
                 report_type_short = "📄 رسمي"
                 design_rules = """
-                Style: Official Corporate Report.
-                - Wrap card sections in <div class="card">.
-                - Use HTML <table> inside cards for tabular data.
-                - Use <ul> with <li><span>Label</span> <span class="value">Value</span></li> for lists.
+                Style: Official Corporate Report with MODERN design.
+                Structure:
+                - Use <header> for title with gradient background
+                - Use <div class="card"> for each major section with shadow and border
+                - Use <h3> with decorative right border for section titles
+                - Use <table class="data-table"> for tabular data with zebra striping
+                - Use <ul class="info-list"> with custom bullets for lists
+                - Add icons (emoji) before important items
+                - Use <div class="highlight-box"> for key findings
+                - Use <div class="stats-row"> with <div class="stat-item"> for statistics
                 """
             
             elif "الرقمي" in report_type:
@@ -700,10 +412,16 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Digital_Dashboard"
                 report_type_short = "📱 رقمي"
                 design_rules = """
-                Style: Modern Digital Dashboard.
-                - Use <section id="summary"> for highlights.
-                - Use <article class="card"> for detailed sections.
-                - Use <div class="goal"> for key takeaways.
+                Style: Modern Digital Dashboard with cards and metrics.
+                Structure:
+                - Use <div class="dashboard-header"> for title area
+                - Use <div class="metrics-grid"> with <div class="metric-card"> for KPIs
+                - Inside metric-card: <div class="metric-value">, <div class="metric-label">, <div class="metric-trend">
+                - Use <div class="chart-section"> for data visualization areas
+                - Use <div class="data-card"> for detailed sections
+                - Use <div class="progress-indicator"> for percentages
+                - Use <div class="alert-box success/warning/info"> for notifications
+                - Add sparkline effects with CSS gradients
                 """
             
             elif "التحليل" in report_type:
@@ -711,11 +429,16 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Deep_Analysis"
                 report_type_short = "📊 تحليلي"
                 design_rules = """
-                Style: Statistical Hierarchy.
-                - Use <div class="stats-grid"> for top key numbers.
-                - Use <div class="pyramid-grid"> for detailed hierarchy.
-                - Inside pyramid, use <div class="tier-card tier-upper"> (or middle/weak) based on importance.
-                - Use <div class="bar-container"><div class="bar" style="width: XX%;"></div></div> for percentages.
+                Style: Statistical Analysis Report with visual hierarchy.
+                Structure:
+                - Use <header class="analysis-header"> with dark background
+                - Use <div class="stats-grid"> for top-level statistics
+                - Use <div class="stat-card"> with <span class="stat-value"> and <span class="stat-label">
+                - Use <div class="analysis-section"> for each analysis area
+                - Use <div class="comparison-table"> for comparisons
+                - Use <div class="bar-chart"> with <div class="bar" style="width: X%"> for visual bars
+                - Use <div class="insight-box"> for key insights
+                - Use <div class="recommendation-card"> for recommendations
                 """
             
             elif "ملخص" in report_type:
@@ -723,10 +446,16 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Executive_Summary"
                 report_type_short = "✨ تنفيذي"
                 design_rules = """
-                Style: Modern Executive Summary.
-                - Header is already provided in CSS, just use <h1>.
-                - Use <div class="executive-summary"> for the main text.
-                - Use <div class="grid-2"> with <div class="metric-box"> for key metrics.
+                Style: Clean Executive Summary with minimal design.
+                Structure:
+                - Use <header class="exec-header"> with brand colors
+                - Use <div class="exec-summary"> for main summary text
+                - Use <div class="key-metrics"> with <div class="metric"> for important numbers
+                - Use <div class="section"> with <h2 class="section-title"> for each part
+                - Use <div class="bullet-list"> for key points
+                - Use <div class="action-items"> for recommendations
+                - Use <blockquote class="quote"> for important quotes
+                - Keep design clean and professional
                 """
 
             elif "عرض تقديمي" in report_type:
@@ -734,21 +463,17 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 file_label = "Presentation_Slides"
                 report_type_short = "📽️ عرض"
                 design_rules = """
-                Style: Interactive Presentation Slides (Reveal.js style).
-                Structure Requirement:
-                1. Output HTML `div` elements with class `slide`.
-                2. The first slide MUST be `<div class="slide cover active" id="slide-1">`.
-                3. Subsequent slides must be `<div class="slide" id="slide-2">`, `<div class="slide" id="slide-3">` etc.
-                4. Inside slides, use `<div class="slide-header">` (with title & logo).
-                5. Use `<div class="slide-content">` split into `<div class="text-panel">` and `<div class="visual-panel">`.
-                6. Use FontAwesome icons `<i class="fas fa-icon"></i>` inside the visual panel.
-                7. The FINAL slide must include the signature box exactly as:
-                   <div class="signature-box">
-                        <div class="signature-title">صادر عن</div>
-                        <div class="signature-name">الجهاز المركزي للجودة الشاملة</div>
-                        <div class="signature-name">وحدة التخطيط الاستراتيجي والتطوير</div>
-                   </div>
-                8. DO NOT output the Javascript or CSS, only the HTML body content.
+                Style: Interactive Presentation Slides.
+                Structure:
+                1. First slide: <div class="slide cover active" id="slide-1"> with main title
+                2. Content slides: <div class="slide" id="slide-N">
+                3. Inside each slide:
+                   - <div class="slide-header"> with <div class="header-title"><h2>Title</h2></div>
+                   - <div class="slide-content"> with <div class="text-panel"> and <div class="visual-panel">
+                4. Use FontAwesome icons: <i class="fas fa-icon"></i>
+                5. Last slide must have signature box
+                6. Create 6-10 slides minimum
+                7. DO NOT output CSS or JavaScript, only HTML content
                 """
                 unified_signature = """
                 <div class="nav-controls">
@@ -758,41 +483,73 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                 <div class="page-number" id="page-num">1 / 1</div>
                 """
 
+            # ===== الـ PROMPT المُحسّن لإنتاج تقارير كاملة =====
             prompt = f"""
-            You are a strict Data Analyst & Developer.
-            **Objective:** Convert the provided text into a Professional HTML Report.
-            
-            **CRITICAL RULES (ZERO TOLERANCE):**
-            1. **OUTPUT FORMAT:** You MUST wrap the HTML code inside a markdown block like this:
-               ```html
-               <!DOCTYPE html>
-               ... code ...
-               ```
-               Do NOT include any text before or after this block.
-            2. **NAMES PRESERVATION:** Copy person names EXACTLY (e.g. "بليغ ابو كلل").
-            3. **REVERSED TEXT:** Fix reversed Arabic letters but keep words unchanged.
-            4. **DESIGN:** Follow these rules:
-            {design_rules}
-            
-            **INPUT DATA:**
-            {full_text}
-            
-            **LANGUAGE:** Arabic (Professional).
-            """
+أنت محلل بيانات ومطور محترف. مهمتك تحويل النص المُعطى إلى تقرير HTML احترافي كامل.
+
+⚠️ قواعد صارمة يجب الالتزام بها (عدم الالتزام = فشل):
+
+1️⃣ المحتوى الكامل (مهم جداً):
+   - يجب تضمين كل المعلومات والبيانات من النص الأصلي بدون أي اختصار أو حذف
+   - لا تختصر أي جملة أو فقرة أو نقطة
+   - انقل كل الأرقام والإحصائيات والنسب كما هي
+   - حافظ على جميع الأسماء والتواريخ والتفاصيل
+   - إذا كان النص طويلاً، اجعل التقرير طويلاً أيضاً
+
+2️⃣ صيغة الإخراج:
+   - غلّف الكود داخل ```html و ```
+   - لا تكتب أي نص قبل أو بعد كود HTML
+   - استخدم UTF-8 للعربية
+
+3️⃣ الأسماء والنصوص:
+   - انسخ أسماء الأشخاص كما هي بالضبط
+   - لا تعكس أي حرف أو كلمة عربية
+   - حافظ على ترتيب الكلمات الأصلي
+
+4️⃣ التصميم المطلوب:
+{design_rules}
+
+5️⃣ الهيكل العام:
+   - ابدأ بـ <!DOCTYPE html>
+   - استخدم <html lang="ar" dir="rtl">
+   - أضف جميع الأقسام المطلوبة
+   - اجعل التصميم عصرياً وجذاباً
+
+📊 البيانات المُدخلة (يجب تضمينها كاملة):
+{full_text}
+
+🎯 التوقيع (أضفه في منتصف التقرير قبل نهاية المحتوى):
+{unified_signature}
+
+اللغة: العربية الفصحى المهنية
+"""
 
             progress_placeholder = st.empty()
             
-            for i in range(0, 90, 10):
+            # ===== شريط التحميل المُحسّن (بدون اسم الموديل) =====
+            progress_messages = [
+                "🔍 جاري تحليل البيانات...",
+                "📊 استخراج المعلومات الرئيسية...",
+                "🎨 تطبيق التصميم المطلوب...",
+                "✍️ إنشاء محتوى التقرير...",
+                "🔧 معالجة النصوص العربية...",
+                "📝 تنسيق الجداول والقوائم...",
+                "🎯 إضافة اللمسات النهائية...",
+                "✅ اكتمال المعالجة..."
+            ]
+            
+            for i, msg in enumerate(progress_messages):
+                progress_percent = int((i + 1) / len(progress_messages) * 100)
                 progress_placeholder.markdown(f'''
                 <div class="progress-box">
-                    <div style="font-size: 2rem; margin-bottom: 15px;">🤖</div>
+                    <div class="progress-icon">🤖</div>
                     <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: {i}%;"></div>
+                        <div class="progress-bar-fill" style="width: {progress_percent}%;"></div>
                     </div>
-                    <div class="progress-text">جاري معالجة البيانات باستخدام ({selected_model})... {i}%</div>
+                    <div class="progress-text">{msg} {progress_percent}%</div>
                 </div>
                 ''', unsafe_allow_html=True)
-                time.sleep(0.1)
+                time.sleep(0.2)
             
             try:
                 response = model.generate_content(prompt, generation_config=generation_config)
@@ -812,13 +569,13 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>تقرير {file_label}</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
                     {target_css}
                 </head>
                 <body>
                     <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
                         {html_body}
-                        {unified_signature}
+                        {unified_signature if 'عرض تقديمي' not in report_type else ''}
                     </div>
                     
                     {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
@@ -835,7 +592,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 
                 st.markdown('''
                 <div class="success-banner">
-                    <span>✅ تم إنشاء التقرير وحفظه في السجل بنجاح!</span>
+                    <span>✅ تم إنشاء التقرير الكامل وحفظه بنجاح!</span>
                 </div>
                 ''', unsafe_allow_html=True)
                 
@@ -856,7 +613,7 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             
             except Exception as api_error:
                 progress_placeholder.empty()
-                st.error(f"❌ حدث خطأ أثناء الاتصال بـ Google AI: {api_error}")
+                st.error(f"❌ حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {api_error}")
 
         except Exception as e:
             st.error(f"❌ حدث خطأ غير متوقع: {e}")
@@ -864,47 +621,11 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
 # الفوتر
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown('''
-<div style="
-    background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
-    border-radius: 15px;
-    padding: 30px 20px;
-    margin: 20px;
-    margin-right: 100px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    text-align: center;
-    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
-">
-    <div style="
-        width: 60px;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, #FFD700, transparent);
-        margin: 0 auto 20px auto;
-        border-radius: 2px;
-    "></div>
-    <p style="
-        color: #FFD700;
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        font-family: 'Tajawal', sans-serif;
-    ">الجهاز المركزي للجودة الشاملة</p>
-    <p style="
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1rem;
-        font-weight: 500;
-        margin-bottom: 15px;
-        font-family: 'Tajawal', sans-serif;
-    ">وحدة التخطيط الاستراتيجي والتطوير</p>
-    <div style="
-        width: 100px;
-        height: 1px;
-        background: rgba(255, 215, 0, 0.3);
-        margin: 15px auto;
-    "></div>
-    <p style="
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.85rem;
-        font-family: 'Tajawal', sans-serif;
-    ">جميع الحقوق محفوظة © 2026</p>
+<div class="footer-section">
+    <div class="footer-line"></div>
+    <p class="footer-org">الجهاز المركزي للجودة الشاملة</p>
+    <p class="footer-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
+    <div class="footer-divider"></div>
+    <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
