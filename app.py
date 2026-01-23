@@ -154,7 +154,7 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري والنهائي
+# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري
 # ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
@@ -185,93 +185,84 @@ def render_custom_sidebar():
 """
     
     # الشريط الجانبي المخصص بالكامل
-    # التعديل الاستراتيجي: إزالة onclick من HTML وإضافة IDs للتحكم البرمجي المباشر
+    # تنبيه: الكود هنا يلامس الحافة اليسرى عمداً لمنع ظهوره كنص في المتصفح
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
-    <div class="sidebar-strip">
-        <div class="strip-btn menu-toggle" id="btn-toggle-main" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
-            <div class="hamburger" id="hamburgerIcon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
+<div class="sidebar-strip">
+<div class="strip-btn menu-toggle" onclick="window.toggleSidebar()" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
+<div class="hamburger" id="hamburgerIcon">
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
 
-        <div class="strip-btn" id="btn-toggle-history" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
-            <span class="strip-icon">📚</span>
-            <span class="strip-badge">{reports_count}</span>
-        </div>
+<div class="strip-btn" onclick="window.toggleSidebar()" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
+<span class="strip-icon">📚</span>
+<span class="strip-badge">{reports_count}</span>
+</div>
 
-        <div class="strip-divider"></div>
+<div class="strip-divider"></div>
 
-        <div class="strip-btn" title="الإعدادات">
-            <span class="strip-icon">⚙️</span>
-        </div>
-    </div>
+<div class="strip-btn" title="الإعدادات">
+<span class="strip-icon">⚙️</span>
+</div>
+</div>
 
-    <div class="sidebar-panel">
-        <div class="sidebar-header">
-            <h3>📚 سجل التقارير</h3>
-            <p>التقارير المُنشأة خلال الجلسة الحالية</p>
-        </div>
+<div class="sidebar-panel">
+<div class="sidebar-header">
+<h3>📚 سجل التقارير</h3>
+<p>التقارير المُنشأة خلال الجلسة الحالية</p>
+</div>
 
-        <div class="sidebar-content">
-            {reports_html}
-        </div>
+<div class="sidebar-content">
+{reports_html}
+</div>
 
-        <div class="sidebar-footer">
-            <span>تيار الحكمة الوطني</span>
-        </div>
-    </div>
+<div class="sidebar-footer">
+<span>تيار الحكمة الوطني</span>
+</div>
+</div>
 </div>
 
 <script>
-    // استخدام IIFE (Immediately Invoked Function Expression) لعزل الكود وتنفيذه فوراً بذكاء
-    (function() {{
-        // تعريف العناصر
-        const sidebar = document.getElementById('customSidebar');
-        const hamburger = document.getElementById('hamburgerIcon');
-        const mainBtn = document.getElementById('btn-toggle-main');
-        const histBtn = document.getElementById('btn-toggle-history');
+    // التأكد من تعريف الدالة في النطاق العام (Global Scope)
+    window.toggleSidebar = function() {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
         
-        // دالة التبديل المركزية
-        function toggleSidebar(e) {{
-            // إيقاف انتشار الحدث لمنع تداخل المستمع العام
-            if(e) e.stopPropagation();
-            
-            if (sidebar) sidebar.classList.toggle('expanded');
-            if (hamburger) hamburger.classList.toggle('active');
+        if (sidebar) {{
+            sidebar.classList.toggle('expanded');
         }}
+        
+        if (hamburger) {{
+            hamburger.classList.toggle('active');
+        }}
+    }};
 
-        // الربط المباشر (Direct Binding)
-        // نستخدم .onclick بدلاً من addEventListener لمنع تكرار الأحداث عند إعادة تحميل Streamlit
-        if (mainBtn) {{
-            mainBtn.onclick = toggleSidebar;
-        }}
+    // إعادة ربط الأحداث في حالة إعادة التحميل
+    document.addEventListener('DOMContentLoaded', function() {{
+        console.log("Sidebar Script Loaded");
+    }});
+    
+    // إغلاق القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
         
-        if (histBtn) {{
-            histBtn.onclick = toggleSidebar;
-        }}
-        
-        // إغلاق القائمة عند النقر خارجها
-        document.addEventListener('click', function(e) {{
-            if (sidebar && sidebar.classList.contains('expanded')) {{
-                // التحقق: هل النقر تم خارج الشريط الجانبي؟
-                if (!sidebar.contains(e.target)) {{
-                    // التحقق: هل النقر تم على أحد أزرار الفتح؟ (لمنع الإغلاق الفوري)
-                    const isMainBtn = mainBtn && (mainBtn.contains(e.target) || mainBtn === e.target);
-                    const isHistBtn = histBtn && (histBtn.contains(e.target) || histBtn === e.target);
-                    
-                    if (!isMainBtn && !isHistBtn) {{
-                        sidebar.classList.remove('expanded');
-                        if (hamburger) hamburger.classList.remove('active');
-                    }}
-                }}
+        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
+            // التأكد من عدم النقر على زر الفتح نفسه
+            let clickedOnButton = false;
+            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
+                clickedOnButton = true;
             }}
-        }});
-        
-        console.log("Sidebar Logic Loaded Successfully via Strategic Fix");
-    }})();
+            
+            if (!clickedOnButton) {{
+                sidebar.classList.remove('expanded');
+                if (hamburger) hamburger.classList.remove('active');
+            }}
+        }}
+    }});
 </script>
 """
     
