@@ -304,7 +304,7 @@ if 'preview_index' in query_params:
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
-    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
+    <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -422,7 +422,6 @@ if st.button("🚀 بدء المعالجة وإنشاء التقرير الكا�
             unified_signature = """
             <div class="report-signature">
                 <div class="signature-line"></div>
-                <div class="signature-icon">🦅</div>
                 <p class="signature-org">صادر من الجهاز المركزي للجودة الشاملة</p>
                 <p class="signature-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
                 <div class="signature-line"></div>
@@ -683,3 +682,4 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
+
