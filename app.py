@@ -369,9 +369,8 @@ def render_platform_page():
     # الهيدر الرئيسي
     st.markdown('''
     <div class="hero-section">
-        <div class="hero-logo">🦅</div>
         <div class="hero-title">تيار الحكمة الوطني</div>
-        <div class="hero-subtitle">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي</div>
+        <div class="hero-subtitle">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
     </div>
     ''', unsafe_allow_html=True)
     
@@ -745,3 +744,4 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
+
