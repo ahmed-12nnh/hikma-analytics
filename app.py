@@ -154,12 +154,12 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (مثل Gemini) - الحل الجذري
+# 🎨 الشريط الجانبي المخصص (الحل النهائي مع الحفاظ على التصميم 100%)
 # ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
     
-    # بناء HTML للتقارير (بدون مسافات بادئة لضمان العمل)
+    # بناء HTML للتقارير
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
@@ -184,88 +184,86 @@ def render_custom_sidebar():
 </div>
 """
     
-    # الشريط الجانبي المخصص بالكامل
-    # تنبيه: الكود هنا يلامس الحافة اليسرى عمداً لمنع ظهوره كنص في المتصفح
+    # === الشريط الجانبي ===
+    # تم الحفاظ على نفس الـ Div Classes لضمان عدم تغير التصميم
+    # التعديل الوحيد: إضافة id="toggleBtn" و id="historyBtn" للعناصر للتحكم بها
     sidebar_html = f"""
 <div class="custom-sidebar" id="customSidebar">
-<div class="sidebar-strip">
-<div class="strip-btn menu-toggle" onclick="window.toggleSidebar()" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
-<div class="hamburger" id="hamburgerIcon">
-<span></span>
-<span></span>
-<span></span>
-</div>
-</div>
+    <div class="sidebar-strip">
+        
+        <div class="strip-btn menu-toggle" id="toggleBtn" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
+            <div class="hamburger" id="hamburgerIcon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
 
-<div class="strip-btn" onclick="window.toggleSidebar()" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
-<span class="strip-icon">📚</span>
-<span class="strip-badge">{reports_count}</span>
-</div>
+        <div class="strip-btn" id="historyBtn" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
+            <span class="strip-icon">📚</span>
+            <span class="strip-badge">{reports_count}</span>
+        </div>
 
-<div class="strip-divider"></div>
+        <div class="strip-divider"></div>
 
-<div class="strip-btn" title="الإعدادات">
-<span class="strip-icon">⚙️</span>
-</div>
-</div>
+        <div class="strip-btn" title="الإعدادات">
+            <span class="strip-icon">⚙️</span>
+        </div>
+    </div>
 
-<div class="sidebar-panel">
-<div class="sidebar-header">
-<h3>📚 سجل التقارير</h3>
-<p>التقارير المُنشأة خلال الجلسة الحالية</p>
-</div>
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3>📚 سجل التقارير</h3>
+            <p>التقارير المُنشأة خلال الجلسة الحالية</p>
+        </div>
 
-<div class="sidebar-content">
-{reports_html}
-</div>
+        <div class="sidebar-content">
+            {reports_html}
+        </div>
 
-<div class="sidebar-footer">
-<span>تيار الحكمة الوطني</span>
-</div>
-</div>
+        <div class="sidebar-footer">
+            <span>تيار الحكمة الوطني</span>
+        </div>
+    </div>
 </div>
 
 <script>
-    // التأكد من تعريف الدالة في النطاق العام (Global Scope)
-    window.toggleSidebar = function() {{
-        var sidebar = document.getElementById('customSidebar');
-        var hamburger = document.getElementById('hamburgerIcon');
+    // كود جافا سكربت "معزول" يربط الأزرار عند التحميل
+    (function() {{
+        const sidebar = document.getElementById('customSidebar');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const historyBtn = document.getElementById('historyBtn');
+        const hamburger = document.getElementById('hamburgerIcon');
         
-        if (sidebar) {{
-            sidebar.classList.toggle('expanded');
+        function toggleMenu(e) {{
+            // منع انتشار الحدث
+            e.stopPropagation();
+            if (sidebar) sidebar.classList.toggle('expanded');
+            if (hamburger) hamburger.classList.toggle('active');
         }}
-        
-        if (hamburger) {{
-            hamburger.classList.toggle('active');
-        }}
-    }};
 
-    // إعادة ربط الأحداث في حالة إعادة التحميل
-    document.addEventListener('DOMContentLoaded', function() {{
-        console.log("Sidebar Script Loaded");
-    }});
-    
-    // إغلاق القائمة عند النقر خارجها
-    document.addEventListener('click', function(e) {{
-        var sidebar = document.getElementById('customSidebar');
-        var hamburger = document.getElementById('hamburgerIcon');
-        
-        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
-            // التأكد من عدم النقر على زر الفتح نفسه
-            let clickedOnButton = false;
-            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
-                clickedOnButton = true;
+        // ربط الحدث برمجياً لضمان العمل في كل مرة
+        if (toggleBtn) toggleBtn.onclick = toggleMenu;
+        if (historyBtn) historyBtn.onclick = toggleMenu;
+
+        // إغلاق القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {{
+            if (sidebar && sidebar.classList.contains('expanded')) {{
+                // هل النقر داخل الشريط؟
+                const clickInside = sidebar.contains(e.target);
+                // هل النقر على زر الفتح؟
+                const clickToggle = toggleBtn && toggleBtn.contains(e.target);
+                const clickHistory = historyBtn && historyBtn.contains(e.target);
+                
+                if (!clickInside && !clickToggle && !clickHistory) {{
+                    sidebar.classList.remove('expanded');
+                    if (hamburger) hamburger.classList.remove('active');
+                }}
             }}
-            
-            if (!clickedOnButton) {{
-                sidebar.classList.remove('expanded');
-                if (hamburger) hamburger.classList.remove('active');
-            }}
-        }}
-    }});
+        }});
+    }})();
 </script>
 """
-    
     return sidebar_html
 
 # تطبيق CSS الشريط الجانبي
