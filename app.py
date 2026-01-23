@@ -29,7 +29,7 @@ except:
     API_KEY = None
 
 # ---------------------------------------------------------
-# 📦 تهيئة التخزين المؤقت
+# 📦 تهيئة التخزين المؤقت (Session State)
 # ---------------------------------------------------------
 if 'reports_history' not in st.session_state:
     st.session_state.reports_history = []
@@ -50,12 +50,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# تطبيق التصميم الرئيسي (الداكن - كما هو) + إخفاء الشريط الافتراضي
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 🛠️ دوال المساعدة
 # ---------------------------------------------------------
+
 def extract_text_from_file(uploaded_file):
+    """استخراج النص باستخدام مكتبة fitz (PyMuPDF)"""
     text_content = ""
     try:
         if uploaded_file.type == "application/pdf":
@@ -65,19 +68,24 @@ def extract_text_from_file(uploaded_file):
                     text_content += page.get_text() + "\n"
             except Exception as pdf_err:
                 return f"⚠️ خطأ في قراءة PDF: {pdf_err}"
+
         elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
             try:
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
                 text_content = df.to_csv(index=False)
             except Exception as xl_err:
                  return f"⚠️ خطأ في قراءة Excel: {xl_err}"
+        
         else:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8", errors='ignore'))
             text_content = stringio.read()
+            
     except Exception as e:
-        return f"⚠️ خطأ عام: {e}"
+        return f"⚠️ خطأ عام في قراءة الملف: {e}"
+        
     if not text_content.strip():
-        return "⚠️ تحذير: الملف فارغ."
+        return "⚠️ تحذير: الملف يبدو فارغاً."
+        
     return text_content
 
 def clean_input_text(text):
@@ -87,16 +95,48 @@ def clean_input_text(text):
 
 def clean_html_response(text):
     match = re.search(r"```html(.*?)```", text, re.DOTALL)
-    if match: return match.group(1).strip()
+    if match:
+        return match.group(1).strip()
+    
     match = re.search(r"```(.*?)```", text, re.DOTALL)
-    if match: return match.group(1).strip()
+    if match:
+        return match.group(1).strip()
+        
+    match = re.search(r"(<html|<!DOCTYPE)(.*)", text, re.DOTALL)
+    if match:
+        return match.group(1) + match.group(2)
+    
     return text.strip()
 
 def get_best_available_model():
-    return "models/gemini-1.5-flash"
+    try:
+        available_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                available_models.append(m.name)
+        
+        for m in available_models:
+            if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
+                return m 
+        
+        for m in available_models:
+            if 'gemini-1.5-pro' in m and 'exp' not in m:
+                return m
+                
+        for m in available_models:
+            if 'gemini-pro' in m and '1.0' in m:
+                return m
+        
+        for m in available_models:
+            if 'exp' not in m and '2.0' not in m:
+                return m
+                
+        return "models/gemini-1.5-flash"
+    except:
+        return "models/gemini-pro"
 
 # ---------------------------------------------------------
-# 📚 دوال التخزين والعرض
+# 📚 دوال التخزين المؤقت
 # ---------------------------------------------------------
 def save_report_to_history(title, report_type, html_content, source_name=""):
     report_entry = {
@@ -109,38 +149,129 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         'size': f"{len(html_content) / 1024:.1f} KB"
     }
     st.session_state.reports_history.insert(0, report_entry)
+    
     if len(st.session_state.reports_history) > 10:
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
+# ---------------------------------------------------------
+# 🎨 الشريط الجانبي المخصص
+# ---------------------------------------------------------
 def render_custom_sidebar():
     reports_count = len(st.session_state.reports_history)
+    
     reports_html = ""
     if reports_count > 0:
         for i, report in enumerate(st.session_state.reports_history):
             title_short = report['title'][:20] + "..." if len(report['title']) > 20 else report['title']
-            reports_html += f"""<div class="sidebar-report-card"><div class="report-title">📄 {title_short}</div><div class="report-meta"><span>{report['type']}</span></div></div>"""
+            reports_html += f"""
+<div class="sidebar-report-card">
+<div class="report-title">📄 {title_short}</div>
+<div class="report-meta">
+<span>{report['type']}</span>
+<span>•</span>
+<span>{report['size']}</span>
+</div>
+<div class="report-time">🕐 {report['timestamp']}</div>
+</div>
+"""
     else:
-        reports_html = """<div class="sidebar-empty"><div class="empty-text">لا توجد تقارير</div></div>"""
+        reports_html = """
+<div class="sidebar-empty">
+<div class="empty-icon">📭</div>
+<div class="empty-text">لا توجد تقارير بعد</div>
+<div class="empty-hint">ستظهر هنا بعد إنشائها</div>
+</div>
+"""
     
-    return f"""
-    <div class="custom-sidebar" id="customSidebar">
-        <div class="sidebar-strip">
-            <div class="strip-btn" onclick="document.getElementById('customSidebar').classList.toggle('expanded')">☰</div>
-            <div class="strip-btn">📊</div>
-        </div>
-        <div class="sidebar-panel">
-            <div class="sidebar-header"><h3>السجل ({reports_count})</h3></div>
-            {reports_html}
-        </div>
-    </div>
-    """
+    sidebar_html = f"""
+<div class="custom-sidebar" id="customSidebar">
+<div class="sidebar-strip">
+<div class="strip-btn menu-toggle" onclick="window.toggleSidebar()" title="فتح/إغلاق القائمة" style="cursor: pointer; z-index: 100000;">
+<div class="hamburger" id="hamburgerIcon">
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
 
+<div class="strip-btn" onclick="window.toggleSidebar()" title="سجل التقارير ({reports_count})" style="cursor: pointer;">
+<span class="strip-icon">📚</span>
+<span class="strip-badge">{reports_count}</span>
+</div>
+
+<div class="strip-divider"></div>
+
+<div class="strip-btn" title="الإعدادات">
+<span class="strip-icon">⚙️</span>
+</div>
+</div>
+
+<div class="sidebar-panel">
+<div class="sidebar-header">
+<h3>📚 سجل التقارير</h3>
+<p>التقارير المُنشأة خلال الجلسة الحالية</p>
+</div>
+
+<div class="sidebar-content">
+{reports_html}
+</div>
+
+<div class="sidebar-footer">
+<span>تيار الحكمة الوطني</span>
+</div>
+</div>
+</div>
+
+<script>
+    window.toggleSidebar = function() {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
+        
+        if (sidebar) {{
+            sidebar.classList.toggle('expanded');
+        }}
+        
+        if (hamburger) {{
+            hamburger.classList.toggle('active');
+        }}
+    }};
+
+    document.addEventListener('DOMContentLoaded', function() {{
+        console.log("Sidebar Script Loaded");
+    }});
+    
+    document.addEventListener('click', function(e) {{
+        var sidebar = document.getElementById('customSidebar');
+        var hamburger = document.getElementById('hamburgerIcon');
+        
+        if (sidebar && sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {{
+            let clickedOnButton = false;
+            if (e.target.closest('.menu-toggle') || e.target.closest('.strip-btn')) {{
+                clickedOnButton = true;
+            }}
+            
+            if (!clickedOnButton) {{
+                sidebar.classList.remove('expanded');
+                if (hamburger) hamburger.classList.remove('active');
+            }}
+        }}
+    }});
+</script>
+"""
+    
+    return sidebar_html
+
+# تطبيق CSS الشريط الجانبي
 st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
+
+# عرض الشريط الجانبي
 st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 🏗️ الواجهة الرئيسية
+# 🏗️ بناء الواجهة الرئيسية
 # ---------------------------------------------------------
+
+# الهيدر الرئيسي
 st.markdown('''
 <div class="hero-section">
     <div class="main-title">تيار الحكمة الوطني</div>
@@ -148,139 +279,319 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-st.markdown('<div class="section-header">🎨 اختر نمط التقرير (جميع التصاميم بخلفية بيضاء احترافية)</div>', unsafe_allow_html=True)
+# عرض معاينة التقرير إذا كانت مفعّلة
+if st.session_state.preview_report:
+    st.markdown(f'''
+    <div class="preview-banner">
+        <span>👁️ معاينة: {st.session_state.preview_title}</span>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    components.html(st.session_state.preview_report, height=600, scrolling=True)
+    
+    if st.button("❌ إغلاق المعاينة", key="close_preview", use_container_width=True):
+        st.session_state.preview_report = None
+        st.session_state.preview_title = ""
+        st.rerun()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
 
+# عنوان اختيار النمط
+st.markdown('<div class="section-header">🎨 اختر نمط الإخراج المطلوب (جميع التصاميم بخلفية بيضاء احترافية)</div>', unsafe_allow_html=True)
+
+# أزرار الاختيار
 report_type = st.radio(
     "",
-    ("🏛️ التقرير الرسمي (أبيض/أزرق)", "📱 الداشبورد الرقمي (أبيض/ملون)", "📊 التحليل البياني (أبيض)", "📽️ عرض تقديمي (شرائح بيضاء)", "✨ ملخص تنفيذي"),
+    ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)", "✨ ملخص تنفيذي حديث"),
     horizontal=True,
     label_visibility="collapsed"
 )
 
-col1, col2 = st.columns([2, 1])
-with col1:
-    user_text = st.text_area("البيانات:", height=150, placeholder="أدخل النص هنا...")
-with col2:
-    uploaded_file = st.file_uploader("رفع ملف (PDF/Excel)", type=['pdf', 'xlsx'])
+st.markdown("<br>", unsafe_allow_html=True)
 
-if st.button("🚀 إنشاء التقرير الآن"):
+# منطقة الإدخال
+col_input, col_upload = st.columns([2, 1])
+
+with col_input:
+    st.markdown('''
+    <div class="input-card">
+        <div class="input-header">
+            <div class="input-icon">📝</div>
+            <div>
+                <div class="input-title">البيانات / الملاحظات</div>
+                <div class="input-subtitle">أدخل النص أو الصق محتوى التقرير هنا</div>
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+    user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...", label_visibility="collapsed")
+
+with col_upload:
+    st.markdown('''
+    <div class="input-card">
+        <div class="input-header">
+            <div class="input-icon">📎</div>
+            <div>
+                <div class="input-title">رفع الملفات</div>
+                <div class="input-subtitle">PDF, XLSX, TXT - حتى 200MB</div>
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
+    
+    if uploaded_file:
+        st.success(f"✅ تم إرفاق: {uploaded_file.name}")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# زر المعالجة
+if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل"):
+    
     if not API_KEY:
-        st.error("المفتاح مفقود!")
+        st.error("⚠️ لم يتم العثور على مفتاح API. يرجى إضافته في Secrets.")
         st.stop()
-        
+    
     full_text = user_text
     source_file_name = ""
+    
     if uploaded_file:
         source_file_name = uploaded_file.name
-        content = extract_text_from_file(uploaded_file)
-        full_text += f"\n\n[الملف]:\n{content}"
-    
+        with st.spinner('📂 جاري قراءة الملف ومعالجة النصوص العربية...'):
+            file_content = extract_text_from_file(uploaded_file)
+            if "⚠️" in file_content and len(file_content) < 200: 
+                st.warning(file_content)
+            full_text += f"\n\n[محتوى الملف]:\n{file_content}"
+
     full_text = clean_input_text(full_text)
-    if not full_text:
-        st.warning("الرجاء إدخال بيانات.")
-        st.stop()
 
-    try:
-        genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # إعداد التصميم المختار
-        target_css = ""
-        design_instructions = ""
-        
-        # التوقيع الموحد (يُضاف تلقائياً للكود النهائي)
-        unified_signature = """
-        <div class="report-signature">
-            <div class="signature-line"></div>
-            <div class="signature-icon">🦅</div>
-            <p class="signature-org">صادر من الجهاز المركزي للجودة الشاملة</p>
-            <p class="signature-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
-            <div class="signature-line"></div>
-        </div>
-        """
-
-        if "الرسمي" in report_type:
-            target_css = STYLE_OFFICIAL
-            design_instructions = """
-            Design: Clean Official White Paper.
-            Structure:
-            - <header><h1>Title</h1><p>Subtitle</p></header>
-            - <div class="stats-row"><div class="stat-item">...</div></div>
-            - Sections with <h2>
-            - Standard <table>
-            - <ul> lists
-            """
-        elif "الرقمي" in report_type:
-            target_css = STYLE_DIGITAL
-            design_instructions = """
-            Design: Modern Light Dashboard (White Background).
-            Structure:
-            - <div class="dashboard-header">...</div>
-            - <div class="metrics-grid"><div class="metric-card">...</div></div>
-            - <div class="data-card">...</div>
-            """
-        elif "التحليل" in report_type:
-            target_css = STYLE_ANALYTICAL
-            design_instructions = "Design: Analytical Report, White background, Clear Charts."
-        elif "عرض تقديمي" in report_type:
-            target_css = STYLE_PRESENTATION
-            design_instructions = """
-            Structure:
-            <div class="slide cover active" id="slide-1">...</div>
-            <div class="slide" id="slide-2">...</div>
-            Note: Use white background for slides.
-            """
-            unified_signature = '<div class="signature-box">صادر من الجهاز المركزي للجودة الشاملة</div><div class="nav-controls"><button class="nav-btn" onclick="prevSlide()">السابق</button><button class="nav-btn" onclick="nextSlide()">التالي</button></div><div class="page-number" id="page-num">1 / 1</div>'
-        else:
-            target_css = STYLE_EXECUTIVE
-            design_instructions = "Simple Executive Summary on White paper."
-
-        # Prompt
-        prompt = f"""
-        حول البيانات التالية إلى تقرير HTML كامل.
-        
-        القواعد:
-        1. الخلفية يجب أن تكون بيضاء (White Background) في كل الأقسام.
-        2. استخدم التصميم التالي: {design_instructions}
-        3. لا تكتب التوقيع في النص، سأضيفه أنا برمجياً.
-        4. اللغة عربية فصحى.
-        5. أعطني فقط كود HTML داخل Body.
-
-        البيانات:
-        {full_text}
-        """
-
-        with st.spinner("جاري الإعداد..."):
-            response = model.generate_content(prompt)
-            html_body = clean_html_response(response.text)
+    if not full_text.strip():
+        st.warning("⚠️ الرجاء إدخال بيانات أو رفع ملف صالح.")
+    else:
+        try:
+            genai.configure(api_key=API_KEY)
             
-            final_html = f"""
-            <!DOCTYPE html>
-            <html lang="ar" dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                {target_css}
-            </head>
-            <body>
-                <div class="{ 'presentation-container' if 'عرض' in report_type else 'container' }">
-                    {html_body}
-                    {unified_signature if 'عرض' not in report_type else ''}
+            selected_model = get_best_available_model()
+            
+            generation_config = genai.types.GenerationConfig(
+                temperature=0.1,
+                top_p=0.95,
+                top_k=40,
+                max_output_tokens=16384,
+            )
+            
+            model = genai.GenerativeModel(selected_model)
+
+            target_css = ""
+            design_rules = ""
+            file_label = "Report"
+            report_type_short = ""
+            
+            # ===== التوقيع الموحد (يضاف برمجياً فقط) =====
+            unified_signature = """
+            <div class="report-signature">
+                <div class="signature-line"></div>
+                <div class="signature-icon">🦅</div>
+                <p class="signature-org">صادر من الجهاز المركزي للجودة الشاملة</p>
+                <p class="signature-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
+                <div class="signature-line"></div>
+            </div>
+            """
+
+            if "الرسمي" in report_type:
+                target_css = STYLE_OFFICIAL
+                file_label = "Official_Report"
+                report_type_short = "📄 رسمي"
+                design_rules = """
+                Style: Official Professional Report (White Background).
+                Structure:
+                - Use <header> for title
+                - Use <div class="card"> for content sections
+                - Use Standard <table class="data-table">
+                - Use <div class="stats-row"> for statistics
+                - **BACKGROUND MUST BE WHITE**
+                """
+            
+            elif "الرقمي" in report_type:
+                target_css = STYLE_DIGITAL
+                file_label = "Digital_Dashboard"
+                report_type_short = "📱 رقمي"
+                design_rules = """
+                Style: Modern Light Dashboard (White Background).
+                Structure:
+                - Use <div class="dashboard-header">
+                - Use <div class="metrics-grid"> with <div class="metric-card">
+                - Use <div class="data-card"> for details
+                - **BACKGROUND MUST BE WHITE**
+                """
+            
+            elif "التحليل" in report_type:
+                target_css = STYLE_ANALYTICAL
+                file_label = "Deep_Analysis"
+                report_type_short = "📊 تحليلي"
+                design_rules = """
+                Style: Analytical Report (White Background).
+                Structure:
+                - Use <header class="analysis-header">
+                - Use <div class="stats-grid">
+                - Use <div class="analysis-section">
+                - **BACKGROUND MUST BE WHITE**
+                """
+            
+            elif "ملخص" in report_type:
+                target_css = STYLE_EXECUTIVE
+                file_label = "Executive_Summary"
+                report_type_short = "✨ تنفيذي"
+                design_rules = """
+                Style: Clean Executive Summary (White Background).
+                Structure:
+                - Use <header class="exec-header">
+                - Use <div class="exec-summary">
+                - Use <div class="key-metrics">
+                - **BACKGROUND MUST BE WHITE**
+                """
+
+            elif "عرض تقديمي" in report_type:
+                target_css = STYLE_PRESENTATION
+                file_label = "Presentation_Slides"
+                report_type_short = "📽️ عرض"
+                design_rules = """
+                Style: Presentation Slides (White Background).
+                Structure:
+                - Use <div class="slide"> for each slide
+                - Use <div class="slide cover"> for first slide
+                - **SLIDE BACKGROUND MUST BE WHITE**
+                """
+                # توقيع خاص للعرض التقديمي
+                unified_signature = """
+                <div class="nav-controls">
+                    <button class="nav-btn" onclick="prevSlide()"><i class="fas fa-chevron-right"></i></button>
+                    <button class="nav-btn" onclick="nextSlide()"><i class="fas fa-chevron-left"></i></button>
                 </div>
-                {unified_signature if 'عرض' in report_type else ''}
-                {SCRIPT_PRESENTATION if 'عرض' in report_type else ''}
-            </body>
-            </html>
-            """
-            
-            save_report_to_history("تقرير جديد", report_type, final_html, source_file_name)
-            
-            st.success("تم الإنشاء!")
-            components.html(final_html, height=800, scrolling=True)
-            st.download_button("تحميل التقرير", final_html, "report.html", "text/html")
+                <div class="page-number" id="page-num">1 / 1</div>
+                <div class="signature-box">صادر من الجهاز المركزي للجودة الشاملة</div>
+                """
 
-    except Exception as e:
-        st.error(f"خطأ: {e}")
+            # ===== الـ PROMPT (تم تعديله لمنع تكرار التوقيع) =====
+            prompt = f"""
+أنت محلل بيانات ومطور محترف. حول البيانات التالية إلى تقرير HTML كامل.
 
+⚠️ القواعد الصارمة:
+1. **الخلفية بيضاء (White Background)** لجميع التقارير.
+2. استخدم بنية HTML المتوافقة مع الكلاسات التالية:
+{design_rules}
+3. لا تقم أبداً بإضافة "التوقيع" أو "الخاتمة" (صادر عن...) داخل النص. سأقوم أنا بإضافتها برمجياً في نهاية الملف.
+4. اللغة العربية الفصحى.
+5. أعطني كود HTML فقط داخل Body.
+
+📊 البيانات:
+{full_text}
+"""
+
+            progress_placeholder = st.empty()
+            
+            # ===== شريط التحميل =====
+            progress_messages = [
+                "🔍 جاري تحليل البيانات...",
+                "📊 استخراج المعلومات الرئيسية...",
+                "🎨 تطبيق التصميم الأبيض الاحترافي...",
+                "✍️ إنشاء محتوى التقرير...",
+                "🔧 معالجة النصوص العربية...",
+                "📝 تنسيق الجداول والقوائم...",
+                "🎯 إضافة اللمسات النهائية...",
+                "✅ اكتمال المعالجة..."
+            ]
+            
+            for i, msg in enumerate(progress_messages):
+                progress_percent = int((i + 1) / len(progress_messages) * 100)
+                progress_placeholder.markdown(f'''
+                <div class="progress-box">
+                    <div class="progress-icon">🤖</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: {progress_percent}%;"></div>
+                    </div>
+                    <div class="progress-text">{msg} {progress_percent}%</div>
+                </div>
+                ''', unsafe_allow_html=True)
+                time.sleep(0.2)
+            
+            try:
+                response = model.generate_content(prompt, generation_config=generation_config)
+                
+                if response.prompt_feedback.block_reason:
+                    st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
+                    st.stop()
+                    
+                html_body = clean_html_response(response.text)
+                
+                progress_placeholder.empty()
+                
+                # تجميع الملف النهائي (إضافة التوقيع برمجياً هنا فقط)
+                final_html = f"""
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>تقرير {file_label}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+                    {target_css}
+                </head>
+                <body>
+                    <div class="{ 'presentation-container' if 'عرض تقديمي' in report_type else 'container' }">
+                        {html_body}
+                        {unified_signature if 'عرض تقديمي' not in report_type else ''}
+                    </div>
+                    
+                    {SCRIPT_PRESENTATION if 'عرض تقديمي' in report_type else ''}
+                    {unified_signature if 'عرض تقديمي' in report_type else ''} 
+                </body>
+                </html>
+                """
+
+                save_report_to_history(
+                    title=file_label,
+                    report_type=report_type_short,
+                    html_content=final_html,
+                    source_name=source_file_name
+                )
+
+                st.markdown('''
+                <div class="success-banner">
+                    <span>✅ تم إنشاء التقرير الكامل وحفظه بنجاح!</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                st.markdown('''
+                <div class="success-hint">
+                    💡 يمكنك الوصول للتقارير المحفوظة من الشريط الجانبي (☰)
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                components.html(final_html, height=850, scrolling=True)
+
+                st.download_button(
+                    label="📥 تحميل التقرير (HTML)",
+                    data=final_html,
+                    file_name=f"{file_label}.html",
+                    mime="text/html"
+                )
+            
+            except Exception as api_error:
+                progress_placeholder.empty()
+                st.error(f"❌ حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {api_error}")
+
+        except Exception as e:
+            st.error(f"❌ حدث خطأ غير متوقع: {e}")
+
+# الفوتر
 st.markdown("<br><br>", unsafe_allow_html=True)
-st.markdown('<div class="footer-section"><p>الجهاز المركزي للجودة الشاملة © 2026</p></div>', unsafe_allow_html=True)
+st.markdown('''
+<div class="footer-section">
+    <div class="footer-line"></div>
+    <p class="footer-org">الجهاز المركزي للجودة الشاملة</p>
+    <p class="footer-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
+    <div class="footer-divider"></div>
+    <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
+</div>
+''', unsafe_allow_html=True)
