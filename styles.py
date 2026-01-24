@@ -6,7 +6,7 @@
 FONT_AWESOME_LINK = """<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">"""
 
 # ---------------------------------------------------------
-# 🎨 CSS الرئيسي للواجهة
+# 🎨 CSS الرئيسي للواجهة + الشريط الجانبي المخصص
 # ---------------------------------------------------------
 MAIN_CSS = """
 <style>
@@ -21,6 +21,10 @@ MAIN_CSS = """
     }
     
     /* إخفاء عناصر Streamlit الافتراضية */
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
+    section[data-testid="stSidebar"] { display: none !important; }
+    button[data-testid="stSidebarCollapseButton"] { display: none !important; }
     header[data-testid="stHeader"] { background: transparent !important; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
@@ -31,15 +35,21 @@ MAIN_CSS = """
     div[class^="viewerBadge"] { display: none !important; }
     .stDeployButton { display: none !important; }
 
+    /* تعديل المحتوى للشريط الجانبي */
+    .main .block-container {
+        padding-right: 90px !important;
+        max-width: 100% !important;
+    }
+
     /* ===== الهيدر الرئيسي ===== */
     .hero-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
-        padding: 40px 30px;
+        padding: 50px 30px;
         text-align: center;
-        margin: 10px 0 20px 0;
+        margin: 10px 20px 20px 20px;
         border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 0 0 40px rgba(0, 31, 63, 0.8);
+        box-shadow: 0 0 40px rgba(0, 31, 63, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.5);
         position: relative;
         overflow: hidden;
     }
@@ -51,67 +61,37 @@ MAIN_CSS = """
         height: 4px;
         background: linear-gradient(90deg, transparent, #FFD700, transparent);
     }
-    
-    .hero-logo {
-        font-size: 60px;
-        margin-bottom: 10px;
-    }
 
-    .hero-title {
-        font-size: 42px;
+    .main-title {
+        font-size: 52px;
         font-weight: 900;
         background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
     }
 
-    .hero-subtitle {
+    .sub-title {
         color: #e0e0e0;
-        font-size: 16px;
+        font-size: 18px;
         letter-spacing: 2px;
         font-weight: 500;
     }
     
     /* ===== هيدر صفحة التقارير ===== */
-    .page-header {
+    .reports-page-header {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
         border-radius: 20px;
         padding: 40px 30px;
         text-align: center;
-        margin: 10px 0 20px 0;
+        margin: 10px 20px 20px 20px;
         border: 2px solid rgba(255, 215, 0, 0.4);
     }
     
-    .page-icon {
-        font-size: 50px;
-        margin-bottom: 10px;
-    }
-    
-    .page-title {
-        font-size: 36px;
-        font-weight: 800;
-        color: #FFD700;
-        margin-bottom: 10px;
-    }
-    
-    .page-subtitle {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 14px;
-    }
-    
-    /* ===== إشعار التقارير ===== */
-    .info-banner {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(184, 134, 11, 0.05));
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        border-radius: 12px;
-        padding: 15px 25px;
-        margin: 15px 0;
-        color: #FFD700;
-        font-size: 0.95rem;
-        text-align: center;
-    }
+    .rph-icon { font-size: 50px; margin-bottom: 10px; }
+    .rph-title { font-size: 36px; font-weight: 800; color: #FFD700; margin-bottom: 10px; }
+    .rph-subtitle { color: rgba(255, 255, 255, 0.7); font-size: 14px; }
     
     /* ===== شريط الإحصائيات ===== */
     .stats-bar {
@@ -122,39 +102,26 @@ MAIN_CSS = """
         background: rgba(0, 31, 63, 0.5);
         border-radius: 15px;
         border: 1px solid rgba(255, 215, 0, 0.2);
-        margin: 20px 0;
+        margin: 20px;
         flex-wrap: wrap;
     }
     
-    .stat-item-small {
-        text-align: center;
-        padding: 10px 25px;
-    }
-    
-    .stat-number {
-        display: block;
-        font-size: 2rem;
-        font-weight: 800;
-        color: #FFD700;
-    }
-    
-    .stat-label {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.85rem;
-    }
+    .stat-box { text-align: center; padding: 10px 30px; }
+    .stat-num { display: block; font-size: 2.2rem; font-weight: 800; color: #FFD700; }
+    .stat-lbl { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
     
     /* ===== عنوان القسم ===== */
     .section-title {
         color: #FFD700;
         font-size: 1.3rem;
         font-weight: 700;
-        margin: 25px 0 15px 0;
+        margin: 25px 20px 15px 20px;
         padding-bottom: 10px;
         border-bottom: 2px solid rgba(255, 215, 0, 0.2);
     }
     
-    /* ===== بطاقات التقارير ===== */
-    .report-card {
+    /* ===== بطاقات التقارير الكبيرة ===== */
+    .report-card-large {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95));
         border: 1px solid rgba(255, 215, 0, 0.2);
         border-radius: 15px;
@@ -163,45 +130,17 @@ MAIN_CSS = """
         transition: all 0.3s ease;
     }
     
-    .report-card:hover {
+    .report-card-large:hover {
         border-color: rgba(255, 215, 0, 0.5);
         transform: translateY(-3px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
     
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    
-    .card-icon {
-        font-size: 1.5rem;
-    }
-    
-    .card-type {
-        background: rgba(255, 215, 0, 0.2);
-        color: #FFD700;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    
-    .card-title {
-        color: white;
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    
-    .card-meta {
-        display: flex;
-        gap: 15px;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.8rem;
-    }
+    .rcl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .rcl-icon { font-size: 1.5rem; }
+    .rcl-type { background: rgba(255, 215, 0, 0.2); color: #FFD700; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .rcl-title { color: white; font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .rcl-meta { display: flex; gap: 15px; color: rgba(255, 255, 255, 0.5); font-size: 0.8rem; }
     
     /* ===== حالة فارغة ===== */
     .empty-state {
@@ -210,26 +149,12 @@ MAIN_CSS = """
         background: rgba(0, 31, 63, 0.5);
         border-radius: 20px;
         border: 2px dashed rgba(255, 215, 0, 0.2);
-        margin: 30px 0;
+        margin: 30px 20px;
     }
     
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.6;
-    }
-    
-    .empty-title {
-        color: #FFD700;
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    
-    .empty-text {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1rem;
-    }
+    .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.6; }
+    .empty-title { color: #FFD700; font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; }
+    .empty-text { color: rgba(255, 255, 255, 0.5); font-size: 1rem; }
     
     /* ===== معاينة التقرير ===== */
     .preview-header {
@@ -237,27 +162,17 @@ MAIN_CSS = """
         color: white;
         padding: 15px 25px;
         border-radius: 12px;
-        margin: 15px 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .preview-icon {
-        font-size: 1.3rem;
-    }
-    
-    .preview-title {
+        margin: 15px 20px;
         font-weight: 600;
-        font-size: 1.1rem;
+        text-align: center;
     }
     
     /* ===== العناصر العامة ===== */
     .section-header {
         text-align: center;
-        margin: 25px 0 20px 0;
+        margin: 30px 20px;
         color: #FFD700;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         font-weight: bold;
     }
 
@@ -266,112 +181,114 @@ MAIN_CSS = """
         display: flex !important;
         flex-direction: row-reverse !important;
         justify-content: center !important;
-        gap: 12px !important;
+        gap: 15px !important;
         flex-wrap: wrap !important;
         background: rgba(0, 0, 0, 0.3) !important;
-        padding: 15px !important;
+        padding: 20px !important;
         border-radius: 15px !important;
-        margin: 0 0 25px 0 !important;
+        margin: 0 20px 30px 20px !important;
         border: 1px solid rgba(255, 215, 0, 0.15) !important;
     }
 
     div[role="radiogroup"] label {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 20, 40, 0.95)) !important;
         border: 2px solid rgba(255, 215, 0, 0.2) !important;
-        padding: 12px 20px !important;
-        border-radius: 10px !important;
+        padding: 15px 25px !important;
+        border-radius: 12px !important;
         cursor: pointer !important;
         transition: all 0.3s ease !important;
         text-align: center !important;
         flex: 1 !important;
-        min-width: 140px !important;
-        max-width: 200px !important;
+        min-width: 160px !important;
+        max-width: 220px !important;
         color: white !important;
         font-weight: 600 !important;
-        font-size: 0.9rem !important;
     }
 
     div[role="radiogroup"] label:hover {
         border-color: #FFD700 !important;
-        transform: translateY(-2px) !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
     }
     
     div[role="radiogroup"] label[data-checked="true"],
     div[role="radiogroup"] label:has(input:checked) {
         background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(184, 134, 11, 0.15)) !important;
         border-color: #FFD700 !important;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.3) !important;
     }
 
     /* ===== بطاقات الإدخال ===== */
     .input-card {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 15, 30, 0.95));
-        border-radius: 15px;
-        padding: 20px;
-        margin: 8px 0;
+        border-radius: 20px;
+        padding: 30px;
+        margin: 10px;
         border: 1px solid rgba(255, 215, 0, 0.2);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         transition: all 0.3s ease;
     }
     
     .input-card:hover {
         border-color: rgba(255, 215, 0, 0.4);
+        transform: translateY(-3px);
     }
 
     .input-header {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 15px;
-        padding-bottom: 12px;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
         border-bottom: 1px solid rgba(255, 215, 0, 0.2);
     }
 
     .input-icon {
-        width: 45px; height: 45px;
+        width: 50px; height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, #FFD700, #B8860B);
-        border-radius: 10px;
-        font-size: 1.3rem;
+        border-radius: 12px;
+        font-size: 1.5rem;
     }
 
     .input-title {
         color: #FFD700;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 700;
     }
 
     .input-subtitle {
         color: rgba(255, 255, 255, 0.6);
-        font-size: 0.85rem;
-        margin-top: 3px;
+        font-size: 0.9rem;
+        margin-top: 5px;
     }
 
     /* ===== حقل النص ===== */
     .stTextArea textarea {
         background-color: rgba(0, 0, 0, 0.4) !important;
         border: 2px solid rgba(255, 215, 0, 0.2) !important;
-        border-radius: 12px !important;
+        border-radius: 15px !important;
         color: white !important;
         font-family: 'Tajawal', sans-serif !important;
         font-size: 1rem !important;
-        padding: 15px !important;
+        padding: 20px !important;
         text-align: right !important;
         direction: rtl !important;
     }
     
     .stTextArea textarea:focus {
         border-color: #FFD700 !important;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2) !important;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.2) !important;
     }
 
     /* ===== رفع الملفات ===== */
     [data-testid="stFileUploader"] {
         background: rgba(0, 0, 0, 0.3) !important;
         border: 2px dashed rgba(255, 215, 0, 0.3) !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
+        border-radius: 15px !important;
+        padding: 25px !important;
     }
     
     [data-testid="stFileUploader"]:hover {
@@ -382,7 +299,7 @@ MAIN_CSS = """
         background: linear-gradient(135deg, #FFD700, #B8860B) !important;
         color: #001f3f !important;
         border: none !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: 700 !important;
     }
 
@@ -392,28 +309,28 @@ MAIN_CSS = """
         background-size: 200% auto !important;
         color: #001f3f !important;
         font-family: 'Tajawal', sans-serif !important;
-        font-weight: 800 !important;
-        font-size: 1.1rem !important;
-        border-radius: 12px !important;
-        padding: 12px 30px !important;
+        font-weight: 900 !important;
+        font-size: 1.2rem !important;
+        border-radius: 15px !important;
+        padding: 15px 40px !important;
         border: none !important;
-        box-shadow: 0 5px 20px rgba(218, 165, 32, 0.3) !important;
+        box-shadow: 0 8px 30px rgba(218, 165, 32, 0.4) !important;
         transition: all 0.3s ease !important;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 25px rgba(218, 165, 32, 0.4) !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 15px 40px rgba(218, 165, 32, 0.5) !important;
     }
 
     /* ===== زر التحميل ===== */
     .stDownloadButton > button {
         background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
         color: white !important;
-        font-size: 1rem !important;
+        font-size: 1.1rem !important;
         font-weight: 700 !important;
-        padding: 12px 30px !important;
-        border-radius: 10px !important;
+        padding: 15px 40px !important;
+        border-radius: 12px !important;
         border: none !important;
     }
 
@@ -421,26 +338,26 @@ MAIN_CSS = """
     .success-banner {
         background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
         border: 2px solid #22c55e;
-        border-radius: 12px;
-        padding: 18px 25px;
+        border-radius: 15px;
+        padding: 20px 30px;
         text-align: center;
-        margin: 15px 0;
+        margin: 20px;
     }
     
     .success-banner span {
         color: #22c55e;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 700;
     }
     
     .success-hint {
         background: rgba(34, 197, 94, 0.08);
         border: 1px solid rgba(34, 197, 94, 0.25);
-        border-radius: 8px;
-        padding: 10px 18px;
-        margin: 10px 0;
+        border-radius: 10px;
+        padding: 12px 20px;
+        margin: 10px 20px;
         color: rgba(34, 197, 94, 0.85);
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         text-align: center;
     }
 
@@ -455,36 +372,36 @@ MAIN_CSS = """
     .progress-box {
         background: rgba(0, 31, 63, 0.9);
         border: 1px solid rgba(255, 215, 0, 0.3);
-        border-radius: 12px;
-        padding: 25px;
-        margin: 15px 0;
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px;
         text-align: center;
     }
     
     .progress-icon {
-        font-size: 2rem;
-        margin-bottom: 12px;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
         animation: bounce 1s infinite;
     }
     
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
+        50% { transform: translateY(-10px); }
     }
     
     .progress-bar-bg {
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        height: 12px;
+        border-radius: 10px;
+        height: 14px;
         overflow: hidden;
-        margin: 15px 0;
+        margin: 20px 0;
     }
     
     .progress-bar-fill {
         height: 100%;
         background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
         background-size: 200% 100%;
-        border-radius: 8px;
+        border-radius: 10px;
         animation: progressShine 1.5s infinite linear;
     }
     
@@ -495,175 +412,330 @@ MAIN_CSS = """
     
     .progress-text {
         color: rgba(255, 255, 255, 0.9);
-        font-size: 0.95rem;
-        margin-top: 8px;
+        font-size: 1.05rem;
+        margin-top: 10px;
+        font-weight: 500;
     }
 
     /* ===== الفوتر ===== */
     .footer-section {
         background: linear-gradient(135deg, rgba(0, 31, 63, 0.95), rgba(10, 46, 92, 0.9));
-        border-radius: 12px;
-        padding: 25px 20px;
-        margin: 15px 0;
+        border-radius: 15px;
+        padding: 30px 20px;
+        margin: 20px;
         border: 1px solid rgba(255, 215, 0, 0.3);
         text-align: center;
     }
     
     .footer-line {
-        width: 50px; height: 3px;
+        width: 60px; height: 3px;
         background: linear-gradient(90deg, transparent, #FFD700, transparent);
-        margin: 0 auto 15px auto;
+        margin: 0 auto 20px auto;
     }
     
     .footer-org {
         color: #FFD700;
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 700;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
     }
     
     .footer-unit {
         color: rgba(255, 255, 255, 0.8);
-        font-size: 0.9rem;
-        margin-bottom: 12px;
+        font-size: 1rem;
+        margin-bottom: 15px;
     }
     
     .footer-divider {
-        width: 80px; height: 1px;
+        width: 100px; height: 1px;
         background: rgba(255, 215, 0, 0.3);
-        margin: 12px auto;
+        margin: 15px auto;
     }
     
     .footer-copy {
         color: rgba(255, 255, 255, 0.5);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 
     /* ===== الجدول ===== */
     .stDataFrame {
         background: rgba(0, 31, 63, 0.5) !important;
         border-radius: 10px !important;
-        overflow: hidden !important;
-    }
-    
-    .stDataFrame table {
-        color: white !important;
-    }
-    
-    .stDataFrame th {
-        background: rgba(255, 215, 0, 0.2) !important;
-        color: #FFD700 !important;
+        margin: 0 20px !important;
     }
 
     /* ===== الاستجابة ===== */
     @media (max-width: 768px) {
-        .hero-title { font-size: 32px; }
-        .hero-section { padding: 25px 15px; }
-        .stats-bar { flex-direction: column; gap: 15px; }
+        .main-title { font-size: 36px; }
+        .hero-section { padding: 30px 20px; margin: 10px; }
+        .main .block-container { padding-right: 80px !important; }
     }
 </style>
 """
 
 # ---------------------------------------------------------
-# 🎨 CSS الشريط الجانبي
+# 🎨 CSS الشريط الجانبي المخصص (يفتح بـ hover)
 # ---------------------------------------------------------
-SIDEBAR_CSS = """
+CUSTOM_SIDEBAR_CSS = """
 <style>
-    /* تخصيص الشريط الجانبي */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%) !important;
-        border-left: 2px solid rgba(255, 215, 0, 0.3) !important;
+    /* ===== الشريط الجانبي المخصص ===== */
+    .custom-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: 70px;
+        background: linear-gradient(180deg, #001f3f 0%, #0a1628 50%, #001f3f 100%);
+        border-left: 2px solid rgba(255, 215, 0, 0.3);
+        z-index: 999999;
+        display: flex;
+        flex-direction: row-reverse;
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
     }
     
-    [data-testid="stSidebar"] > div:first-child {
+    /* فتح الشريط عند hover */
+    .custom-sidebar:hover {
+        width: 300px;
+    }
+    
+    /* الشريط الضيق */
+    .sidebar-strip {
+        width: 70px;
+        min-width: 70px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         padding-top: 20px;
+        background: linear-gradient(180deg, rgba(0, 31, 63, 0.98) 0%, rgba(10, 22, 40, 0.98) 100%);
+        border-left: 1px solid rgba(255, 215, 0, 0.15);
     }
     
-    /* عناصر الشريط الجانبي */
-    .sidebar-container {
+    /* أزرار الشريط الضيق */
+    .strip-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.03));
+        border: 2px solid rgba(255, 215, 0, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    
+    .strip-btn:hover {
+        background: linear-gradient(135deg, #FFD700, #B8860B);
+        border-color: #FFD700;
+        transform: scale(1.08);
+        box-shadow: 0 5px 25px rgba(255, 215, 0, 0.5);
+    }
+    
+    .strip-btn:hover .hamburger span,
+    .strip-btn:hover .strip-icon {
+        color: #001f3f;
+    }
+    
+    /* أيقونة الهامبرغر */
+    .hamburger {
+        width: 24px;
+        height: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .hamburger span {
+        display: block;
+        width: 100%;
+        height: 3px;
+        background: #FFD700;
+        border-radius: 3px;
+        transition: all 0.35s ease;
+    }
+    
+    .strip-btn:hover .hamburger span {
+        background: #001f3f;
+    }
+    
+    /* تحويل الهامبرغر لـ X عند hover */
+    .custom-sidebar:hover .hamburger span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .custom-sidebar:hover .hamburger span:nth-child(2) {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    
+    .custom-sidebar:hover .hamburger span:nth-child(3) {
+        transform: rotate(-45deg) translate(6px, -6px);
+    }
+    
+    /* الأيقونات */
+    .strip-icon {
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    /* شارة العدد */
+    .strip-badge {
+        position: absolute;
+        top: -6px;
+        left: -6px;
+        background: linear-gradient(135deg, #FFD700, #B8860B);
+        color: #001f3f;
+        font-size: 0.72rem;
+        font-weight: 800;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
+    }
+    
+    /* الفاصل */
+    .strip-divider {
+        width: 35px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+        margin: 10px 0;
+    }
+    
+    /* لوحة المحتوى */
+    .sidebar-panel {
+        flex: 1;
+        padding: 20px 15px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease 0.1s;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* إظهار اللوحة عند hover */
+    .custom-sidebar:hover .sidebar-panel {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* رأس الشريط */
+    .sidebar-header {
         text-align: center;
-        padding: 20px 10px;
+        padding-bottom: 18px;
+        margin-bottom: 18px;
         border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-        margin-bottom: 20px;
     }
     
     .sidebar-logo {
-        font-size: 3rem;
-        margin-bottom: 10px;
+        font-size: 2.5rem;
+        margin-bottom: 8px;
     }
     
-    .sidebar-title {
+    .sidebar-header h3 {
         color: #FFD700;
-        font-size: 1.3rem;
-        font-weight: 800;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0 0 5px 0;
     }
     
-    .sidebar-divider {
-        border: none;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
-        margin: 20px 0;
+    .sidebar-header p {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin: 0;
     }
     
-    .sidebar-info {
+    /* محتوى الشريط */
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    /* بطاقات التقارير في الشريط */
+    .sidebar-report-card {
+        background: linear-gradient(135deg, rgba(26, 45, 74, 0.8), rgba(13, 31, 60, 0.9));
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 215, 0, 0.12);
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-report-card:hover {
+        border-color: rgba(255, 215, 0, 0.4);
+        transform: translateX(-3px);
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-report-card .report-title {
+        color: #FFD700;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-report-card .report-meta {
+        display: flex;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        margin-bottom: 3px;
+    }
+    
+    .sidebar-report-card .report-time {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.65rem;
+    }
+    
+    /* حالة فارغة في الشريط */
+    .sidebar-empty {
+        text-align: center;
+        padding: 30px 10px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 215, 0, 0.2);
+    }
+    
+    .sidebar-empty .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5; }
+    .sidebar-empty .empty-text { color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; margin-bottom: 5px; }
+    .sidebar-empty .empty-hint { color: rgba(255, 255, 255, 0.3); font-size: 0.75rem; }
+    
+    /* صندوق التلميح */
+    .sidebar-hint-box {
         background: rgba(255, 215, 0, 0.1);
         border: 1px solid rgba(255, 215, 0, 0.2);
-        border-radius: 10px;
-        padding: 15px;
-        margin: 10px 15px;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 12px 0;
         text-align: center;
-    }
-    
-    .sidebar-info p {
-        color: rgba(255, 255, 255, 0.7);
-        margin: 0;
-        font-size: 0.85rem;
-    }
-    
-    .sidebar-info .info-count {
-        color: #FFD700;
-        font-size: 1.5rem;
-        font-weight: 800;
-        display: block;
-        margin-top: 5px;
-    }
-    
-    .sidebar-footer-text {
-        text-align: center;
-        padding: 15px;
-        border-top: 1px solid rgba(255, 215, 0, 0.1);
-        margin-top: auto;
-    }
-    
-    .sidebar-footer-text p {
-        color: rgba(255, 255, 255, 0.4);
-        margin: 3px 0;
+        color: rgba(255, 215, 0, 0.8);
         font-size: 0.75rem;
     }
     
-    /* أزرار الشريط الجانبي */
-    [data-testid="stSidebar"] .stButton > button {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05)) !important;
-        border: 2px solid rgba(255, 215, 0, 0.3) !important;
-        color: white !important;
-        font-size: 1rem !important;
-        padding: 12px 20px !important;
-        border-radius: 10px !important;
-        transition: all 0.3s ease !important;
+    /* فوتر الشريط */
+    .sidebar-footer {
+        text-align: center;
+        padding-top: 12px;
+        margin-top: auto;
+        border-top: 1px solid rgba(255, 215, 0, 0.15);
     }
     
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
-        border-color: #FFD700 !important;
-        transform: translateX(-3px) !important;
+    .sidebar-footer span {
+        color: rgba(255, 215, 0, 0.4);
+        font-size: 0.7rem;
     }
     
-    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(184, 134, 11, 0.2)) !important;
-        border-color: #FFD700 !important;
-        color: #FFD700 !important;
-        font-weight: 700 !important;
-    }
+    /* Scrollbar */
+    .sidebar-content::-webkit-scrollbar { width: 4px; }
+    .sidebar-content::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+    .sidebar-content::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 4px; }
 </style>
 """
 
@@ -675,82 +747,24 @@ STYLE_OFFICIAL = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap');
     
-    :root {
-        --primary: #003366;
-        --secondary: #c5a059;
-        --bg: #ffffff;
-        --text: #333333;
-    }
+    :root { --primary: #003366; --secondary: #c5a059; --bg: #ffffff; --text: #333333; }
     
-    body {
-        font-family: 'Cairo', sans-serif;
-        background-color: #f9fafb;
-        color: var(--text);
-        margin: 0;
-        padding: 40px;
-        direction: rtl;
-        line-height: 1.8;
-    }
+    body { font-family: 'Cairo', sans-serif; background-color: #f9fafb; color: var(--text); margin: 0; padding: 40px; direction: rtl; line-height: 1.8; }
     
-    .container {
-        max-width: 1100px;
-        margin: 0 auto;
-        background: white;
-        padding: 60px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        border-top: 8px solid var(--primary);
-    }
+    .container { max-width: 1100px; margin: 0 auto; background: white; padding: 60px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border-top: 8px solid var(--primary); }
     
-    header {
-        text-align: center;
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 30px;
-        margin-bottom: 40px;
-    }
-    
-    header h1 {
-        color: var(--primary);
-        font-size: 2.4em;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    
+    header { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 30px; margin-bottom: 40px; }
+    header h1 { color: var(--primary); font-size: 2.4em; font-weight: 700; margin-bottom: 10px; }
     header p { color: #666; font-size: 1.1em; margin: 5px 0; }
     
-    .card {
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    }
-    
+    .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
     .card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
     
-    h2 {
-        color: var(--primary);
-        font-size: 1.8em;
-        border-right: 5px solid var(--secondary);
-        padding-right: 15px;
-        margin-top: 40px;
-        margin-bottom: 20px;
-    }
-    
+    h2 { color: var(--primary); font-size: 1.8em; border-right: 5px solid var(--secondary); padding-right: 15px; margin-top: 40px; margin-bottom: 20px; }
     h3 { color: #444; font-size: 1.4em; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
     
     .stats-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
-    
-    .stat-item {
-        flex: 1;
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-    }
-    
+    .stat-item { flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; text-align: center; }
     .stat-item .stat-value { display: block; font-size: 2.2em; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
     .stat-item .stat-label { font-size: 1em; color: #777; }
     
