@@ -623,7 +623,7 @@ def process_report(user_text, uploaded_file, report_type):
         # ⚡ الإصلاح الأساسي: تفعيل الـ Streaming لمنع الـ 504 Timeout
         # ----------------------------------------------------------------------------
         try:
-            status_text.markdown(f"<div class='progress-status'>📡 جاري الاتصال بالنموذج الذكي (Pro)...</div>", unsafe_allow_html=True)
+            status_text.markdown(f"<div class='progress-status'>📡 جاري انشاء التقرير...</div>", unsafe_allow_html=True)
             
             # تفعيل stream=True هو السر في منع انقطاع الاتصال
             response_stream = model.generate_content(
