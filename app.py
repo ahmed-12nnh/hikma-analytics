@@ -104,61 +104,44 @@ def clean_html_response(text):
     text = re.sub(r"```$", "", text, flags=re.MULTILINE)
     return text.strip()
 
-def generate_content_with_fallback(model_client, prompt, generation_config, safety_settings, status_placeholder):
+def get_best_available_model():
     """
-    خوارزمية ذكية تحاول استخدام الموديل الأفضل، وإذا فشلت بسبب الكوتة (429) أو غيره،
-    تنتقل تلقائياً للموديل الأسرع والأرخص.
+    دالة ذكية تكتشف الموديلات المتاحة فعلياً للحساب وتختار الأفضل
+    بدلاً من التخمين الذي يسبب خطأ 404
     """
-    # قائمة الموديلات مرتبة حسب الأفضلية (الأذكى أولاً، ثم الأسرع)
-    # نستخدم أسماء عامة لتجنب 404
-    models_priority = [
-        "models/gemini-1.5-pro",      # الأذكى (قد يسبب 429)
-        "models/gemini-1.5-flash",    # الأسرع والأكثر استقراراً
-        "models/gemini-pro"           # القديم (احتياط)
-    ]
+    try:
+        # 1. جلب قائمة الموديلات الحقيقية من جوجل
+        all_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                all_models.append(m.name)
+        
+        if not all_models:
+            return None, "لا توجد موديلات متاحة لهذا المفتاح"
 
-    last_error = None
+        # 2. البحث عن الأفضل (Pro -> Flash -> أي شيء)
+        # نبحث عن الاسم في القائمة الحقيقية
+        
+        # أولوية 1: أي موديل يحتوي على gemini-1.5-pro
+        for m in all_models:
+            if 'gemini-1.5-pro' in m:
+                return m, all_models
 
-    for model_name in models_priority:
-        try:
-            status_placeholder.markdown(f"<div class='progress-status'>📡 محاولة الاتصال بالنموذج: {model_name.split('/')[-1]}...</div>", unsafe_allow_html=True)
-            
-            model = genai.GenerativeModel(model_name)
-            
-            # محاولة التوليد بالبث المباشر
-            response_stream = model.generate_content(
-                prompt, 
-                generation_config=generation_config,
-                safety_settings=safety_settings,
-                stream=True 
-            )
-            
-            full_text = ""
-            for chunk in response_stream:
-                if chunk.text:
-                    full_text += chunk.text
-                    status_placeholder.markdown(f"<div class='progress-status'>⏳ جاري الكتابة باستخدام {model_name.split('/')[-1]}... ({len(full_text)} حرف)</div>", unsafe_allow_html=True)
-            
-            # إذا وصلنا هنا، يعني نجحنا!
-            return full_text
+        # أولوية 2: أي موديل يحتوي على gemini-1.5-flash
+        for m in all_models:
+            if 'gemini-1.5-flash' in m:
+                return m, all_models
+                
+        # أولوية 3: أي موديل يحتوي على gemini-pro
+        for m in all_models:
+            if 'gemini-pro' in m:
+                return m, all_models
 
-        except Exception as e:
-            error_str = str(e)
-            last_error = e
-            # تحليل الخطأ
-            if "429" in error_str or "quota" in error_str.lower():
-                status_placeholder.warning(f"⚠️ النموذج {model_name} مشغول أو انتهت الحصة. جاري الانتقال للبديل...")
-                time.sleep(1) # استراحة قصيرة قبل المحاولة التالية
-                continue # جرب الموديل التالي في القائمة
-            elif "404" in error_str or "not found" in error_str.lower():
-                continue # الموديل غير موجود، جرب التالي
-            else:
-                # خطأ غير متوقع، لكن سنحاول مع الموديل التالي احتياطاً
-                print(f"Error with {model_name}: {e}")
-                continue
+        # أولوية 4: الملاذ الأخير (أول موديل متاح)
+        return all_models[0], all_models
 
-    # إذا فشلت كل الموديلات
-    raise last_error
+    except Exception as e:
+        return None, str(e)
 
 # ---------------------------------------------------------
 # 📚 دوال التخزين المؤقت
@@ -471,7 +454,16 @@ def process_report(user_text, uploaded_file, report_type):
     try:
         genai.configure(api_key=API_KEY)
         
-        # إعدادات الأمان: السماح بكل شيء (لتجنب التقرير الفارغ)
+        # =========================================================================
+        # ⚡ الخوارزمية الديناميكية لاكتشاف الموديل (تمنع خطأ 404 نهائياً)
+        # =========================================================================
+        selected_model_name, available_models_list = get_best_available_model()
+        
+        if not selected_model_name:
+            st.error(f"❌ خطأ حرج: لم يتم العثور على أي موديل متاح في حسابك. الخطأ: {available_models_list}")
+            return
+            
+        # إعدادات الأمان: السماح بكل شيء
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -487,6 +479,8 @@ def process_report(user_text, uploaded_file, report_type):
             max_output_tokens=8192, 
         )
         
+        model = genai.GenerativeModel(selected_model_name)
+
         target_css = ""
         design_rules = ""
         file_label = "Report"
@@ -582,7 +576,6 @@ def process_report(user_text, uploaded_file, report_type):
 2. **حماية الأسماء (Entities Protection Policy):**
    - 🚫 **ممنوع منعاً باتاً** استخدام "التصحيح التلقائي" للأسماء.
    - انسخ الاسم كما يظهر لك في النص الأصلي تماماً (مثلاً: "أبو كلل" تبقى "أبو كلل"، "الدراجي" تبقى "الدراجي").
-   - حتى لو كان النموذج الأسرع (Flash) يميل للتغيير، يجب عليك المقاومة والالتزام بالنص.
 
 3. **التنسيق (Formatting):**
    - استخدم الكلاسات التالية:
@@ -602,23 +595,36 @@ def process_report(user_text, uploaded_file, report_type):
         status_text = st.empty()
         
         try:
-            # استخدام دالة التوليد الذكية مع الخطة البديلة (Fallback)
-            full_response_text = generate_content_with_fallback(
-                None, # Client is created inside
-                prompt,
-                generation_config,
-                safety_settings,
-                status_text
+            # رسالة توضيحية للمستخدم
+            status_text.markdown(f"<div class='progress-status'>📡 تم اكتشاف النموذج المتاح: {selected_model_name} (جاري الاتصال...)</div>", unsafe_allow_html=True)
+            
+            response_stream = model.generate_content(
+                prompt, 
+                generation_config=generation_config,
+                safety_settings=safety_settings,
+                stream=True 
             )
+            
+            full_response_text = ""
+            
+            for chunk in response_stream:
+                try:
+                    if chunk.text:
+                        full_response_text += chunk.text
+                        status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
+                except Exception:
+                    pass 
             
             progress_bar.progress(100)
             status_text.empty()
             
             html_body = clean_html_response(full_response_text)
             
-            # --- عرض النص الخام فقط إذا كان هناك مشكلة (اختياري) ---
-            # with st.expander("🛠️ عرض النص الخام (للمطور)"):
-            #     st.text(full_response_text)
+            # --- إضافة أداة تصحيح الأخطاء (لرؤية الموديلات المتاحة) ---
+            with st.expander("🛠️ (مهم جداً) معلومات التشخيص والموديلات المكتشفة"):
+                st.write(f"✅ الموديل المستخدم حالياً: **{selected_model_name}**")
+                st.write("📋 قائمة الموديلات التي يراها حسابك فعلياً:")
+                st.write(available_models_list)
             # -----------------------------------------------
 
             if len(html_body) < 50:
@@ -704,8 +710,7 @@ def process_report(user_text, uploaded_file, report_type):
         except Exception as api_error:
             progress_bar.empty()
             status_text.empty()
-            error_msg = str(api_error)
-            st.error(f"❌ خطأ نهائي بعد كل المحاولات: {api_error}")
+            st.error(f"❌ حدث خطأ أثناء التوليد: {api_error}")
 
     except Exception as e:
         st.error(f"❌ خطأ غير متوقع: {e}")
