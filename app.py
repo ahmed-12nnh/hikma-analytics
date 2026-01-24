@@ -7,6 +7,8 @@ import time
 import streamlit.components.v1 as components
 import re
 from datetime import datetime
+import pytesseract  # مكتبة التعرف الضوئي على الحروف
+from PIL import Image  # مكتبة معالجة الصور
 
 # استيراد التصاميم من ملف styles.py
 from styles import (
@@ -61,14 +63,33 @@ st.markdown(MAIN_CSS, unsafe_allow_html=True)
 # ---------------------------------------------------------
 
 def extract_text_from_file(uploaded_file):
-    """استخراج النص من الملفات"""
+    """استخراج النص بذكاء (يدعم OCR للملفات المصورة)"""
     text_content = ""
     try:
-        if uploaded_file.type == "application/pdf":
+        # التعامل مع ملفات الصور مباشرة
+        if uploaded_file.type in ["image/png", "image/jpeg", "image/jpg"]:
+            try:
+                image = Image.open(uploaded_file)
+                # استخراج النص عربي + انجليزي
+                text_content = pytesseract.image_to_string(image, lang='ara+eng')
+            except Exception as img_err:
+                return f"⚠️ خطأ في معالجة الصورة: {img_err}"
+
+        # التعامل مع ملفات PDF (نصي أو مصور)
+        elif uploaded_file.type == "application/pdf":
             try:
                 doc = fitz.open(stream=uploaded_file.getvalue(), filetype="pdf")
                 for page in doc:
-                    text_content += page.get_text() + "\n"
+                    # محاولة استخراج النص العادي أولاً
+                    page_text = page.get_text()
+                    
+                    # إذا كان النص قليلاً جداً (احتمال أنه ملف مصور)، نستخدم OCR
+                    if len(page_text.strip()) < 10:
+                        pix = page.get_pixmap()
+                        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                        page_text = pytesseract.image_to_string(img, lang='ara+eng')
+                    
+                    text_content += page_text + "\n"
             except Exception as pdf_err:
                 return f"⚠️ خطأ في قراءة PDF: {pdf_err}"
 
@@ -87,7 +108,7 @@ def extract_text_from_file(uploaded_file):
         return f"⚠️ خطأ عام في قراءة الملف: {e}"
         
     if not text_content.strip():
-        return "⚠️ تحذير: الملف يبدو فارغاً."
+        return "⚠️ تحذير: الملف يبدو فارغاً أو جودته سيئة جداً للتعرف عليه."
         
     return text_content
 
@@ -436,7 +457,7 @@ def render_platform_page():
             </div>
         </div>
         """, unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
+        uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt', 'png', 'jpg', 'jpeg'], label_visibility="collapsed")
         
         if uploaded_file:
             st.success(f"✅ تم إرفاق: {uploaded_file.name}")
