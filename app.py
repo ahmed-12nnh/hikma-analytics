@@ -97,51 +97,47 @@ def clean_input_text(text):
     return '\n'.join(lines)
 
 def clean_html_response(text):
-    """دالة تنظيف مرنة جداً لضمان عدم حذف المحتوى"""
-    if not text: return ""
-    text = re.sub(r"^```html", "", text, flags=re.IGNORECASE | re.MULTILINE)
-    text = re.sub(r"^```", "", text, flags=re.MULTILINE)
-    text = re.sub(r"```$", "", text, flags=re.MULTILINE)
+    match = re.search(r"```html(.*?)```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    
+    match = re.search(r"```(.*?)```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+        
+    match = re.search(r"(<html|<!DOCTYPE)(.*)", text, re.DOTALL)
+    if match:
+        return match.group(1) + match.group(2)
+    
     return text.strip()
 
 def get_best_available_model():
-    """
-    دالة ذكية تكتشف الموديلات المتاحة فعلياً للحساب وتختار الأفضل
-    بدلاً من التخمين الذي يسبب خطأ 404
-    """
     try:
-        # 1. جلب قائمة الموديلات الحقيقية من جوجل
-        all_models = []
+        available_models = []
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
-                all_models.append(m.name)
+                available_models.append(m.name)
         
-        if not all_models:
-            return None, "لا توجد موديلات متاحة لهذا المفتاح"
-
-        # 2. البحث عن الأفضل (Pro -> Flash -> أي شيء)
-        # نبحث عن الاسم في القائمة الحقيقية
+        for m in available_models:
+            # نفضل الموديلات المستقرة والسريعة للنصوص الطويلة
+            if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
+                return m 
         
-        # أولوية 1: أي موديل يحتوي على gemini-1.5-pro
-        for m in all_models:
-            if 'gemini-1.5-pro' in m:
-                return m, all_models
-
-        # أولوية 2: أي موديل يحتوي على gemini-1.5-flash
-        for m in all_models:
-            if 'gemini-1.5-flash' in m:
-                return m, all_models
+        for m in available_models:
+            if 'gemini-1.5-pro' in m and 'exp' not in m:
+                return m
                 
-        # أولوية 3: أي موديل يحتوي على gemini-pro
-        for m in all_models:
-            if 'gemini-pro' in m:
-                return m, all_models
-
-        # أولوية 4: الملاذ الأخير (أول موديل متاح)
-        return all_models[0], all_models
-
-    except Exception as e:
-        return None, str(e)
+        for m in available_models:
+            if 'gemini-pro' in m and '1.0' in m:
+                return m
+        
+        for m in available_models:
+            if 'exp' not in m and '2.0' not in m:
+                return m
+                
+        return "models/gemini-1.5-flash"
+    except:
+        return "models/gemini-pro"
 
 # ---------------------------------------------------------
 # 📚 دوال التخزين المؤقت
@@ -165,6 +161,7 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
 # 🎨 الشريط الجانبي (Streamlit Sidebar)
 # ---------------------------------------------------------
 with st.sidebar:
+    # الشعار والعنوان
     st.markdown("""
     <div class="sidebar-brand">
         <div class="brand-name">تيار الحكمة الوطني</div>
@@ -173,14 +170,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
+    
+    # قسم التنقل
     st.markdown("<div class='nav-section-title'>📍 التنقل</div>", unsafe_allow_html=True)
     
+    # زر المنصة الرئيسية
     if st.button("🏠 المنصة الرئيسية", key="nav_platform", use_container_width=True,
                 type="primary" if st.session_state.current_page == "platform" else "secondary"):
         st.session_state.current_page = "platform"
         st.session_state.preview_report = None
         st.rerun()
     
+    # زر سجل التقارير
     reports_count = len(st.session_state.reports_history)
     if st.button(f"📚 سجل التقارير ({reports_count})", key="nav_reports", use_container_width=True,
                 type="primary" if st.session_state.current_page == "reports" else "secondary"):
@@ -190,6 +191,7 @@ with st.sidebar:
     
     st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
     
+    # إحصائيات الجلسة
     st.markdown(f"""
     <div class="session-stats">
         <div class="stats-title">📊 إحصائيات الجلسة</div>
@@ -210,9 +212,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
+    # آخر التقارير
     if st.session_state.reports_history:
         st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
         st.markdown("<div class='nav-section-title'>📄 آخر التقارير</div>", unsafe_allow_html=True)
+        
         for i, report in enumerate(st.session_state.reports_history[:3]):
             title_short = report['title'][:15] + "..." if len(report['title']) > 15 else report['title']
             st.markdown(f"""
@@ -225,6 +229,7 @@ with st.sidebar:
             </div>
             """, unsafe_allow_html=True)
     
+    # الفوتر
     st.markdown("<div class='sidebar-spacer'></div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sidebar-footer">
@@ -239,6 +244,9 @@ with st.sidebar:
 # 📄 صفحة التقارير المحفوظة
 # ---------------------------------------------------------
 def render_reports_page():
+    """صفحة عرض التقارير المحفوظة"""
+    
+    # الهيدر
     st.markdown("""
     <div class="page-header-reports">
         <div class="header-icon">📚</div>
@@ -259,6 +267,7 @@ def render_reports_page():
         """, unsafe_allow_html=True)
         return
     
+    # عرض المعاينة إذا كانت مفعّلة
     if st.session_state.preview_report:
         st.markdown(f"""
         <div class="preview-banner">
@@ -275,8 +284,10 @@ def render_reports_page():
                 st.session_state.preview_report = None
                 st.session_state.preview_title = ""
                 st.rerun()
+        
         st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
     
+    # شريط الإحصائيات
     st.markdown(f"""
     <div class="stats-bar-reports">
         <div class="stat-box-report">
@@ -298,8 +309,10 @@ def render_reports_page():
     </div>
     """, unsafe_allow_html=True)
     
+    # عنوان البطاقات
     st.markdown("<h2 class='section-title-reports'>📋 التقارير</h2>", unsafe_allow_html=True)
     
+    # عرض البطاقات
     cols_count = min(len(reports), 3)
     rows = (len(reports) + cols_count - 1) // cols_count
     
@@ -340,6 +353,7 @@ def render_reports_page():
                             use_container_width=True
                         )
     
+    # الجدول
     st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
     st.markdown("<h2 class='section-title-reports'>📊 جدول التقارير</h2>", unsafe_allow_html=True)
     
@@ -360,6 +374,9 @@ def render_reports_page():
 # 🏠 صفحة المنصة الرئيسية
 # ---------------------------------------------------------
 def render_platform_page():
+    """صفحة المنصة الرئيسية لإنشاء التقارير"""
+    
+    # الهيدر الرئيسي
     st.markdown("""
     <div class="hero-section">
         <div class="hero-glow"></div>
@@ -371,6 +388,7 @@ def render_platform_page():
     </div>
     """, unsafe_allow_html=True)
     
+    # عنوان اختيار النمط
     st.markdown("""
     <div class="section-header">
         <span class="section-icon">🎨</span>
@@ -379,6 +397,7 @@ def render_platform_page():
     </div>
     """, unsafe_allow_html=True)
     
+    # أزرار الاختيار
     report_type = st.radio(
         "",
         ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)", "✨ ملخص تنفيذي حديث"),
@@ -388,6 +407,7 @@ def render_platform_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     
+    # منطقة الإدخال
     col_input, col_upload = st.columns([2, 1])
     
     with col_input:
@@ -423,6 +443,7 @@ def render_platform_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     
+    # زر المعالجة
     if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل", use_container_width=True, type="primary"):
         process_report(user_text, uploaded_file, report_type)
 
@@ -430,6 +451,8 @@ def render_platform_page():
 # ⚙️ معالجة إنشاء التقرير
 # ---------------------------------------------------------
 def process_report(user_text, uploaded_file, report_type):
+    """معالجة إنشاء التقرير"""
+    
     if not API_KEY:
         st.error("⚠️ لم يتم العثور على مفتاح API. يرجى إضافته في Secrets.")
         st.stop()
@@ -439,7 +462,7 @@ def process_report(user_text, uploaded_file, report_type):
     
     if uploaded_file:
         source_file_name = uploaded_file.name
-        with st.spinner('📂 جاري قراءة الملف وتحليل المحتوى...'):
+        with st.spinner('📂 جاري قراءة الملف...'):
             file_content = extract_text_from_file(uploaded_file)
             if "⚠️" in file_content and len(file_content) < 200: 
                 st.warning(file_content)
@@ -453,33 +476,17 @@ def process_report(user_text, uploaded_file, report_type):
     
     try:
         genai.configure(api_key=API_KEY)
+        selected_model = get_best_available_model()
         
-        # =========================================================================
-        # ⚡ الخوارزمية الديناميكية لاكتشاف الموديل (تمنع خطأ 404 نهائياً)
-        # =========================================================================
-        selected_model_name, available_models_list = get_best_available_model()
-        
-        if not selected_model_name:
-            st.error(f"❌ خطأ حرج: لم يتم العثور على أي موديل متاح في حسابك. الخطأ: {available_models_list}")
-            return
-            
-        # إعدادات الأمان: السماح بكل شيء
-        safety_settings = [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-        ]
-
-        # إعدادات التوليد
+        # زيادة tokens قليلاً لضمان عدم انقطاع النصوص الطويلة
         generation_config = genai.types.GenerationConfig(
-            temperature=0.0,
+            temperature=0.1,  # درجة حرارة منخفضة جداً للدقة
             top_p=0.95,
             top_k=40,
-            max_output_tokens=8192, 
+            max_output_tokens=32000, # زيادة الحد لاستيعاب التقارير الكاملة
         )
         
-        model = genai.GenerativeModel(selected_model_name)
+        model = genai.GenerativeModel(selected_model)
 
         target_css = ""
         design_rules = ""
@@ -509,6 +516,7 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="stats-row"> for statistics if present.
             - **BACKGROUND MUST BE WHITE**
             """
+        
         elif "الرقمي" in report_type:
             target_css = STYLE_DIGITAL
             file_label = "Digital_Dashboard"
@@ -521,6 +529,7 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="data-card"> for details
             - **BACKGROUND MUST BE WHITE**
             """
+        
         elif "التحليل" in report_type:
             target_css = STYLE_ANALYTICAL
             file_label = "Deep_Analysis"
@@ -533,6 +542,7 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="analysis-section">
             - **BACKGROUND MUST BE WHITE**
             """
+        
         elif "ملخص" in report_type:
             target_css = STYLE_EXECUTIVE
             file_label = "Executive_Summary"
@@ -545,6 +555,7 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="key-metrics">
             - **BACKGROUND MUST BE WHITE**
             """
+
         elif "عرض تقديمي" in report_type:
             target_css = STYLE_PRESENTATION
             file_label = "Presentation_Slides"
@@ -563,26 +574,32 @@ def process_report(user_text, uploaded_file, report_type):
             7. **SLIDE BACKGROUND MUST BE WHITE**
             """
 
+        # --------------------------------------------------------------------------------
+        # ⚡ هندسة الأوامر المعدلة (استراتيجية الإصلاح الذكي + النسخ)
+        # --------------------------------------------------------------------------------
         prompt = f"""
-أنت خبير توثيق رقمي ومدقق بيانات دقيق جداً (Strict Verbatim Transcriber).
-المهمة: تحويل محتوى PDF الخام إلى تقرير HTML احترافي وكامل.
+أنت خبير في معالجة المستندات وتنسيق HTML.
+مهمتك: تحويل النص الخام المستخرج (والذي قد يحتوي على مشاكل تشفير PDF) إلى تقرير HTML احترافي ونظيف.
 
-⚠️ تعليمات التنفيذ الصارمة (Strict Execution Protocol):
+📥 حالة البيانات المدخلة:
+النص القادم تم استخراجه من ملف PDF وقد يعاني من:
+1. أحرف عربية معكوسة أو مقطعة (تشوه PDF).
+2. ضياع التنسيق الجدولي.
 
-1. **اكتمال التقرير (COMPLETENESS - CRITICAL):**
-   - ⛔ **ممنوع التوقف.** استمر في التوليد حتى تحول كامل المستند.
-   - إذا كان المستند طويلاً، لا تختصر.
+⚠️ تعليمات التنفيذ الصارمة (Execution Protocol):
 
-2. **حماية الأسماء (Entities Protection Policy):**
-   - 🚫 **ممنوع منعاً باتاً** استخدام "التصحيح التلقائي" للأسماء.
-   - انسخ الاسم كما يظهر لك في النص الأصلي تماماً (مثلاً: "أبو كلل" تبقى "أبو كلل"، "الدراجي" تبقى "الدراجي").
+1. **مرحلة المعالجة (Pre-processing):**
+   - إذا وجدت النص العربي مقطعاً أو معكوساً، **يجب عليك إصلاحه** ليصبح مقروءاً وصحيحاً لغوياً (هذا هو الاستثناء الوحيد لقاعدة عدم التعديل).
+   - إذا كان النص سليماً، انسخه كما هو حرفياً.
 
-3. **التنسيق (Formatting):**
-   - استخدم الكلاسات التالية:
+2. **مرحلة الهيكلة (Structuring):**
+   - استخدم الكلاسات التالية حصراً في التصميم:
 {design_rules}
-   - الجداول: حول القوائم والبيانات إلى `<table class="data-table">` فوراً.
+   - الجداول: حول أي بيانات رقمية أو قوائم منظمة في النص إلى `<table class="data-table">`.
 
-4. **المخرجات:**
+3. **قواعد السلامة (Safety Rules):**
+   - لا تكرر أي حرف أو رمز بشكل عشوائي (مثل sssss).
+   - لا تخترع نصوصاً غير موجودة.
    - أعطني كود HTML فقط داخل Body.
 
 📥 النص للمعالجة:
@@ -591,46 +608,42 @@ def process_report(user_text, uploaded_file, report_type):
 --------------------------------------------------
 """
 
+        # شريط التقدم
         progress_bar = st.progress(0)
         status_text = st.empty()
         
+        progress_messages = [
+            "🔍 قراءة البيانات بدقة...",
+            "📊 هيكلة التقرير...",
+            "🎨 تطبيق التصميم...",
+            "✍️ تنسيق المحتوى...",
+            "🔧 معالجة الجداول...",
+            "📝 المراجعة النهائية...",
+            "🎯 اللمسات الأخيرة...",
+            "✅ اكتمال!"
+        ]
+        
+        for i, msg in enumerate(progress_messages):
+            progress_bar.progress((i + 1) / len(progress_messages))
+            status_text.markdown(f"<div class='progress-status'>{msg}</div>", unsafe_allow_html=True)
+            time.sleep(0.3)
+        
         try:
-            # رسالة توضيحية للمستخدم
-            status_text.markdown(f"<div class='progress-status'>📡 تم اكتشاف النموذج المتاح: {selected_model_name} (جاري الاتصال...)</div>", unsafe_allow_html=True)
-            
-            response_stream = model.generate_content(
+            response = model.generate_content(
                 prompt, 
                 generation_config=generation_config,
-                safety_settings=safety_settings,
-                stream=True 
+                request_options={"timeout": 120}
             )
             
-            full_response_text = ""
-            
-            for chunk in response_stream:
-                try:
-                    if chunk.text:
-                        full_response_text += chunk.text
-                        status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
-                except Exception:
-                    pass 
-            
-            progress_bar.progress(100)
+            progress_bar.empty()
             status_text.empty()
             
-            html_body = clean_html_response(full_response_text)
+            if response.prompt_feedback.block_reason:
+                st.error("⚠️ تم حظر المحتوى من قبل Google AI.")
+                st.stop()
+                
+            html_body = clean_html_response(response.text)
             
-            # --- إضافة أداة تصحيح الأخطاء (لرؤية الموديلات المتاحة) ---
-            with st.expander("🛠️ (مهم جداً) معلومات التشخيص والموديلات المكتشفة"):
-                st.write(f"✅ الموديل المستخدم حالياً: **{selected_model_name}**")
-                st.write("📋 قائمة الموديلات التي يراها حسابك فعلياً:")
-                st.write(available_models_list)
-            # -----------------------------------------------
-
-            if len(html_body) < 50:
-                st.error("⚠️ عذراً، لم يتم استلام أي نص. يرجى التأكد من أن الملف يحتوي على نص قابل للقراءة.")
-                return
-
             if is_presentation:
                 final_html = f"""
 <!DOCTYPE html>
@@ -639,7 +652,7 @@ def process_report(user_text, uploaded_file, report_type):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير {file_label}</title>
-    <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap)" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     {FONT_AWESOME_LINK}
     {target_css}
 </head>
@@ -671,7 +684,7 @@ def process_report(user_text, uploaded_file, report_type):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير {file_label}</title>
-    <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap)" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     {target_css}
 </head>
 <body>
@@ -710,7 +723,11 @@ def process_report(user_text, uploaded_file, report_type):
         except Exception as api_error:
             progress_bar.empty()
             status_text.empty()
-            st.error(f"❌ حدث خطأ أثناء التوليد: {api_error}")
+            error_msg = str(api_error)
+            if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
+                st.error("⚠️ انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.")
+            else:
+                st.error(f"❌ خطأ: {api_error}")
 
     except Exception as e:
         st.error(f"❌ خطأ غير متوقع: {e}")
