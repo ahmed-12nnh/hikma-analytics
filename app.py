@@ -11,7 +11,7 @@ from datetime import datetime
 # استيراد التصاميم من ملف styles.py
 from styles import (
     MAIN_CSS,
-    SIDEBAR_CSS,
+    CUSTOM_SIDEBAR_CSS,
     STYLE_OFFICIAL,
     STYLE_DIGITAL,
     STYLE_ANALYTICAL,
@@ -41,9 +41,8 @@ if 'preview_report' not in st.session_state:
 if 'preview_title' not in st.session_state:
     st.session_state.preview_title = ""
 
-# ✅ [جديد] صفحة التنقل الحالية
 if 'current_page' not in st.session_state:
-    st.session_state.current_page = "platform"  # "platform" أو "reports"
+    st.session_state.current_page = "platform"
 
 # ---------------------------------------------------------
 # 🎨 إعدادات الصفحة
@@ -57,7 +56,6 @@ st.set_page_config(
 
 # تطبيق التصميم الرئيسي
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
-st.markdown(SIDEBAR_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 🛠️ دوال المساعدة
@@ -160,60 +158,118 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي (أزرار Streamlit فعلية)
+# 🎨 الشريط الجانبي المخصص (يفتح بـ hover)
 # ---------------------------------------------------------
-def render_sidebar():
-    """الشريط الجانبي مع أزرار التنقل"""
+def render_custom_sidebar():
+    """الشريط الجانبي المخصص - يفتح بـ CSS hover"""
+    reports_count = len(st.session_state.reports_history)
     
-    with st.container():
-        st.markdown("""
-        <div class="sidebar-container">
-            <div class="sidebar-title"> تيار الحكمة الوطني</div>
+    # بناء HTML للتقارير المحفوظة
+    reports_html = ""
+    if reports_count > 0:
+        for i, report in enumerate(st.session_state.reports_history[:5]):
+            title_short = report['title'][:18] + "..." if len(report['title']) > 18 else report['title']
+            reports_html += f"""
+            <div class="sidebar-report-card">
+                <div class="report-title">📄 {title_short}</div>
+                <div class="report-meta">
+                    <span>{report['type']}</span>
+                    <span>•</span>
+                    <span>{report['size']}</span>
+                </div>
+                <div class="report-time">🕐 {report['timestamp']}</div>
+            </div>
+            """
+    else:
+        reports_html = """
+        <div class="sidebar-empty">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">لا توجد تقارير بعد</div>
+            <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
         </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # زر المنصة الرئيسية
-        col1, col2, col3 = st.columns([1, 3, 1])
-        with col2:
-            if st.button("🏠 المنصة الرئيسية", key="nav_platform", use_container_width=True,
-                        type="primary" if st.session_state.current_page == "platform" else "secondary"):
-                st.session_state.current_page = "platform"
-                st.session_state.preview_report = None
-                st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # زر التقارير المحفوظة
-        reports_count = len(st.session_state.reports_history)
-        col1, col2, col3 = st.columns([1, 3, 1])
-        with col2:
-            btn_label = f"📚 التقارير المحفوظة ({reports_count})"
-            if st.button(btn_label, key="nav_reports", use_container_width=True,
-                        type="primary" if st.session_state.current_page == "reports" else "secondary"):
-                st.session_state.current_page = "reports"
-                st.session_state.preview_report = None
-                st.rerun()
-        
-        st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
-        
-        # معلومات إضافية
-        st.markdown("""
-        <div class="sidebar-info">
-            <p>📊 الجلسة الحالية</p>
-            <p class="info-count">{} تقرير</p>
+        """
+    
+    sidebar_html = f"""
+    <div class="custom-sidebar" id="customSidebar">
+        <div class="sidebar-strip">
+            <div class="strip-btn menu-toggle" title="مرر الماوس لفتح القائمة">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+
+            <div class="strip-btn" title="سجل التقارير ({reports_count})">
+                <span class="strip-icon">📚</span>
+                <span class="strip-badge">{reports_count}</span>
+            </div>
+
+            <div class="strip-divider"></div>
+
+            <div class="strip-btn" title="الإعدادات">
+                <span class="strip-icon">⚙️</span>
+            </div>
         </div>
-        """.format(reports_count), unsafe_allow_html=True)
-        
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class="sidebar-footer-text">
-            <p>الجهاز المركزي للجودة الشاملة</p>
-            <p>وحدة التخطيط الاستراتيجي</p>
+
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🦅</div>
+                <h3>تيار الحكمة</h3>
+                <p>سجل التقارير</p>
+            </div>
+
+            <div class="sidebar-content">
+                {reports_html}
+            </div>
+            
+            <div class="sidebar-hint-box">
+                💡 استخدم أزرار التنقل أعلى الصفحة
+            </div>
+
+            <div class="sidebar-footer">
+                <span>الجهاز المركزي للجودة الشاملة</span>
+            </div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """
+    
+    return sidebar_html
+
+# تطبيق CSS الشريط الجانبي
+st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
+
+# عرض الشريط الجانبي
+st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# 🔀 أزرار التنقل (في أعلى الصفحة)
+# ---------------------------------------------------------
+def render_navigation():
+    """أزرار التنقل بين المنصة والتقارير"""
+    reports_count = len(st.session_state.reports_history)
+    
+    col1, col2, col3, col4, col5 = st.columns([1, 1.5, 0.5, 1.5, 1])
+    
+    with col2:
+        if st.button("🏠 المنصة الرئيسية", key="nav_platform", use_container_width=True,
+                    type="primary" if st.session_state.current_page == "platform" else "secondary"):
+            st.session_state.current_page = "platform"
+            st.session_state.preview_report = None
+            st.rerun()
+    
+    with col4:
+        btn_label = f"📚 سجل التقارير ({reports_count})"
+        if st.button(btn_label, key="nav_reports", use_container_width=True,
+                    type="primary" if st.session_state.current_page == "reports" else "secondary"):
+            st.session_state.current_page = "reports"
+            st.session_state.preview_report = None
+            st.rerun()
+
+# عرض أزرار التنقل
+render_navigation()
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 📄 صفحة التقارير المحفوظة
@@ -223,17 +279,16 @@ def render_reports_page():
     
     # الهيدر
     st.markdown('''
-    <div class="page-header">
-        <div class="page-icon">📚</div>
-        <div class="page-title">التقارير المحفوظة</div>
-        <div class="page-subtitle">جميع التقارير المُنشأة خلال الجلسة الحالية</div>
+    <div class="reports-page-header">
+        <div class="rph-icon">📚</div>
+        <div class="rph-title">سجل التقارير المحفوظة</div>
+        <div class="rph-subtitle">جميع التقارير المُنشأة خلال الجلسة الحالية</div>
     </div>
     ''', unsafe_allow_html=True)
     
     reports = st.session_state.reports_history
     
     if not reports:
-        # لا توجد تقارير
         st.markdown('''
         <div class="empty-state">
             <div class="empty-icon">📭</div>
@@ -241,18 +296,13 @@ def render_reports_page():
             <div class="empty-text">قم بإنشاء تقرير من المنصة الرئيسية وسيظهر هنا</div>
         </div>
         ''', unsafe_allow_html=True)
-        
-        if st.button("🏠 العودة للمنصة الرئيسية", key="back_to_platform_empty", use_container_width=True):
-            st.session_state.current_page = "platform"
-            st.rerun()
         return
     
     # عرض المعاينة إذا كانت مفعّلة
     if st.session_state.preview_report:
         st.markdown(f'''
         <div class="preview-header">
-            <span class="preview-icon">👁️</span>
-            <span class="preview-title">معاينة: {st.session_state.preview_title}</span>
+            <span>👁️ معاينة: {st.session_state.preview_title}</span>
         </div>
         ''', unsafe_allow_html=True)
         
@@ -260,7 +310,7 @@ def render_reports_page():
         
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button("❌ إغلاق المعاينة", key="close_preview_reports", use_container_width=True):
+            if st.button("❌ إغلاق المعاينة", key="close_preview", use_container_width=True):
                 st.session_state.preview_report = None
                 st.session_state.preview_title = ""
                 st.rerun()
@@ -270,17 +320,17 @@ def render_reports_page():
     # إحصائيات سريعة
     st.markdown(f'''
     <div class="stats-bar">
-        <div class="stat-item-small">
-            <span class="stat-number">{len(reports)}</span>
-            <span class="stat-label">إجمالي التقارير</span>
+        <div class="stat-box">
+            <span class="stat-num">{len(reports)}</span>
+            <span class="stat-lbl">إجمالي التقارير</span>
         </div>
-        <div class="stat-item-small">
-            <span class="stat-number">{sum(1 for r in reports if "رسمي" in r["type"])}</span>
-            <span class="stat-label">تقارير رسمية</span>
+        <div class="stat-box">
+            <span class="stat-num">{sum(1 for r in reports if "رسمي" in r["type"])}</span>
+            <span class="stat-lbl">تقارير رسمية</span>
         </div>
-        <div class="stat-item-small">
-            <span class="stat-number">{sum(1 for r in reports if "عرض" in r["type"])}</span>
-            <span class="stat-label">عروض تقديمية</span>
+        <div class="stat-box">
+            <span class="stat-num">{sum(1 for r in reports if "عرض" in r["type"])}</span>
+            <span class="stat-lbl">عروض تقديمية</span>
         </div>
     </div>
     ''', unsafe_allow_html=True)
@@ -290,7 +340,6 @@ def render_reports_page():
     # عرض البطاقات
     st.markdown('<div class="section-title">📋 البطاقات</div>', unsafe_allow_html=True)
     
-    # عرض التقارير كبطاقات
     cols_count = min(len(reports), 3)
     rows = (len(reports) + cols_count - 1) // cols_count
     
@@ -302,13 +351,13 @@ def render_reports_page():
                 report = reports[report_idx]
                 with cols[col_idx]:
                     st.markdown(f'''
-                    <div class="report-card">
-                        <div class="card-header">
-                            <span class="card-icon">📄</span>
-                            <span class="card-type">{report['type']}</span>
+                    <div class="report-card-large">
+                        <div class="rcl-header">
+                            <span class="rcl-icon">📄</span>
+                            <span class="rcl-type">{report['type']}</span>
                         </div>
-                        <div class="card-title">{report['title']}</div>
-                        <div class="card-meta">
+                        <div class="rcl-title">{report['title']}</div>
+                        <div class="rcl-meta">
                             <span>📦 {report['size']}</span>
                             <span>🕐 {report['timestamp']}</span>
                         </div>
@@ -336,7 +385,6 @@ def render_reports_page():
     # عرض الجدول
     st.markdown('<div class="section-title">📊 جدول التقارير</div>', unsafe_allow_html=True)
     
-    # تحويل البيانات لجدول
     table_data = []
     for i, report in enumerate(reports):
         table_data.append({
@@ -349,15 +397,6 @@ def render_reports_page():
     
     df = pd.DataFrame(table_data)
     st.dataframe(df, use_container_width=True, hide_index=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # زر العودة
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("🏠 العودة للمنصة الرئيسية", key="back_to_platform", use_container_width=True):
-            st.session_state.current_page = "platform"
-            st.rerun()
 
 # ---------------------------------------------------------
 # 🏠 صفحة المنصة الرئيسية
@@ -368,22 +407,13 @@ def render_platform_page():
     # الهيدر الرئيسي
     st.markdown('''
     <div class="hero-section">
-        <div class="hero-title">تيار الحكمة الوطني</div>
-        <div class="hero-subtitle">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
+        <div class="main-title">تيار الحكمة الوطني</div>
+        <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
     </div>
     ''', unsafe_allow_html=True)
     
-    # إشعار بعدد التقارير
-    if st.session_state.reports_history:
-        st.markdown(f'''
-        <div class="info-banner">
-            <span>📚</span> لديك <strong>{len(st.session_state.reports_history)}</strong> تقرير محفوظ - 
-            <span style="cursor:pointer; text-decoration:underline;">انقر على "التقارير المحفوظة" للعرض</span>
-        </div>
-        ''', unsafe_allow_html=True)
-    
     # عنوان اختيار النمط
-    st.markdown('<div class="section-header">🎨 اختر نمط الإخراج المطلوب</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">🎨 اختر نمط الإخراج المطلوب (جميع التصاميم بخلفية بيضاء احترافية)</div>', unsafe_allow_html=True)
     
     # أزرار الاختيار
     report_type = st.radio(
@@ -482,7 +512,6 @@ def process_report(user_text, uploaded_file, report_type):
         report_type_short = ""
         is_presentation = False
         
-        # التوقيع الموحد
         unified_signature = """
         <div class="report-signature">
             <div class="signature-line"></div>
@@ -564,7 +593,6 @@ def process_report(user_text, uploaded_file, report_type):
             7. **SLIDE BACKGROUND MUST BE WHITE**
             """
 
-        # الـ PROMPT
         prompt = f"""
 أنت محلل بيانات ومطور محترف. حول البيانات التالية إلى تقرير HTML كامل.
 
@@ -572,7 +600,7 @@ def process_report(user_text, uploaded_file, report_type):
 1. **الخلفية بيضاء (White Background)** لجميع التقارير.
 2. استخدم بنية HTML المتوافقة مع الكلاسات التالية:
 {design_rules}
-3. لا تقم أبداً بإضافة "التوقيع" أو "الخاتمة" (صادر عن...) داخل النص. سأقوم أنا بإضافتها برمجياً في نهاية الملف.
+3. لا تقم أبداً بإضافة "التوقيع" أو "الخاتمة" (صادر عن...) داخل النص.
 4. اللغة العربية الفصحى.
 5. أعطني كود HTML فقط داخل Body.
 
@@ -582,7 +610,6 @@ def process_report(user_text, uploaded_file, report_type):
 
         progress_placeholder = st.empty()
         
-        # شريط التحميل
         progress_messages = [
             "🔍 جاري تحليل البيانات...",
             "📊 استخراج المعلومات الرئيسية...",
@@ -615,14 +642,13 @@ def process_report(user_text, uploaded_file, report_type):
             )
             
             if response.prompt_feedback.block_reason:
-                st.error("⚠️ تم حظر المحتوى من قبل Google AI لأسباب تتعلق بالسياسة أو السلامة.")
+                st.error("⚠️ تم حظر المحتوى من قبل Google AI.")
                 st.stop()
                 
             html_body = clean_html_response(response.text)
             
             progress_placeholder.empty()
             
-            # تجميع الملف النهائي
             if is_presentation:
                 final_html = f"""
 <!DOCTYPE html>
@@ -640,12 +666,8 @@ def process_report(user_text, uploaded_file, report_type):
         {html_body}
         
         <div class="nav-controls">
-            <button class="nav-btn" onclick="prevSlide()" title="السابق">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <button class="nav-btn" onclick="nextSlide()" title="التالي">
-                <i class="fas fa-chevron-left"></i>
-            </button>
+            <button class="nav-btn" onclick="prevSlide()" title="السابق">◀</button>
+            <button class="nav-btn" onclick="nextSlide()" title="التالي">▶</button>
         </div>
         
         <div class="page-number" id="page-num">1 / 1</div>
@@ -694,7 +716,7 @@ def process_report(user_text, uploaded_file, report_type):
             
             st.markdown('''
             <div class="success-hint">
-                💡 يمكنك الوصول للتقارير المحفوظة من زر "التقارير المحفوظة" في الأعلى
+                💡 يمكنك الوصول للتقارير المحفوظة من زر "سجل التقارير" في الأعلى
             </div>
             ''', unsafe_allow_html=True)
             
@@ -711,22 +733,16 @@ def process_report(user_text, uploaded_file, report_type):
             progress_placeholder.empty()
             error_msg = str(api_error)
             if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
-                st.error("⚠️ انتهت مهلة الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى.")
+                st.error("⚠️ انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.")
             else:
-                st.error(f"❌ حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {api_error}")
+                st.error(f"❌ خطأ: {api_error}")
 
     except Exception as e:
-        st.error(f"❌ حدث خطأ غير متوقع: {e}")
+        st.error(f"❌ خطأ غير متوقع: {e}")
 
 # ---------------------------------------------------------
-# 🚀 التطبيق الرئيسي
+# 🚀 عرض الصفحة المناسبة
 # ---------------------------------------------------------
-
-# الشريط الجانبي
-with st.sidebar:
-    render_sidebar()
-
-# عرض الصفحة المناسبة
 if st.session_state.current_page == "platform":
     render_platform_page()
 elif st.session_state.current_page == "reports":
@@ -743,5 +759,3 @@ st.markdown('''
     <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
 </div>
 ''', unsafe_allow_html=True)
-
-
