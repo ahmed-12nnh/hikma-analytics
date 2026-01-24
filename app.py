@@ -99,34 +99,39 @@ def clean_input_text(text):
 def clean_html_response(text):
     """دالة تنظيف مرنة جداً لضمان عدم حذف المحتوى"""
     if not text: return ""
-    
-    # تنظيف علامات المارك داون فقط
     text = re.sub(r"^```html", "", text, flags=re.IGNORECASE | re.MULTILINE)
     text = re.sub(r"^```", "", text, flags=re.MULTILINE)
     text = re.sub(r"```$", "", text, flags=re.MULTILINE)
-    
-    # تنظيف المسافات الزائدة في البداية والنهاية
     return text.strip()
 
 def get_best_available_model():
-    """تحديد أفضل نموذج متاح مع أولوية قصوى لنموذج Pro للدقة"""
+    """تحديد أفضل نموذج متاح ديناميكياً من القائمة الفعلية للمستخدم"""
     try:
-        available_models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                available_models.append(m.name)
+        # جلب قائمة الموديلات المتاحة فعلياً للمستخدم
+        all_models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         
-        # 1. الأولوية القصوى لـ Gemini 1.5 Pro
-        for m in available_models:
-            if 'gemini-1.5-pro' in m and 'exp' not in m:
-                return m
+        # ترتيب الأولويات: نبحث عن Pro أولاً، ثم Flash، ثم أي شيء آخر
         
-        # 2. الخيار الثاني Gemini 1.5 Flash
-        for m in available_models:
-            if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
-                return m 
+        # 1. البحث عن أي نسخة Pro
+        for m in all_models:
+            if 'gemini-1.5-pro' in m.name:
+                return m.name
+        
+        # 2. البحث عن أي نسخة Flash
+        for m in all_models:
+            if 'gemini-1.5-flash' in m.name:
+                return m.name
                 
-        return "models/gemini-1.5-pro"
+        # 3. البحث عن Gemini Pro العادي
+        for m in all_models:
+            if 'gemini-pro' in m.name:
+                return m.name
+
+        # 4. الملاذ الأخير: أول موديل متاح في القائمة
+        if all_models:
+            return all_models[0].name
+            
+        return "models/gemini-pro" # احتياط نهائي
     except:
         return "models/gemini-pro"
 
@@ -456,9 +461,12 @@ def process_report(user_text, uploaded_file, report_type):
     
     try:
         genai.configure(api_key=API_KEY)
-        selected_model = get_best_available_model()
         
-        # إعدادات الأمان: السماح بكل شيء لتجنب حظر التقارير السياسية
+        # === (الحل الجذري للخطأ 404) اختيار النموذج من القائمة المتاحة ===
+        selected_model_name = get_best_available_model()
+        # ===============================================================
+        
+        # إعدادات الأمان: السماح بكل شيء لتجنب حظر التقارير السياسية (حل التقرير الفارغ)
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -466,6 +474,7 @@ def process_report(user_text, uploaded_file, report_type):
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
         ]
 
+        # إعدادات التوليد
         generation_config = genai.types.GenerationConfig(
             temperature=0.0,
             top_p=0.95,
@@ -473,7 +482,7 @@ def process_report(user_text, uploaded_file, report_type):
             max_output_tokens=8192, 
         )
         
-        model = genai.GenerativeModel(selected_model)
+        model = genai.GenerativeModel(selected_model_name)
 
         target_css = ""
         design_rules = ""
@@ -592,12 +601,12 @@ def process_report(user_text, uploaded_file, report_type):
         status_text = st.empty()
         
         try:
-            status_text.markdown(f"<div class='progress-status'>📡 جاري الاتصال بالنموذج الذكي (Pro)...</div>", unsafe_allow_html=True)
+            status_text.markdown(f"<div class='progress-status'>📡 متصل بـ: {selected_model_name}</div>", unsafe_allow_html=True)
             
             response_stream = model.generate_content(
                 prompt, 
                 generation_config=generation_config,
-                safety_settings=safety_settings, # تم تفعيل إلغاء الفلاتر
+                safety_settings=safety_settings, 
                 stream=True 
             )
             
@@ -609,7 +618,7 @@ def process_report(user_text, uploaded_file, report_type):
                         full_response_text += chunk.text
                         status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
                 except Exception:
-                    pass # تجاهل الأجزاء التالفة في الستريم
+                    pass 
             
             progress_bar.progress(100)
             status_text.empty()
@@ -617,12 +626,12 @@ def process_report(user_text, uploaded_file, report_type):
             html_body = clean_html_response(full_response_text)
             
             # --- إضافة أداة تصحيح الأخطاء (للمطور فقط) ---
-            with st.expander("🛠️ (للمطور) عرض النص الخام المستلم من الذكاء الاصطناعي"):
+            with st.expander("🛠️ (للمطور) عرض النص الخام المستلم"):
                 st.text(full_response_text)
             # -----------------------------------------------
 
             if len(html_body) < 50:
-                st.error("⚠️ عذراً، لم يتم استلام أي نص. قد يكون المحتوى محظوراً من المصدر أو فارغاً. راجع خانة 'النص الخام' أعلاه.")
+                st.error("⚠️ عذراً، لم يتم استلام أي نص. يرجى مراجعة خانة 'النص الخام' أعلاه.")
                 return
 
             if is_presentation:
@@ -705,8 +714,9 @@ def process_report(user_text, uploaded_file, report_type):
             progress_bar.empty()
             status_text.empty()
             error_msg = str(api_error)
-            if "504" in error_msg or "timeout" in error_msg.lower():
-                st.error("⚠️ استغرق النموذج وقتاً طويلاً جداً.")
+            # معالجة الخطأ إذا حدث 404 (نادراً الآن)
+            if "404" in error_msg:
+                 st.error(f"❌ خطأ: النموذج المطلوب غير موجود. حاول تحديث الصفحة.")
             else:
                 st.error(f"❌ خطأ: {api_error}")
 
