@@ -119,6 +119,7 @@ def get_best_available_model():
                 available_models.append(m.name)
         
         for m in available_models:
+            # نفضل الموديلات المستقرة والسريعة للنصوص الطويلة
             if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
                 return m 
         
@@ -465,7 +466,7 @@ def process_report(user_text, uploaded_file, report_type):
             file_content = extract_text_from_file(uploaded_file)
             if "⚠️" in file_content and len(file_content) < 200: 
                 st.warning(file_content)
-            full_text += f"\n\n[محتوى الملف]:\n{file_content}"
+            full_text += f"\n\n[بداية محتوى الملف المرفق]:\n{file_content}\n[نهاية محتوى الملف المرفق]"
 
     full_text = clean_input_text(full_text)
 
@@ -477,11 +478,12 @@ def process_report(user_text, uploaded_file, report_type):
         genai.configure(api_key=API_KEY)
         selected_model = get_best_available_model()
         
+        # زيادة tokens قليلاً لضمان عدم انقطاع النصوص الطويلة
         generation_config = genai.types.GenerationConfig(
-            temperature=0.1,
+            temperature=0.1,  # درجة حرارة منخفضة جداً للدقة
             top_p=0.95,
             top_k=40,
-            max_output_tokens=16384,
+            max_output_tokens=32000, # زيادة الحد لاستيعاب التقارير الكاملة
         )
         
         model = genai.GenerativeModel(selected_model)
@@ -510,8 +512,8 @@ def process_report(user_text, uploaded_file, report_type):
             Structure:
             - Use <header> for title
             - Use <div class="card"> for content sections
-            - Use Standard <table class="data-table">
-            - Use <div class="stats-row"> for statistics
+            - Use Standard <table class="data-table"> for ANY tabular data found in text.
+            - Use <div class="stats-row"> for statistics if present.
             - **BACKGROUND MUST BE WHITE**
             """
         
@@ -568,23 +570,35 @@ def process_report(user_text, uploaded_file, report_type):
             3. Other slides: <div class="slide" id="slide-2">, <div class="slide" id="slide-3">, etc.
             4. Use <div class="slide-header"> with <div class="header-title"><h2>Title</h2></div>
             5. Use <div class="slide-content"> for the main content
-            6. Create 5-8 slides maximum
+            6. Create as many slides as needed to cover ALL content.
             7. **SLIDE BACKGROUND MUST BE WHITE**
             """
 
+        # --------------------------------------------------------------------------------
+        # ⚡ هندسة الأوامر المعدلة (استراتيجية النسخ الدقيق)
+        # --------------------------------------------------------------------------------
         prompt = f"""
-أنت محلل بيانات ومطور محترف. حول البيانات التالية إلى تقرير HTML كامل.
+أنت محرك تحويل وتنسيق نصوص دقيق جداً (Strict HTML Formatter). مهمتك هي تحويل النص المدخل أدناه إلى كود HTML احترافي دون تغيير المحتوى الأصلي.
 
-⚠️ القواعد الصارمة:
-1. **الخلفية بيضاء (White Background)** لجميع التقارير.
-2. استخدم بنية HTML المتوافقة مع الكلاسات التالية:
+⚠️ القواعد الصارمة جداً (Critical Rules):
+1. **النسخ الحرفي (Verbatim Copy):** يجب أن يتضمن التقرير **كل كلمة** و**كل رقم** موجود في "البيانات المدخلة". ممنوع التلخيص نهائياً. ممنوع حذف أي فقرة.
+2. **الجداول (Tables):** إذا وجدت بيانات جدولية في النص، يجب تحويلها فوراً إلى جداول HTML (`<table class="data-table">`) مع الحفاظ على كل الصفوف والأعمدة بدقة.
+3. **التصميم (Design):** التزم حرفياً بالكلاسات وهيكلية التصميم التالية:
 {design_rules}
-3. لا تقم أبداً بإضافة "التوقيع" أو "الخاتمة" (صادر عن...) داخل النص.
-4. اللغة العربية الفصحى.
-5. أعطني كود HTML فقط داخل Body.
+4. **النظافة (Clean Code):** أعطني كود HTML فقط (داخل Body tags). لا تضف شروحات markdown.
+5. **اللغة:** حافظ على اللغة العربية للنص كما هي تماماً دون تعديل.
+6. **الخلفية:** بيضاء دائماً.
 
-📊 البيانات:
+⛔ ممنوعات قاتلة:
+- ممنوع التلخيص (Do NOT summarize).
+- ممنوع تغيير النص الأصلي (Do NOT change original text).
+- ممنوع اختراع محتوى غير موجود.
+- ممنوع قطع التقرير (تأكد من إغلاق كل الوسوم).
+
+📥 البيانات المدخلة (Input Data):
+--------------------------------------------------
 {full_text}
+--------------------------------------------------
 """
 
         # شريط التقدم
@@ -592,13 +606,13 @@ def process_report(user_text, uploaded_file, report_type):
         status_text = st.empty()
         
         progress_messages = [
-            "🔍 تحليل البيانات...",
-            "📊 استخراج المعلومات...",
+            "🔍 قراءة البيانات بدقة...",
+            "📊 هيكلة التقرير...",
             "🎨 تطبيق التصميم...",
-            "✍️ إنشاء المحتوى...",
-            "🔧 معالجة النصوص...",
-            "📝 تنسيق الجداول...",
-            "🎯 اللمسات النهائية...",
+            "✍️ تنسيق المحتوى...",
+            "🔧 معالجة الجداول...",
+            "📝 المراجعة النهائية...",
+            "🎯 اللمسات الأخيرة...",
             "✅ اكتمال!"
         ]
         
@@ -730,4 +744,3 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
