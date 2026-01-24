@@ -619,37 +619,33 @@ def process_report(user_text, uploaded_file, report_type):
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        progress_messages = [
-            "🔍 تحليل دقيق للمستند (نموذج Pro)...",
-            "🛡️ التحقق من صحة الأسماء والمناصب...",
-            "📊 بناء الهيكلية والجداول...",
-            "🎨 تطبيق التصميم المؤسسي...",
-            "🔧 معالجة مشاكل التشفير...",
-            "📝 المراجعة النهائية للنص...",
-            "🎯 اللمسات الأخيرة...",
-            "✅ تم الإنشاء بنجاح!"
-        ]
-        
-        for i, msg in enumerate(progress_messages):
-            progress_bar.progress((i + 1) / len(progress_messages))
-            status_text.markdown(f"<div class='progress-status'>{msg}</div>", unsafe_allow_html=True)
-            time.sleep(0.4) # زيادة طفيفة للوقت ليتناسب مع Pro
-        
+        # ----------------------------------------------------------------------------
+        # ⚡ الإصلاح الأساسي: تفعيل الـ Streaming لمنع الـ 504 Timeout
+        # ----------------------------------------------------------------------------
         try:
-            response = model.generate_content(
+            status_text.markdown(f"<div class='progress-status'>📡 جاري الاتصال بالنموذج الذكي (Pro)...</div>", unsafe_allow_html=True)
+            
+            # تفعيل stream=True هو السر في منع انقطاع الاتصال
+            response_stream = model.generate_content(
                 prompt, 
                 generation_config=generation_config,
-                request_options={"timeout": 120}
+                stream=True 
             )
             
-            progress_bar.empty()
+            full_response_text = ""
+            
+            # حلقة التجميع: تبقي الاتصال حياً وتجمع النص قطعة قطعة
+            for chunk in response_stream:
+                if chunk.text:
+                    full_response_text += chunk.text
+                    # تحديث الواجهة ليبدو التطبيق نشطاً للخادم
+                    status_text.markdown(f"<div class='progress-status'>⏳ جاري استلام البيانات... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
+            
+            progress_bar.progress(100)
             status_text.empty()
             
-            if response.prompt_feedback.block_reason:
-                st.error("⚠️ تم حظر المحتوى من قبل Google AI.")
-                st.stop()
-                
-            html_body = clean_html_response(response.text)
+            # معالجة النص المجمع
+            html_body = clean_html_response(full_response_text)
             
             if is_presentation:
                 final_html = f"""
@@ -731,8 +727,8 @@ def process_report(user_text, uploaded_file, report_type):
             progress_bar.empty()
             status_text.empty()
             error_msg = str(api_error)
-            if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
-                st.error("⚠️ انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.")
+            if "504" in error_msg or "timeout" in error_msg.lower():
+                st.error("⚠️ استغرق النموذج وقتاً طويلاً. يرجى المحاولة مرة أخرى (تم تحسين الاتصال في المحاولة القادمة).")
             else:
                 st.error(f"❌ خطأ: {api_error}")
 
