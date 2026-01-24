@@ -11,7 +11,6 @@ from datetime import datetime
 # استيراد التصاميم من ملف styles.py
 from styles import (
     MAIN_CSS,
-    CUSTOM_SIDEBAR_CSS,
     STYLE_OFFICIAL,
     STYLE_DIGITAL,
     STYLE_ANALYTICAL,
@@ -51,7 +50,7 @@ st.set_page_config(
     page_title="منصة التحليل الاستراتيجي",
     page_icon="🦅",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # تطبيق التصميم الرئيسي
@@ -62,7 +61,7 @@ st.markdown(MAIN_CSS, unsafe_allow_html=True)
 # ---------------------------------------------------------
 
 def extract_text_from_file(uploaded_file):
-    """استخراج النص باستخدام مكتبة fitz (PyMuPDF)"""
+    """استخراج النص من الملفات"""
     text_content = ""
     try:
         if uploaded_file.type == "application/pdf":
@@ -78,7 +77,7 @@ def extract_text_from_file(uploaded_file):
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
                 text_content = df.to_csv(index=False)
             except Exception as xl_err:
-                 return f"⚠️ خطأ في قراءة Excel: {xl_err}"
+                return f"⚠️ خطأ في قراءة Excel: {xl_err}"
         
         else:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8", errors='ignore'))
@@ -158,118 +157,88 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي المخصص (يفتح بـ hover)
+# 🎨 الشريط الجانبي (Streamlit Sidebar مع أزرار فعلية)
 # ---------------------------------------------------------
-def render_custom_sidebar():
-    """الشريط الجانبي المخصص - يفتح بـ CSS hover"""
+with st.sidebar:
+    # الشعار والعنوان
+    st.markdown("""
+    <div class="sidebar-brand">
+        <div class="brand-logo">🦅</div>
+        <div class="brand-name">تيار الحكمة</div>
+        <div class="brand-subtitle">منصة التحليل الاستراتيجي</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
+    
+    # قسم التنقل
+    st.markdown("<div class='nav-section-title'>📍 التنقل</div>", unsafe_allow_html=True)
+    
+    # زر المنصة الرئيسية
+    if st.button("🏠 المنصة الرئيسية", key="nav_platform", use_container_width=True,
+                type="primary" if st.session_state.current_page == "platform" else "secondary"):
+        st.session_state.current_page = "platform"
+        st.session_state.preview_report = None
+        st.rerun()
+    
+    # زر سجل التقارير
     reports_count = len(st.session_state.reports_history)
+    if st.button(f"📚 سجل التقارير ({reports_count})", key="nav_reports", use_container_width=True,
+                type="primary" if st.session_state.current_page == "reports" else "secondary"):
+        st.session_state.current_page = "reports"
+        st.session_state.preview_report = None
+        st.rerun()
     
-    # بناء HTML للتقارير المحفوظة
-    reports_html = ""
-    if reports_count > 0:
-        for i, report in enumerate(st.session_state.reports_history[:5]):
-            title_short = report['title'][:18] + "..." if len(report['title']) > 18 else report['title']
-            reports_html += f"""
-            <div class="sidebar-report-card">
-                <div class="report-title">📄 {title_short}</div>
-                <div class="report-meta">
-                    <span>{report['type']}</span>
-                    <span>•</span>
-                    <span>{report['size']}</span>
-                </div>
-                <div class="report-time">🕐 {report['timestamp']}</div>
-            </div>
-            """
-    else:
-        reports_html = """
-        <div class="sidebar-empty">
-            <div class="empty-icon">📭</div>
-            <div class="empty-text">لا توجد تقارير بعد</div>
-            <div class="empty-hint">ستظهر هنا بعد إنشائها</div>
-        </div>
-        """
+    st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
     
-    sidebar_html = f"""
-    <div class="custom-sidebar" id="customSidebar">
-        <div class="sidebar-strip">
-            <div class="strip-btn menu-toggle" title="مرر الماوس لفتح القائمة">
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
+    # إحصائيات الجلسة
+    st.markdown(f"""
+    <div class="session-stats">
+        <div class="stats-title">📊 إحصائيات الجلسة</div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-value">{reports_count}</span>
+                <span class="stat-label">تقرير</span>
             </div>
-
-            <div class="strip-btn" title="سجل التقارير ({reports_count})">
-                <span class="strip-icon">📚</span>
-                <span class="strip-badge">{reports_count}</span>
+            <div class="stat-item">
+                <span class="stat-value">{sum(1 for r in st.session_state.reports_history if "رسمي" in r.get("type", ""))}</span>
+                <span class="stat-label">رسمي</span>
             </div>
-
-            <div class="strip-divider"></div>
-
-            <div class="strip-btn" title="الإعدادات">
-                <span class="strip-icon">⚙️</span>
-            </div>
-        </div>
-
-        <div class="sidebar-panel">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">🦅</div>
-                <h3>تيار الحكمة</h3>
-                <p>سجل التقارير</p>
-            </div>
-
-            <div class="sidebar-content">
-                {reports_html}
-            </div>
-            
-            <div class="sidebar-hint-box">
-                💡 استخدم أزرار التنقل أعلى الصفحة
-            </div>
-
-            <div class="sidebar-footer">
-                <span>الجهاز المركزي للجودة الشاملة</span>
+            <div class="stat-item">
+                <span class="stat-value">{sum(1 for r in st.session_state.reports_history if "عرض" in r.get("type", ""))}</span>
+                <span class="stat-label">عرض</span>
             </div>
         </div>
     </div>
-    """
+    """, unsafe_allow_html=True)
     
-    return sidebar_html
-
-# تطبيق CSS الشريط الجانبي
-st.markdown(CUSTOM_SIDEBAR_CSS, unsafe_allow_html=True)
-
-# عرض الشريط الجانبي
-st.markdown(render_custom_sidebar(), unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# 🔀 أزرار التنقل (في أعلى الصفحة)
-# ---------------------------------------------------------
-def render_navigation():
-    """أزرار التنقل بين المنصة والتقارير"""
-    reports_count = len(st.session_state.reports_history)
+    # آخر التقارير
+    if st.session_state.reports_history:
+        st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
+        st.markdown("<div class='nav-section-title'>📄 آخر التقارير</div>", unsafe_allow_html=True)
+        
+        for i, report in enumerate(st.session_state.reports_history[:3]):
+            title_short = report['title'][:15] + "..." if len(report['title']) > 15 else report['title']
+            st.markdown(f"""
+            <div class="recent-report">
+                <div class="report-icon">📄</div>
+                <div class="report-info">
+                    <div class="report-name">{title_short}</div>
+                    <div class="report-meta">{report['type']} • {report['size']}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    col1, col2, col3, col4, col5 = st.columns([1, 1.5, 0.5, 1.5, 1])
-    
-    with col2:
-        if st.button("🏠 المنصة الرئيسية", key="nav_platform", use_container_width=True,
-                    type="primary" if st.session_state.current_page == "platform" else "secondary"):
-            st.session_state.current_page = "platform"
-            st.session_state.preview_report = None
-            st.rerun()
-    
-    with col4:
-        btn_label = f"📚 سجل التقارير ({reports_count})"
-        if st.button(btn_label, key="nav_reports", use_container_width=True,
-                    type="primary" if st.session_state.current_page == "reports" else "secondary"):
-            st.session_state.current_page = "reports"
-            st.session_state.preview_report = None
-            st.rerun()
-
-# عرض أزرار التنقل
-render_navigation()
-
-st.markdown("<br>", unsafe_allow_html=True)
+    # الفوتر
+    st.markdown("<div class='sidebar-spacer'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="sidebar-footer">
+        <div class="footer-line"></div>
+        <div class="footer-org">الجهاز المركزي للجودة الشاملة</div>
+        <div class="footer-unit">وحدة التخطيط الاستراتيجي</div>
+        <div class="footer-copy">© 2026</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 📄 صفحة التقارير المحفوظة
@@ -278,33 +247,34 @@ def render_reports_page():
     """صفحة عرض التقارير المحفوظة"""
     
     # الهيدر
-    st.markdown('''
-    <div class="reports-page-header">
-        <div class="rph-icon">📚</div>
-        <div class="rph-title">سجل التقارير المحفوظة</div>
-        <div class="rph-subtitle">جميع التقارير المُنشأة خلال الجلسة الحالية</div>
+    st.markdown("""
+    <div class="page-header-reports">
+        <div class="header-icon">📚</div>
+        <h1 class="header-title">سجل التقارير المحفوظة</h1>
+        <p class="header-subtitle">جميع التقارير المُنشأة خلال الجلسة الحالية</p>
     </div>
-    ''', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
     reports = st.session_state.reports_history
     
     if not reports:
-        st.markdown('''
+        st.markdown("""
         <div class="empty-state">
             <div class="empty-icon">📭</div>
-            <div class="empty-title">لا توجد تقارير بعد</div>
-            <div class="empty-text">قم بإنشاء تقرير من المنصة الرئيسية وسيظهر هنا</div>
+            <h3 class="empty-title">لا توجد تقارير بعد</h3>
+            <p class="empty-text">قم بإنشاء تقرير من المنصة الرئيسية وسيظهر هنا</p>
         </div>
-        ''', unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         return
     
     # عرض المعاينة إذا كانت مفعّلة
     if st.session_state.preview_report:
-        st.markdown(f'''
-        <div class="preview-header">
-            <span>👁️ معاينة: {st.session_state.preview_title}</span>
+        st.markdown(f"""
+        <div class="preview-banner">
+            <span class="preview-icon">👁️</span>
+            <span class="preview-text">معاينة: {st.session_state.preview_title}</span>
         </div>
-        ''', unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         
         components.html(st.session_state.preview_report, height=500, scrolling=True)
         
@@ -315,31 +285,34 @@ def render_reports_page():
                 st.session_state.preview_title = ""
                 st.rerun()
         
-        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
     
-    # إحصائيات سريعة
-    st.markdown(f'''
-    <div class="stats-bar">
-        <div class="stat-box">
-            <span class="stat-num">{len(reports)}</span>
-            <span class="stat-lbl">إجمالي التقارير</span>
+    # شريط الإحصائيات
+    st.markdown(f"""
+    <div class="stats-bar-reports">
+        <div class="stat-box-report">
+            <span class="stat-number">{len(reports)}</span>
+            <span class="stat-text">إجمالي التقارير</span>
         </div>
-        <div class="stat-box">
-            <span class="stat-num">{sum(1 for r in reports if "رسمي" in r["type"])}</span>
-            <span class="stat-lbl">تقارير رسمية</span>
+        <div class="stat-box-report">
+            <span class="stat-number">{sum(1 for r in reports if "رسمي" in r["type"])}</span>
+            <span class="stat-text">تقارير رسمية</span>
         </div>
-        <div class="stat-box">
-            <span class="stat-num">{sum(1 for r in reports if "عرض" in r["type"])}</span>
-            <span class="stat-lbl">عروض تقديمية</span>
+        <div class="stat-box-report">
+            <span class="stat-number">{sum(1 for r in reports if "عرض" in r["type"])}</span>
+            <span class="stat-text">عروض تقديمية</span>
+        </div>
+        <div class="stat-box-report">
+            <span class="stat-number">{sum(1 for r in reports if "تحليل" in r["type"])}</span>
+            <span class="stat-text">تقارير تحليلية</span>
         </div>
     </div>
-    ''', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    # عنوان البطاقات
+    st.markdown("<h2 class='section-title-reports'>📋 التقارير</h2>", unsafe_allow_html=True)
     
     # عرض البطاقات
-    st.markdown('<div class="section-title">📋 البطاقات</div>', unsafe_allow_html=True)
-    
     cols_count = min(len(reports), 3)
     rows = (len(reports) + cols_count - 1) // cols_count
     
@@ -350,19 +323,19 @@ def render_reports_page():
             if report_idx < len(reports):
                 report = reports[report_idx]
                 with cols[col_idx]:
-                    st.markdown(f'''
-                    <div class="report-card-large">
-                        <div class="rcl-header">
-                            <span class="rcl-icon">📄</span>
-                            <span class="rcl-type">{report['type']}</span>
+                    st.markdown(f"""
+                    <div class="report-card">
+                        <div class="card-header">
+                            <span class="card-icon">📄</span>
+                            <span class="card-badge">{report['type']}</span>
                         </div>
-                        <div class="rcl-title">{report['title']}</div>
-                        <div class="rcl-meta">
+                        <h3 class="card-title">{report['title']}</h3>
+                        <div class="card-meta">
                             <span>📦 {report['size']}</span>
                             <span>🕐 {report['timestamp']}</span>
                         </div>
                     </div>
-                    ''', unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
                     
                     btn_col1, btn_col2 = st.columns(2)
                     with btn_col1:
@@ -372,7 +345,7 @@ def render_reports_page():
                             st.rerun()
                     with btn_col2:
                         st.download_button(
-                            label="💾 حفظ",
+                            label="💾 تحميل",
                             data=report['html'],
                             file_name=f"{report['title']}.html",
                             mime="text/html",
@@ -380,10 +353,9 @@ def render_reports_page():
                             use_container_width=True
                         )
     
-    st.markdown("<br><hr><br>", unsafe_allow_html=True)
-    
-    # عرض الجدول
-    st.markdown('<div class="section-title">📊 جدول التقارير</div>', unsafe_allow_html=True)
+    # الجدول
+    st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
+    st.markdown("<h2 class='section-title-reports'>📊 جدول التقارير</h2>", unsafe_allow_html=True)
     
     table_data = []
     for i, report in enumerate(reports):
@@ -405,15 +377,26 @@ def render_platform_page():
     """صفحة المنصة الرئيسية لإنشاء التقارير"""
     
     # الهيدر الرئيسي
-    st.markdown('''
+    st.markdown("""
     <div class="hero-section">
-        <div class="main-title">تيار الحكمة الوطني</div>
-        <div class="sub-title">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي و التطوير</div>
+        <div class="hero-glow"></div>
+        <div class="hero-content">
+            <div class="hero-badge">منصة الأتمتة الذكية</div>
+            <h1 class="hero-title">تيار الحكمة الوطني</h1>
+            <p class="hero-subtitle">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي والتطوير</p>
+            <div class="hero-line"></div>
+        </div>
     </div>
-    ''', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
     # عنوان اختيار النمط
-    st.markdown('<div class="section-header">🎨 اختر نمط الإخراج المطلوب (جميع التصاميم بخلفية بيضاء احترافية)</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="section-header">
+        <span class="section-icon">🎨</span>
+        <span class="section-text">اختر نمط الإخراج المطلوب</span>
+        <span class="section-note">(جميع التصاميم بخلفية بيضاء احترافية)</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     # أزرار الاختيار
     report_type = st.radio(
@@ -429,31 +412,31 @@ def render_platform_page():
     col_input, col_upload = st.columns([2, 1])
     
     with col_input:
-        st.markdown('''
+        st.markdown("""
         <div class="input-card">
             <div class="input-header">
-                <div class="input-icon">📝</div>
-                <div>
-                    <div class="input-title">البيانات / الملاحظات</div>
-                    <div class="input-subtitle">أدخل النص أو الصق محتوى التقرير هنا</div>
+                <div class="input-icon-box">📝</div>
+                <div class="input-info">
+                    <h3 class="input-title">البيانات / الملاحظات</h3>
+                    <p class="input-desc">أدخل النص أو الصق محتوى التقرير هنا</p>
                 </div>
             </div>
         </div>
-        ''', unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         user_text = st.text_area("", height=200, placeholder="اكتب الملاحظات أو الصق نص التقرير هنا...", label_visibility="collapsed")
     
     with col_upload:
-        st.markdown('''
+        st.markdown("""
         <div class="input-card">
             <div class="input-header">
-                <div class="input-icon">📎</div>
-                <div>
-                    <div class="input-title">رفع الملفات</div>
-                    <div class="input-subtitle">PDF, XLSX, TXT - حتى 200MB</div>
+                <div class="input-icon-box">📎</div>
+                <div class="input-info">
+                    <h3 class="input-title">رفع الملفات</h3>
+                    <p class="input-desc">PDF, XLSX, TXT - حتى 200MB</p>
                 </div>
             </div>
         </div>
-        ''', unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         uploaded_file = st.file_uploader("", type=['pdf', 'xlsx', 'txt'], label_visibility="collapsed")
         
         if uploaded_file:
@@ -462,7 +445,7 @@ def render_platform_page():
     st.markdown("<br>", unsafe_allow_html=True)
     
     # زر المعالجة
-    if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل", use_container_width=True):
+    if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل", use_container_width=True, type="primary"):
         process_report(user_text, uploaded_file, report_type)
 
 # ---------------------------------------------------------
@@ -480,7 +463,7 @@ def process_report(user_text, uploaded_file, report_type):
     
     if uploaded_file:
         source_file_name = uploaded_file.name
-        with st.spinner('📂 جاري قراءة الملف ومعالجة النصوص العربية...'):
+        with st.spinner('📂 جاري قراءة الملف...'):
             file_content = extract_text_from_file(uploaded_file)
             if "⚠️" in file_content and len(file_content) < 200: 
                 st.warning(file_content)
@@ -494,7 +477,6 @@ def process_report(user_text, uploaded_file, report_type):
     
     try:
         genai.configure(api_key=API_KEY)
-        
         selected_model = get_best_available_model()
         
         generation_config = genai.types.GenerationConfig(
@@ -608,31 +590,25 @@ def process_report(user_text, uploaded_file, report_type):
 {full_text}
 """
 
-        progress_placeholder = st.empty()
+        # شريط التقدم
+        progress_bar = st.progress(0)
+        status_text = st.empty()
         
         progress_messages = [
-            "🔍 جاري تحليل البيانات...",
-            "📊 استخراج المعلومات الرئيسية...",
-            "🎨 تطبيق التصميم الاحترافي...",
-            "✍️ إنشاء محتوى التقرير...",
-            "🔧 معالجة النصوص العربية...",
-            "📝 تنسيق الجداول والقوائم...",
-            "🎯 إضافة اللمسات النهائية...",
-            "✅ اكتمال المعالجة..."
+            "🔍 تحليل البيانات...",
+            "📊 استخراج المعلومات...",
+            "🎨 تطبيق التصميم...",
+            "✍️ إنشاء المحتوى...",
+            "🔧 معالجة النصوص...",
+            "📝 تنسيق الجداول...",
+            "🎯 اللمسات النهائية...",
+            "✅ اكتمال!"
         ]
         
         for i, msg in enumerate(progress_messages):
-            progress_percent = int((i + 1) / len(progress_messages) * 100)
-            progress_placeholder.markdown(f'''
-            <div class="progress-box">
-                <div class="progress-icon">🤖</div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: {progress_percent}%;"></div>
-                </div>
-                <div class="progress-text">{msg} {progress_percent}%</div>
-            </div>
-            ''', unsafe_allow_html=True)
-            time.sleep(0.2)
+            progress_bar.progress((i + 1) / len(progress_messages))
+            status_text.markdown(f"<div class='progress-status'>{msg}</div>", unsafe_allow_html=True)
+            time.sleep(0.3)
         
         try:
             response = model.generate_content(
@@ -641,13 +617,14 @@ def process_report(user_text, uploaded_file, report_type):
                 request_options={"timeout": 120}
             )
             
+            progress_bar.empty()
+            status_text.empty()
+            
             if response.prompt_feedback.block_reason:
                 st.error("⚠️ تم حظر المحتوى من قبل Google AI.")
                 st.stop()
                 
             html_body = clean_html_response(response.text)
-            
-            progress_placeholder.empty()
             
             if is_presentation:
                 final_html = f"""
@@ -708,17 +685,12 @@ def process_report(user_text, uploaded_file, report_type):
                 source_name=source_file_name
             )
 
-            st.markdown('''
-            <div class="success-banner">
-                <span>✅ تم إنشاء التقرير الكامل وحفظه بنجاح!</span>
+            st.markdown("""
+            <div class="success-message">
+                <span class="success-icon">✅</span>
+                <span class="success-text">تم إنشاء التقرير بنجاح!</span>
             </div>
-            ''', unsafe_allow_html=True)
-            
-            st.markdown('''
-            <div class="success-hint">
-                💡 يمكنك الوصول للتقارير المحفوظة من زر "سجل التقارير" في الأعلى
-            </div>
-            ''', unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
             components.html(final_html, height=850, scrolling=True)
 
@@ -726,11 +698,13 @@ def process_report(user_text, uploaded_file, report_type):
                 label="📥 تحميل التقرير (HTML)",
                 data=final_html,
                 file_name=f"{file_label}.html",
-                mime="text/html"
+                mime="text/html",
+                use_container_width=True
             )
         
         except Exception as api_error:
-            progress_placeholder.empty()
+            progress_bar.empty()
+            status_text.empty()
             error_msg = str(api_error)
             if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
                 st.error("⚠️ انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.")
@@ -749,13 +723,13 @@ elif st.session_state.current_page == "reports":
     render_reports_page()
 
 # الفوتر
-st.markdown("<br><br>", unsafe_allow_html=True)
-st.markdown('''
-<div class="footer-section">
-    <div class="footer-line"></div>
-    <p class="footer-org">الجهاز المركزي للجودة الشاملة</p>
-    <p class="footer-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
-    <div class="footer-divider"></div>
-    <p class="footer-copy">جميع الحقوق محفوظة © 2026</p>
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("""
+<div class="main-footer">
+    <div class="footer-content">
+        <div class="footer-brand">🦅 تيار الحكمة الوطني</div>
+        <div class="footer-org">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي والتطوير</div>
+        <div class="footer-copy">جميع الحقوق محفوظة © 2026</div>
+    </div>
 </div>
-''', unsafe_allow_html=True)
+""", unsafe_allow_html=True)
