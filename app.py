@@ -97,18 +97,19 @@ def clean_input_text(text):
     return '\n'.join(lines)
 
 def clean_html_response(text):
-    match = re.search(r"```html(.*?)```", text, re.DOTALL)
-    if match:
-        return match.group(1).strip()
+    """دالة تنظيف ذكية تقبل النصوص الجزئية وتزيل علامات المارك داون"""
+    # تنظيف علامات البداية
+    text = re.sub(r"^```html", "", text, flags=re.IGNORECASE | re.MULTILINE)
+    text = re.sub(r"^```", "", text, flags=re.MULTILINE)
     
-    match = re.search(r"```(.*?)```", text, re.DOTALL)
-    if match:
-        return match.group(1).strip()
-        
+    # تنظيف علامات النهاية (حتى لو لم تكن موجودة لا يضر)
+    text = re.sub(r"```$", "", text, flags=re.MULTILINE)
+    
+    # محاولة استخراج HTML الصافي إذا كان محاطاً بنص آخر
     match = re.search(r"(<html|<!DOCTYPE)(.*)", text, re.DOTALL)
     if match:
         return match.group(1) + match.group(2)
-    
+        
     return text.strip()
 
 def get_best_available_model():
@@ -481,12 +482,12 @@ def process_report(user_text, uploaded_file, report_type):
         genai.configure(api_key=API_KEY)
         selected_model = get_best_available_model()
         
-        # تحسين الإعدادات للنموذج الأقوى
+        # تحسين الإعدادات: ضبط Output Tokens إلى 8192 وهو الحد الأقصى الآمن
         generation_config = genai.types.GenerationConfig(
-            temperature=0.0,  # درجة حرارة صفر لتقليل الإبداع والهلوسة تماماً
+            temperature=0.0,
             top_p=0.95,
             top_k=40,
-            max_output_tokens=32000,
+            max_output_tokens=8192, 
         )
         
         model = genai.GenerativeModel(selected_model)
@@ -578,36 +579,28 @@ def process_report(user_text, uploaded_file, report_type):
             """
 
         # --------------------------------------------------------------------------------
-        # ⚡ هندسة الأوامر المحسنة (الحماية القصوى للأسماء + النموذج الذكي)
+        # ⚡ هندسة الأوامر المحسنة (ضمان الاكتمال + الحماية)
         # --------------------------------------------------------------------------------
         prompt = f"""
-أنت خبير توثيق رقمي ومدقق بيانات دقيق جداً (Strict Verbatim Transcriber).
-المهمة: تحويل محتوى PDF الخام إلى تقرير HTML احترافي، مع الالتزام التام بعدم تغيير الأسماء أو الألقاب.
+أنت خبير توثيق رقمي ومدقق بيانات دقيق جداً.
+المهمة: تحويل محتوى PDF الخام إلى تقرير HTML احترافي وكامل.
 
-📥 حالة البيانات المدخلة:
-النص مستخرج من PDF عربي وقد يحتوي على:
-1. أحرف معكوسة أو مقطعة (بسبب مشاكل التشفير).
-2. أسماء أشخاص ومناصب.
+⚠️ تعليمات التنفيذ الصارمة (Strict Execution Protocol):
 
-⚠️ بروتوكول التنفيذ الصارم (Strict Execution Protocol):
+1. **اكتمال التقرير (COMPLETENESS - CRITICAL):**
+   - ⛔ **ممنوع التوقف عند المقدمة.** يجب عليك تحويل المستند كاملاً حتى آخر كلمة.
+   - إذا كان المستند طويلاً، استمر في التوليد حتى تنتهي من كل الأقسام (المقدمة، التفاصيل، الجداول، الخاتمة).
 
-1. **حماية الأسماء (Entities Protection Policy - CRITICAL):**
-   - 🚫 **ممنوع منعاً باتاً** استخدام "التصحيح التلقائي" على أسماء الأشخاص أو الألقاب أو العشائر (مثل: "الكلابي"، "الدراجي"، "أبو كلل").
-   - انسخ الاسم كما يظهر لك في النص الأصلي تماماً، حتى لو بدا غريباً. لا تخمن اسماً آخر (لا تحول "كلل" إلى "هيل").
-   - الاستثناء الوحيد: إذا كانت الأحرف مقطعة (م ت ف ر ق ة)، قم بدمجها فقط، ولا تغير الأحرف نفسها.
-
-2. **معالجة النصوص (Text Processing):**
-   - إذا وجدت نصاً مقلوباً (معكوساً)، قم بترتيبه ليصبح مقروءاً.
-   - حافظ على كل المعلومات والأرقام بدقة 100%.
+2. **حماية الأسماء (Entities Protection Policy):**
+   - 🚫 ممنوع "التصحيح التلقائي" للأسماء. انسخها كما هي (مثلاً: "أبو كلل" تبقى "أبو كلل").
 
 3. **التنسيق (Formatting):**
    - استخدم الكلاسات التالية:
 {design_rules}
    - الجداول: حول القوائم والبيانات إلى `<table class="data-table">` فوراً.
 
-4. **قواعد السلامة:**
-   - لا تكرر الأحرف (sssss).
-   - أعطني كود HTML فقط.
+4. **المخرجات:**
+   - أعطني كود HTML فقط داخل Body.
 
 📥 النص للمعالجة:
 --------------------------------------------------
@@ -620,12 +613,12 @@ def process_report(user_text, uploaded_file, report_type):
         status_text = st.empty()
         
         # ----------------------------------------------------------------------------
-        # ⚡ الإصلاح الأساسي: تفعيل الـ Streaming لمنع الـ 504 Timeout
+        # ⚡ البث المباشر (Streaming) مع معالجة ذكية
         # ----------------------------------------------------------------------------
         try:
             status_text.markdown(f"<div class='progress-status'>📡 جاري انشاء التقرير...</div>", unsafe_allow_html=True)
             
-            # تفعيل stream=True هو السر في منع انقطاع الاتصال
+            # تفعيل stream=True
             response_stream = model.generate_content(
                 prompt, 
                 generation_config=generation_config,
@@ -634,19 +627,22 @@ def process_report(user_text, uploaded_file, report_type):
             
             full_response_text = ""
             
-            # حلقة التجميع: تبقي الاتصال حياً وتجمع النص قطعة قطعة
             for chunk in response_stream:
                 if chunk.text:
                     full_response_text += chunk.text
-                    # تحديث الواجهة ليبدو التطبيق نشطاً للخادم
-                    status_text.markdown(f"<div class='progress-status'>⏳ جاري استلام البيانات... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
+                    # تحديث الواجهة ليبدو التطبيق نشطاً
+                    status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف تم توليده)</div>", unsafe_allow_html=True)
             
             progress_bar.progress(100)
             status_text.empty()
             
-            # معالجة النص المجمع
+            # معالجة النص المجمع باستخدام دالة التنظيف الجديدة
             html_body = clean_html_response(full_response_text)
             
+            # التأكد من أن النص ليس فارغاً
+            if len(html_body) < 100:
+                st.warning("⚠️ يبدو أن التقرير قصير جداً. قد يكون النموذج واجه مشكلة في المحتوى.")
+
             if is_presentation:
                 final_html = f"""
 <!DOCTYPE html>
@@ -655,7 +651,7 @@ def process_report(user_text, uploaded_file, report_type):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير {file_label}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap)" rel="stylesheet">
     {FONT_AWESOME_LINK}
     {target_css}
 </head>
@@ -687,7 +683,7 @@ def process_report(user_text, uploaded_file, report_type):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير {file_label}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap](https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Tajawal:wght@400;500;700;800&display=swap)" rel="stylesheet">
     {target_css}
 </head>
 <body>
@@ -728,7 +724,7 @@ def process_report(user_text, uploaded_file, report_type):
             status_text.empty()
             error_msg = str(api_error)
             if "504" in error_msg or "timeout" in error_msg.lower():
-                st.error("⚠️ استغرق النموذج وقتاً طويلاً. يرجى المحاولة مرة أخرى (تم تحسين الاتصال في المحاولة القادمة).")
+                st.error("⚠️ استغرق النموذج وقتاً طويلاً جداً. حاول تقليل حجم النص قليلاً.")
             else:
                 st.error(f"❌ خطأ: {api_error}")
 
