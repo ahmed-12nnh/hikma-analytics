@@ -104,36 +104,61 @@ def clean_html_response(text):
     text = re.sub(r"```$", "", text, flags=re.MULTILINE)
     return text.strip()
 
-def get_best_available_model():
-    """تحديد أفضل نموذج متاح ديناميكياً من القائمة الفعلية للمستخدم"""
-    try:
-        # جلب قائمة الموديلات المتاحة فعلياً للمستخدم
-        all_models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        
-        # ترتيب الأولويات: نبحث عن Pro أولاً، ثم Flash، ثم أي شيء آخر
-        
-        # 1. البحث عن أي نسخة Pro
-        for m in all_models:
-            if 'gemini-1.5-pro' in m.name:
-                return m.name
-        
-        # 2. البحث عن أي نسخة Flash
-        for m in all_models:
-            if 'gemini-1.5-flash' in m.name:
-                return m.name
-                
-        # 3. البحث عن Gemini Pro العادي
-        for m in all_models:
-            if 'gemini-pro' in m.name:
-                return m.name
+def generate_content_with_fallback(model_client, prompt, generation_config, safety_settings, status_placeholder):
+    """
+    خوارزمية ذكية تحاول استخدام الموديل الأفضل، وإذا فشلت بسبب الكوتة (429) أو غيره،
+    تنتقل تلقائياً للموديل الأسرع والأرخص.
+    """
+    # قائمة الموديلات مرتبة حسب الأفضلية (الأذكى أولاً، ثم الأسرع)
+    # نستخدم أسماء عامة لتجنب 404
+    models_priority = [
+        "models/gemini-1.5-pro",      # الأذكى (قد يسبب 429)
+        "models/gemini-1.5-flash",    # الأسرع والأكثر استقراراً
+        "models/gemini-pro"           # القديم (احتياط)
+    ]
 
-        # 4. الملاذ الأخير: أول موديل متاح في القائمة
-        if all_models:
-            return all_models[0].name
+    last_error = None
+
+    for model_name in models_priority:
+        try:
+            status_placeholder.markdown(f"<div class='progress-status'>📡 محاولة الاتصال بالنموذج: {model_name.split('/')[-1]}...</div>", unsafe_allow_html=True)
             
-        return "models/gemini-pro" # احتياط نهائي
-    except:
-        return "models/gemini-pro"
+            model = genai.GenerativeModel(model_name)
+            
+            # محاولة التوليد بالبث المباشر
+            response_stream = model.generate_content(
+                prompt, 
+                generation_config=generation_config,
+                safety_settings=safety_settings,
+                stream=True 
+            )
+            
+            full_text = ""
+            for chunk in response_stream:
+                if chunk.text:
+                    full_text += chunk.text
+                    status_placeholder.markdown(f"<div class='progress-status'>⏳ جاري الكتابة باستخدام {model_name.split('/')[-1]}... ({len(full_text)} حرف)</div>", unsafe_allow_html=True)
+            
+            # إذا وصلنا هنا، يعني نجحنا!
+            return full_text
+
+        except Exception as e:
+            error_str = str(e)
+            last_error = e
+            # تحليل الخطأ
+            if "429" in error_str or "quota" in error_str.lower():
+                status_placeholder.warning(f"⚠️ النموذج {model_name} مشغول أو انتهت الحصة. جاري الانتقال للبديل...")
+                time.sleep(1) # استراحة قصيرة قبل المحاولة التالية
+                continue # جرب الموديل التالي في القائمة
+            elif "404" in error_str or "not found" in error_str.lower():
+                continue # الموديل غير موجود، جرب التالي
+            else:
+                # خطأ غير متوقع، لكن سنحاول مع الموديل التالي احتياطاً
+                print(f"Error with {model_name}: {e}")
+                continue
+
+    # إذا فشلت كل الموديلات
+    raise last_error
 
 # ---------------------------------------------------------
 # 📚 دوال التخزين المؤقت
@@ -157,7 +182,6 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
 # 🎨 الشريط الجانبي (Streamlit Sidebar)
 # ---------------------------------------------------------
 with st.sidebar:
-    # الشعار والعنوان
     st.markdown("""
     <div class="sidebar-brand">
         <div class="brand-name">تيار الحكمة الوطني</div>
@@ -166,18 +190,14 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
-    
-    # قسم التنقل
     st.markdown("<div class='nav-section-title'>📍 التنقل</div>", unsafe_allow_html=True)
     
-    # زر المنصة الرئيسية
     if st.button("🏠 المنصة الرئيسية", key="nav_platform", use_container_width=True,
                 type="primary" if st.session_state.current_page == "platform" else "secondary"):
         st.session_state.current_page = "platform"
         st.session_state.preview_report = None
         st.rerun()
     
-    # زر سجل التقارير
     reports_count = len(st.session_state.reports_history)
     if st.button(f"📚 سجل التقارير ({reports_count})", key="nav_reports", use_container_width=True,
                 type="primary" if st.session_state.current_page == "reports" else "secondary"):
@@ -187,7 +207,6 @@ with st.sidebar:
     
     st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
     
-    # إحصائيات الجلسة
     st.markdown(f"""
     <div class="session-stats">
         <div class="stats-title">📊 إحصائيات الجلسة</div>
@@ -208,11 +227,9 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # آخر التقارير
     if st.session_state.reports_history:
         st.markdown("<div class='sidebar-divider'></div>", unsafe_allow_html=True)
         st.markdown("<div class='nav-section-title'>📄 آخر التقارير</div>", unsafe_allow_html=True)
-        
         for i, report in enumerate(st.session_state.reports_history[:3]):
             title_short = report['title'][:15] + "..." if len(report['title']) > 15 else report['title']
             st.markdown(f"""
@@ -225,7 +242,6 @@ with st.sidebar:
             </div>
             """, unsafe_allow_html=True)
     
-    # الفوتر
     st.markdown("<div class='sidebar-spacer'></div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sidebar-footer">
@@ -240,8 +256,6 @@ with st.sidebar:
 # 📄 صفحة التقارير المحفوظة
 # ---------------------------------------------------------
 def render_reports_page():
-    """صفحة عرض التقارير المحفوظة"""
-    
     st.markdown("""
     <div class="page-header-reports">
         <div class="header-icon">📚</div>
@@ -278,7 +292,6 @@ def render_reports_page():
                 st.session_state.preview_report = None
                 st.session_state.preview_title = ""
                 st.rerun()
-        
         st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
     
     st.markdown(f"""
@@ -364,8 +377,6 @@ def render_reports_page():
 # 🏠 صفحة المنصة الرئيسية
 # ---------------------------------------------------------
 def render_platform_page():
-    """صفحة المنصة الرئيسية لإنشاء التقارير"""
-    
     st.markdown("""
     <div class="hero-section">
         <div class="hero-glow"></div>
@@ -436,8 +447,6 @@ def render_platform_page():
 # ⚙️ معالجة إنشاء التقرير
 # ---------------------------------------------------------
 def process_report(user_text, uploaded_file, report_type):
-    """معالجة إنشاء التقرير"""
-    
     if not API_KEY:
         st.error("⚠️ لم يتم العثور على مفتاح API. يرجى إضافته في Secrets.")
         st.stop()
@@ -462,11 +471,7 @@ def process_report(user_text, uploaded_file, report_type):
     try:
         genai.configure(api_key=API_KEY)
         
-        # === (الحل الجذري للخطأ 404) اختيار النموذج من القائمة المتاحة ===
-        selected_model_name = get_best_available_model()
-        # ===============================================================
-        
-        # إعدادات الأمان: السماح بكل شيء لتجنب حظر التقارير السياسية (حل التقرير الفارغ)
+        # إعدادات الأمان: السماح بكل شيء (لتجنب التقرير الفارغ)
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -482,8 +487,6 @@ def process_report(user_text, uploaded_file, report_type):
             max_output_tokens=8192, 
         )
         
-        model = genai.GenerativeModel(selected_model_name)
-
         target_css = ""
         design_rules = ""
         file_label = "Report"
@@ -512,7 +515,6 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="stats-row"> for statistics if present.
             - **BACKGROUND MUST BE WHITE**
             """
-        
         elif "الرقمي" in report_type:
             target_css = STYLE_DIGITAL
             file_label = "Digital_Dashboard"
@@ -525,7 +527,6 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="data-card"> for details
             - **BACKGROUND MUST BE WHITE**
             """
-        
         elif "التحليل" in report_type:
             target_css = STYLE_ANALYTICAL
             file_label = "Deep_Analysis"
@@ -538,7 +539,6 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="analysis-section">
             - **BACKGROUND MUST BE WHITE**
             """
-        
         elif "ملخص" in report_type:
             target_css = STYLE_EXECUTIVE
             file_label = "Executive_Summary"
@@ -551,7 +551,6 @@ def process_report(user_text, uploaded_file, report_type):
             - Use <div class="key-metrics">
             - **BACKGROUND MUST BE WHITE**
             """
-
         elif "عرض تقديمي" in report_type:
             target_css = STYLE_PRESENTATION
             file_label = "Presentation_Slides"
@@ -571,7 +570,7 @@ def process_report(user_text, uploaded_file, report_type):
             """
 
         prompt = f"""
-أنت خبير توثيق رقمي ومدقق بيانات دقيق جداً.
+أنت خبير توثيق رقمي ومدقق بيانات دقيق جداً (Strict Verbatim Transcriber).
 المهمة: تحويل محتوى PDF الخام إلى تقرير HTML احترافي وكامل.
 
 ⚠️ تعليمات التنفيذ الصارمة (Strict Execution Protocol):
@@ -581,7 +580,9 @@ def process_report(user_text, uploaded_file, report_type):
    - إذا كان المستند طويلاً، لا تختصر.
 
 2. **حماية الأسماء (Entities Protection Policy):**
-   - 🚫 ممنوع "التصحيح التلقائي" للأسماء. انسخها كما هي (مثلاً: "أبو كلل" تبقى "أبو كلل").
+   - 🚫 **ممنوع منعاً باتاً** استخدام "التصحيح التلقائي" للأسماء.
+   - انسخ الاسم كما يظهر لك في النص الأصلي تماماً (مثلاً: "أبو كلل" تبقى "أبو كلل"، "الدراجي" تبقى "الدراجي").
+   - حتى لو كان النموذج الأسرع (Flash) يميل للتغيير، يجب عليك المقاومة والالتزام بالنص.
 
 3. **التنسيق (Formatting):**
    - استخدم الكلاسات التالية:
@@ -601,37 +602,27 @@ def process_report(user_text, uploaded_file, report_type):
         status_text = st.empty()
         
         try:
-            status_text.markdown(f"<div class='progress-status'>📡 متصل بـ: {selected_model_name}</div>", unsafe_allow_html=True)
-            
-            response_stream = model.generate_content(
-                prompt, 
-                generation_config=generation_config,
-                safety_settings=safety_settings, 
-                stream=True 
+            # استخدام دالة التوليد الذكية مع الخطة البديلة (Fallback)
+            full_response_text = generate_content_with_fallback(
+                None, # Client is created inside
+                prompt,
+                generation_config,
+                safety_settings,
+                status_text
             )
-            
-            full_response_text = ""
-            
-            for chunk in response_stream:
-                try:
-                    if chunk.text:
-                        full_response_text += chunk.text
-                        status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
-                except Exception:
-                    pass 
             
             progress_bar.progress(100)
             status_text.empty()
             
             html_body = clean_html_response(full_response_text)
             
-            # --- إضافة أداة تصحيح الأخطاء (للمطور فقط) ---
-            with st.expander("🛠️ (للمطور) عرض النص الخام المستلم"):
-                st.text(full_response_text)
+            # --- عرض النص الخام فقط إذا كان هناك مشكلة (اختياري) ---
+            # with st.expander("🛠️ عرض النص الخام (للمطور)"):
+            #     st.text(full_response_text)
             # -----------------------------------------------
 
             if len(html_body) < 50:
-                st.error("⚠️ عذراً، لم يتم استلام أي نص. يرجى مراجعة خانة 'النص الخام' أعلاه.")
+                st.error("⚠️ عذراً، لم يتم استلام أي نص. يرجى التأكد من أن الملف يحتوي على نص قابل للقراءة.")
                 return
 
             if is_presentation:
@@ -714,11 +705,7 @@ def process_report(user_text, uploaded_file, report_type):
             progress_bar.empty()
             status_text.empty()
             error_msg = str(api_error)
-            # معالجة الخطأ إذا حدث 404 (نادراً الآن)
-            if "404" in error_msg:
-                 st.error(f"❌ خطأ: النموذج المطلوب غير موجود. حاول تحديث الصفحة.")
-            else:
-                st.error(f"❌ خطأ: {api_error}")
+            st.error(f"❌ خطأ نهائي بعد كل المحاولات: {api_error}")
 
     except Exception as e:
         st.error(f"❌ خطأ غير متوقع: {e}")
