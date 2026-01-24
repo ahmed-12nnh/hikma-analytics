@@ -6,3 +6,4 @@ python-docx
 weasyprint
 Pillow
 pymupdf
+pytesseract
