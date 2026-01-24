@@ -97,19 +97,15 @@ def clean_input_text(text):
     return '\n'.join(lines)
 
 def clean_html_response(text):
-    """دالة تنظيف ذكية تقبل النصوص الجزئية وتزيل علامات المارك داون"""
-    # تنظيف علامات البداية
+    """دالة تنظيف مرنة جداً لضمان عدم حذف المحتوى"""
+    if not text: return ""
+    
+    # تنظيف علامات المارك داون فقط
     text = re.sub(r"^```html", "", text, flags=re.IGNORECASE | re.MULTILINE)
     text = re.sub(r"^```", "", text, flags=re.MULTILINE)
-    
-    # تنظيف علامات النهاية (حتى لو لم تكن موجودة لا يضر)
     text = re.sub(r"```$", "", text, flags=re.MULTILINE)
     
-    # محاولة استخراج HTML الصافي إذا كان محاطاً بنص آخر
-    match = re.search(r"(<html|<!DOCTYPE)(.*)", text, re.DOTALL)
-    if match:
-        return match.group(1) + match.group(2)
-        
+    # تنظيف المسافات الزائدة في البداية والنهاية
     return text.strip()
 
 def get_best_available_model():
@@ -120,26 +116,17 @@ def get_best_available_model():
             if 'generateContent' in m.supported_generation_methods:
                 available_models.append(m.name)
         
-        # 1. الأولوية القصوى لـ Gemini 1.5 Pro (الأذكى والأدق في الأسماء)
+        # 1. الأولوية القصوى لـ Gemini 1.5 Pro
         for m in available_models:
             if 'gemini-1.5-pro' in m and 'exp' not in m:
                 return m
         
-        # 2. الخيار الثاني Gemini 1.5 Flash (الأسرع)
+        # 2. الخيار الثاني Gemini 1.5 Flash
         for m in available_models:
             if 'gemini-1.5-flash' in m and 'exp' not in m and '002' not in m:
                 return m 
                 
-        # 3. الخيارات القديمة
-        for m in available_models:
-            if 'gemini-pro' in m and '1.0' in m:
-                return m
-        
-        for m in available_models:
-            if 'exp' not in m and '2.0' not in m:
-                return m
-                
-        return "models/gemini-1.5-pro" # محاولة فرض البرو
+        return "models/gemini-1.5-pro"
     except:
         return "models/gemini-pro"
 
@@ -250,7 +237,6 @@ with st.sidebar:
 def render_reports_page():
     """صفحة عرض التقارير المحفوظة"""
     
-    # الهيدر
     st.markdown("""
     <div class="page-header-reports">
         <div class="header-icon">📚</div>
@@ -271,7 +257,6 @@ def render_reports_page():
         """, unsafe_allow_html=True)
         return
     
-    # عرض المعاينة إذا كانت مفعّلة
     if st.session_state.preview_report:
         st.markdown(f"""
         <div class="preview-banner">
@@ -291,7 +276,6 @@ def render_reports_page():
         
         st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
     
-    # شريط الإحصائيات
     st.markdown(f"""
     <div class="stats-bar-reports">
         <div class="stat-box-report">
@@ -313,10 +297,8 @@ def render_reports_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # عنوان البطاقات
     st.markdown("<h2 class='section-title-reports'>📋 التقارير</h2>", unsafe_allow_html=True)
     
-    # عرض البطاقات
     cols_count = min(len(reports), 3)
     rows = (len(reports) + cols_count - 1) // cols_count
     
@@ -357,7 +339,6 @@ def render_reports_page():
                             use_container_width=True
                         )
     
-    # الجدول
     st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
     st.markdown("<h2 class='section-title-reports'>📊 جدول التقارير</h2>", unsafe_allow_html=True)
     
@@ -380,7 +361,6 @@ def render_reports_page():
 def render_platform_page():
     """صفحة المنصة الرئيسية لإنشاء التقارير"""
     
-    # الهيدر الرئيسي
     st.markdown("""
     <div class="hero-section">
         <div class="hero-glow"></div>
@@ -392,7 +372,6 @@ def render_platform_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # عنوان اختيار النمط
     st.markdown("""
     <div class="section-header">
         <span class="section-icon">🎨</span>
@@ -401,7 +380,6 @@ def render_platform_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # أزرار الاختيار
     report_type = st.radio(
         "",
         ("🏛️ نمط الكتاب الرسمي", "📱 نمط الداشبورد الرقمي", "📊 نمط التحليل العميق", "📽️ عرض تقديمي تفاعلي (PPT)", "✨ ملخص تنفيذي حديث"),
@@ -411,7 +389,6 @@ def render_platform_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # منطقة الإدخال
     col_input, col_upload = st.columns([2, 1])
     
     with col_input:
@@ -447,7 +424,6 @@ def render_platform_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # زر المعالجة
     if st.button("🚀 بدء المعالجة وإنشاء التقرير الكامل", use_container_width=True, type="primary"):
         process_report(user_text, uploaded_file, report_type)
 
@@ -482,7 +458,14 @@ def process_report(user_text, uploaded_file, report_type):
         genai.configure(api_key=API_KEY)
         selected_model = get_best_available_model()
         
-        # تحسين الإعدادات: ضبط Output Tokens إلى 8192 وهو الحد الأقصى الآمن
+        # إعدادات الأمان: السماح بكل شيء لتجنب حظر التقارير السياسية
+        safety_settings = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+        ]
+
         generation_config = genai.types.GenerationConfig(
             temperature=0.0,
             top_p=0.95,
@@ -578,9 +561,6 @@ def process_report(user_text, uploaded_file, report_type):
             7. **SLIDE BACKGROUND MUST BE WHITE**
             """
 
-        # --------------------------------------------------------------------------------
-        # ⚡ هندسة الأوامر المحسنة (ضمان الاكتمال + الحماية)
-        # --------------------------------------------------------------------------------
         prompt = f"""
 أنت خبير توثيق رقمي ومدقق بيانات دقيق جداً.
 المهمة: تحويل محتوى PDF الخام إلى تقرير HTML احترافي وكامل.
@@ -588,8 +568,8 @@ def process_report(user_text, uploaded_file, report_type):
 ⚠️ تعليمات التنفيذ الصارمة (Strict Execution Protocol):
 
 1. **اكتمال التقرير (COMPLETENESS - CRITICAL):**
-   - ⛔ **ممنوع التوقف عند المقدمة.** يجب عليك تحويل المستند كاملاً حتى آخر كلمة.
-   - إذا كان المستند طويلاً، استمر في التوليد حتى تنتهي من كل الأقسام (المقدمة، التفاصيل، الجداول، الخاتمة).
+   - ⛔ **ممنوع التوقف.** استمر في التوليد حتى تحول كامل المستند.
+   - إذا كان المستند طويلاً، لا تختصر.
 
 2. **حماية الأسماء (Entities Protection Policy):**
    - 🚫 ممنوع "التصحيح التلقائي" للأسماء. انسخها كما هي (مثلاً: "أبو كلل" تبقى "أبو كلل").
@@ -608,40 +588,42 @@ def process_report(user_text, uploaded_file, report_type):
 --------------------------------------------------
 """
 
-        # شريط التقدم
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        # ----------------------------------------------------------------------------
-        # ⚡ البث المباشر (Streaming) مع معالجة ذكية
-        # ----------------------------------------------------------------------------
         try:
-            status_text.markdown(f"<div class='progress-status'>📡 جاري انشاء التقرير...</div>", unsafe_allow_html=True)
+            status_text.markdown(f"<div class='progress-status'>📡 جاري الاتصال بالنموذج الذكي (Pro)...</div>", unsafe_allow_html=True)
             
-            # تفعيل stream=True
             response_stream = model.generate_content(
                 prompt, 
                 generation_config=generation_config,
+                safety_settings=safety_settings, # تم تفعيل إلغاء الفلاتر
                 stream=True 
             )
             
             full_response_text = ""
             
             for chunk in response_stream:
-                if chunk.text:
-                    full_response_text += chunk.text
-                    # تحديث الواجهة ليبدو التطبيق نشطاً
-                    status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف تم توليده)</div>", unsafe_allow_html=True)
+                try:
+                    if chunk.text:
+                        full_response_text += chunk.text
+                        status_text.markdown(f"<div class='progress-status'>⏳ جاري الكتابة... ({len(full_response_text)} حرف)</div>", unsafe_allow_html=True)
+                except Exception:
+                    pass # تجاهل الأجزاء التالفة في الستريم
             
             progress_bar.progress(100)
             status_text.empty()
             
-            # معالجة النص المجمع باستخدام دالة التنظيف الجديدة
             html_body = clean_html_response(full_response_text)
             
-            # التأكد من أن النص ليس فارغاً
-            if len(html_body) < 100:
-                st.warning("⚠️ يبدو أن التقرير قصير جداً. قد يكون النموذج واجه مشكلة في المحتوى.")
+            # --- إضافة أداة تصحيح الأخطاء (للمطور فقط) ---
+            with st.expander("🛠️ (للمطور) عرض النص الخام المستلم من الذكاء الاصطناعي"):
+                st.text(full_response_text)
+            # -----------------------------------------------
+
+            if len(html_body) < 50:
+                st.error("⚠️ عذراً، لم يتم استلام أي نص. قد يكون المحتوى محظوراً من المصدر أو فارغاً. راجع خانة 'النص الخام' أعلاه.")
+                return
 
             if is_presentation:
                 final_html = f"""
@@ -724,7 +706,7 @@ def process_report(user_text, uploaded_file, report_type):
             status_text.empty()
             error_msg = str(api_error)
             if "504" in error_msg or "timeout" in error_msg.lower():
-                st.error("⚠️ استغرق النموذج وقتاً طويلاً جداً. حاول تقليل حجم النص قليلاً.")
+                st.error("⚠️ استغرق النموذج وقتاً طويلاً جداً.")
             else:
                 st.error(f"❌ خطأ: {api_error}")
 
