@@ -157,12 +157,13 @@ def save_report_to_history(title, report_type, html_content, source_name=""):
         st.session_state.reports_history = st.session_state.reports_history[:10]
 
 # ---------------------------------------------------------
-# 🎨 الشريط الجانبي (Streamlit Sidebar مع أزرار فعلية)
+# 🎨 الشريط الجانبي (Streamlit Sidebar)
 # ---------------------------------------------------------
 with st.sidebar:
     # الشعار والعنوان
     st.markdown("""
     <div class="sidebar-brand">
+        <div class="brand-logo">🦅</div>
         <div class="brand-name">تيار الحكمة الوطني</div>
         <div class="brand-subtitle">منصة التحليل الاستراتيجي</div>
     </div>
@@ -234,7 +235,7 @@ with st.sidebar:
     <div class="sidebar-footer">
         <div class="footer-line"></div>
         <div class="footer-org">الجهاز المركزي للجودة الشاملة</div>
-        <div class="footer-unit">وحدة التخطيط الاستراتيجي و التطوير</div>
+        <div class="footer-unit">وحدة التخطيط الاستراتيجي</div>
         <div class="footer-copy">© 2026</div>
     </div>
     """, unsafe_allow_html=True)
@@ -380,7 +381,6 @@ def render_platform_page():
     <div class="hero-section">
         <div class="hero-glow"></div>
         <div class="hero-content">
-            <div class="hero-badge">منصة الأتمتة الذكية</div>
             <h1 class="hero-title">تيار الحكمة الوطني</h1>
             <p class="hero-subtitle">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي والتطوير</p>
             <div class="hero-line"></div>
@@ -496,6 +496,7 @@ def process_report(user_text, uploaded_file, report_type):
         unified_signature = """
         <div class="report-signature">
             <div class="signature-line"></div>
+            <div class="signature-icon">🦅</div>
             <p class="signature-org">صادر من الجهاز المركزي للجودة الشاملة</p>
             <p class="signature-unit">وحدة التخطيط الاستراتيجي والتطوير</p>
             <div class="signature-line"></div>
@@ -725,10 +726,9 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div class="main-footer">
     <div class="footer-content">
-        <div class="footer-brand"> تيار الحكمة الوطني</div>
+        <div class="footer-brand">🦅 تيار الحكمة الوطني</div>
         <div class="footer-org">الجهاز المركزي للجودة الشاملة | وحدة التخطيط الاستراتيجي والتطوير</div>
         <div class="footer-copy">جميع الحقوق محفوظة © 2026</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
